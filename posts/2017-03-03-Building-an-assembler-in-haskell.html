@@ -60,7 +60,7 @@
   
 </div>
 <h1 id="mos-tech-6502">MOS Tech 6502</h1>
-<p>Recently I started building an emulator for the MosTech 6502 Cpu, this post is about the initial stages of building an assembler for a simple assembly language that compiles to runnable 6502 machine code. I’ve created a repo and updated it as I wrote this post, so the the end of each section that introduces new code I’ll link to a commit which has the code up to that point.</p>
+<p>Recently I started building an emulator for the MosTech 6502 Cpu, this post is about the initial stages of building an assembler for a simple assembly language that compiles to runnable 6502 machine code. I’ve created a repo and updated it as I wrote this post, so at the end of most sections that introduce new code I’ll link to a commit which has the code up to that point.</p>
 <p>You can see the repo here: <a href="https://github.com/wayofthepie/emu-mos6502-asm-blog" class="uri">https://github.com/wayofthepie/emu-mos6502-asm-blog</a>. The only pre-requisite is installing <a href="https://docs.haskellstack.org/en/stable/README/#how-to-install">stack</a>, once the project is cloned you can use <code>stack install</code> to install dependencies and build the project.</p>
 <h1 id="the-language">The Language</h1>
 <p>First, let’s define what we want our assembly language to be able to do. To keep it simple, we only want to allow assignment and the definition of instructions for now:</p>
@@ -153,11 +153,11 @@ notequal: BRK</code></pre>
 <span class="co">-- | A three letter upper case string.</span>
 <span class="kw">newtype</span> <span class="dt">Mnemonic</span> <span class="fu">=</span> <span class="dt">Mnemonic</span> <span class="dt">T.Text</span> <span class="kw">deriving</span> <span class="dt">Show</span>
 
-<span class="co">-- | A label, which must be assigned a value.</span>
+<span class="co">-- | A label, which should be assigned a value.</span>
 <span class="kw">newtype</span> <span class="dt">Var</span> <span class="fu">=</span> <span class="dt">Var</span> <span class="dt">Label</span>  <span class="kw">deriving</span> <span class="dt">Show</span>
 
-<span class="co">-- | An operand which must be assigned to a label.</span>
-<span class="kw">newtype</span> <span class="dt">Val</span> <span class="fu">=</span> <span class="dt">Val</span> <span class="dt">Operand</span> <span class="kw">deriving</span> <span class="dt">Show</span>
+<span class="co">-- | A value, which should be assigned to a Var.</span>
+<span class="kw">newtype</span> <span class="dt">Val</span> <span class="fu">=</span> <span class="dt">Val</span> <span class="dt">T.Text</span> <span class="kw">deriving</span> <span class="dt">Show</span>
 
 <span class="co">-- | Either a label or an operand.</span>
 <span class="kw">data</span> <span class="dt">LabelOrOperand</span> <span class="fu">=</span> <span class="dt">Lbl</span> <span class="dt">Label</span> <span class="fu">|</span> <span class="dt">Op</span> <span class="dt">Operand</span> <span class="kw">deriving</span> <span class="dt">Show</span>
@@ -217,21 +217,21 @@ byte <span class="fu">=</span> undefined</code></pre></div>
 <ul>
 <li><a href="https://hackage.haskell.org/package/QuickCheck-2.9.2/docs/Test-QuickCheck-Gen.html#v:choose">choose</a> generates a random element in the given range, <code>choose (1, 4)</code> generates integers between 1 and 4 inclusive.</li>
 <li><a href="https://hackage.haskell.org/package/QuickCheck-2.9.2/docs/Test-QuickCheck-Gen.html#v:elements">elements</a> generates a single value from the given list.</li>
-<li>With these functions we can generate <code>x</code> and <code>y</code> and build our two character string by building a list of characters made up of <code>x</code> and <code>y</code> - see <code>x:[y]</code> above, this is just a <code>String</code> - we then pack this with <code>T.pack</code> to get our <code>Text</code> value.</li>
+<li>With these functions we can generate <code>x</code> and <code>y</code> and build our two character string by building a two element list of characters made up of <code>x</code> and <code>y</code> - see <code>x:[y]</code> above, this is just a <code>String</code> which is a list of <code>Char</code> - we then pack this with <code>T.pack</code> to get our <code>Text</code> value.</li>
 </ul>
 <h3 id="building-our-property">Building Our Property</h3>
 <p>Next we need to write a property that defines what should happen when <code>byte</code> parses these string values.</p>
 <div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">prop_byte_parse (<span class="dt">TwoCharHexString</span> s) <span class="fu">=</span> parse byte <span class="st">&quot;&quot;</span> s  <span class="ot">`shouldParse`</span> s</code></pre></div>
 <p>This is simply a function called <code>prop_byte_parse</code> which takes a value of type <code>TwoCharHexString</code> runs the parser <code>byte</code> with the megaparsec <code>parse</code> function <a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a> and checks that the result is as expected, in this case parsing a string <code>s</code> should return that same string. <code>parse</code> is a function from the <em>megaparsec</em> package which runs our parser on the supplied string.</p>
-<p>Finally, <code>shouldParse</code> is a functoin from <a href="https://hackage.haskell.org/package/hspec-megaparsec">hspec-megaparsec</a> - a library containing utility functions for testing parsers build with megaparsec. Here are using it to say <code>parse byte &quot;&quot; s</code> should parse to the string <code>s</code> - so the <code>byte</code> parser run on string <code>s</code> should just give us back <code>s</code>.</p>
+<p>Finally, <code>shouldParse</code> is a function from <a href="https://hackage.haskell.org/package/hspec-megaparsec">hspec-megaparsec</a> - a library containing utility functions for testing parsers built with megaparsec. Here we are using it to say <code>parse byte &quot;&quot; s</code> should parse to the string <code>s</code> - meaning the <code>byte</code> parser run on string <code>s</code> should just give us back <code>s</code>.</p>
 <p>Let’s add this to our spec so the property check gets run when we launch <code>stack test</code>.</p>
 <div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">asmSpec <span class="fu">=</span> <span class="kw">do</span>
   describe <span class="st">&quot;byte&quot;</span> <span class="fu">$</span>
     it <span class="st">&quot;should parse two consecutive characters in the hex range into a two character string&quot;</span> <span class="fu">$</span>
       property prop_byte_parse</code></pre></div>
-<p>Running the tests with <code>stack test</code> will run this spec and check that the property <code>prop_byte_parse</code> holds under the random values of <code>TwoCharHexString</code> that quickcheck produces - which we ourselves defined in our <code>Arbitrary</code> instance.</p>
-<p>But wait! The <code>byte</code> function was <code>undefined</code> so the test should fail! Yip, it should give output similar to the following..</p>
-<pre><code>Progress: 1/2
+<p>Running the tests with <code>stack test</code> will run this spec and check that the property <code>prop_byte_parse</code> holds when parsing the random values of <code>TwoCharHexString</code> that quickcheck produces - which we defined in our <code>Arbitrary</code> instance.</p>
+<p>But wait! The <code>byte</code> function was <code>undefined</code> so the test should fail! Yip, it should give output similar to the following.</p>
+<pre><code>...
 Assembler
   byte
     should parse two consecutive characters in the hex range into a two character string FAILED [1]
@@ -256,8 +256,8 @@ Randomized with seed 1913513661
 
 Finished in 0.0023 seconds
 1 example, 1 failure
-</code></pre>
-<p>Good, now we can implement <code>byte</code>. I’ve deliberatly left out some boiler plate such as dependencies and test setup, but you can view the full code up to this point, see <a href="https://github.com/wayofthepie/emu-mos6502-asm-blog/blob/ff2c770ec79dc1b56446b80cff28c6bfc87ca57a/src/Assembler.hs">Assembler.hs</a> for the types and functions and <a href="https://github.com/wayofthepie/emu-mos6502-asm-blog/blob/ff2c770ec79dc1b56446b80cff28c6bfc87ca57a/test/AssemblerSpec.hs">AssemblerSpec.hs</a> for the the tests.</p>
+...</code></pre>
+<p>Good, now we can implement <code>byte</code>. I’ve deliberatly left out some boiler plate such as dependencies and test setup, but you can view the full code up to this point, see <a href="https://github.com/wayofthepie/emu-mos6502-asm-blog/blob/ff2c770ec79dc1b56446b80cff28c6bfc87ca57a/src/Assembler.hs">Assembler.hs</a> for the types and functions and <a href="https://github.com/wayofthepie/emu-mos6502-asm-blog/blob/ff2c770ec79dc1b56446b80cff28c6bfc87ca57a/test/AssemblerSpec.hs">AssemblerSpec.hs</a> for the the property and <code>Arbitrary</code> instance.</p>
 <h3 id="implementation">Implementation</h3>
 <p>So now that we have a property which defines what our <code>byte</code> function should do, we can implement it. <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec.html#v:hexDigitChar">hexDigitChar</a> is a parser from <em>megaparsec</em> which parses a a hexadecimal digit. A byte is made up of two such digits so <code>byte</code> is simply a parser which tries to parse two hexadecimal chars.</p>
 <div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">byte ::</span> <span class="dt">Parser</span> <span class="dt">T.Text</span>
@@ -266,8 +266,8 @@ byte <span class="fu">=</span> <span class="kw">do</span>
   low <span class="ot">&lt;-</span> hexDigitChar
   pure <span class="fu">$</span> T.pack [high,low]</code></pre></div>
 <p>Nice! We read a hex char and call it <code>high</code> and another called <code>low</code> and build a <code>Text</code> value.</p>
-<p>The rest of the parsers can be implemented in a similar way, define <code>Arbitrary</code> instances for the data they should take, define properties for the expected output and implement!</p>
-<p>I’ll leave this implementation for another post. Running <code>stack test</code> now should give the following output.</p>
+<p>The rest of the parsers can be implemented in a similar way - define <code>Arbitrary</code> instances for the data they should take, define properties for the expected output and implement!</p>
+<p>I’ll leave the rest of the implementation for another post. Running <code>stack test</code> now should give the following output.</p>
 <pre><code>...
 Assembler
   byte
