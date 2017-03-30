@@ -87,7 +87,7 @@
 <li><a href="#conclusion">Conclusion</a></li>
 </ul>
 <h1 id="review">Review</h1>
-<p>In the last post we wrote a grammar for a simple assembly language, wrote the outline of our parser, derived some properties from the grammar for a simple parser <code>byte</code> and implemented <code>byte</code>. We also saw that there are a few deficiencies in our grammar. In this post we’ll implement <code>bytes</code>, <code>menmonic</code>, <code>label</code> and <code>labelAssign</code>. For each parser I’ll start with some <em>QuickCheck</em> properties then use those as the spec to implement the parser. Let’s get to it!</p>
+<p>In the <a href="../posts/2017-03-03-Building-an-assembler-in-haskell.html">previous post</a> we wrote a grammar for a simple assembly language, wrote the outline of our parser, derived some properties from the grammar for a simple parser <code>byte</code> and implemented <code>byte</code>. We also saw that there are a few deficiencies in our grammar. In this post we’ll implement <code>bytes</code>, <code>menmonic</code>, <code>label</code> and <code>labelAssign</code>. For each parser I’ll start with some <em>QuickCheck</em> properties then use those as the spec to implement the parser. Let’s get to it!</p>
 <hr />
 <h1 id="lexemes-and-space">Lexemes And Space</h1>
 <p>The <em>lexemes</em> of a language are the smallest syntactic unit. <em>Tokens</em> are categories of <em>lexemes</em>. In our case, the <em>“STORE”</em> string is an example of a lexeme in the category of <em>label</em> tokens. Let’s also assume we can safely eat any whitespace proceeding lexemes. With this in mind, and before we continue implementing the parsers for our language, let’s create convenience functions for parsing trailing space after our lexemes.</p>
