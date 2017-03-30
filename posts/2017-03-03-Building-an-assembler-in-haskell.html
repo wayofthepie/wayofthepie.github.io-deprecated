@@ -59,9 +59,21 @@
     Tags: <a href="../tags/haskell.html">haskell</a>, <a href="../tags/emulator.html">emulator</a>
   
 </div>
+<h3>Table of contents</h3><ul>
+<li><a href="#mos-tech-6502">MOS Tech 6502</a></li>
+<li><a href="#the-language">The Language</a></li>
+<li><a href="#building-our-parser">Building Our Parser</a><ul>
+<li><a href="#property-driven-parser-development">Property Driven Parser Development</a><ul>
+<li><a href="#generating-our-data---quickcheck-arbitrary">Generating Our Data - QuickCheck Arbitrary</a></li>
+<li><a href="#building-our-property">Building Our Property</a></li>
+<li><a href="#implementation">Implementation</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
 <h1 id="mos-tech-6502">MOS Tech 6502</h1>
 <p>Recently I started building an emulator for the MosTech 6502 Cpu, this post is about the initial stages of building an assembler for a simple assembly language that compiles to runnable 6502 machine code. I’ve created a repo and updated it as I wrote this post, so at the end of most sections that introduce new code I’ll link to a commit which has the code up to that point.</p>
-<p>You can see the repo here: <a href="https://github.com/wayofthepie/emu-mos6502-asm-blog" class="uri">https://github.com/wayofthepie/emu-mos6502-asm-blog</a>. The only pre-requisite is installing <a href="https://docs.haskellstack.org/en/stable/README/#how-to-install">stack</a>, once the project is cloned you can use <code>stack install</code> to install dependencies and build the project.</p>
+<p>You can see the repo here: <a href="https://github.com/wayofthepie/emu-mos6502-asm-blog/tree/hasm-blog01" class="uri">https://github.com/wayofthepie/emu-mos6502-asm-blog/tree/hasm-blog01</a>. The only pre-requisite is installing <a href="https://docs.haskellstack.org/en/stable/README/#how-to-install">stack</a>, once the project is cloned you can use <code>stack install</code> to install dependencies and build the project.</p>
 <h1 id="the-language">The Language</h1>
 <p>First, let’s define what we want our assembly language to be able to do. To keep it simple, we only want to allow assignment and the definition of instructions for now:</p>
 <ul>

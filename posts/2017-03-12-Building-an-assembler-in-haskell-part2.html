@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Wayofthepie - Building An Assembler In Haskell : Implementation</title>
+    <link rel="stylesheet" type="text/css" href="../css/syntax.css">
+    <link rel="stylesheet" type="text/css" href="../css/fluff.css">
+    <link rel="stylesheet" type="text/css" href="../css/fix.css">
+    <link rel="stylesheet" type="text/css" href="../css/github.css">
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-social/5.1.1/bootstrap-social.min.css" crossorigin="anonymous">
+    <link type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+</head>
+<body>
+<div id="header">
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="../index.html">
+                    Software Pie
+                </a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li class="inactive"><a href="../index.html">Home</a></li>
+                    <li class="inactive"><a href="../about.html">About</a></li>
+                    <li class="inactive"><a href="../contact.html">Contact</a></li>
+                    <li class="inactive"><a href="../archive.html">Archives</a></li>
+
+                </ul>
+            </div><!--/.nav-collapse -->
+        </div>
+    </nav>
+</div>
+
+<div class="container theme-showcase" role="main">
+    <div id="content">
+        <div class="page-header">
+            <h1>Building An Assembler In Haskell : Implementation</h1>
+        </div>
+        <div class="info">
+    Posted on March 12, 2017
+    
+</div>
+<div class="info">
+  
+    Tags: <a href="../tags/haskell.html">haskell</a>, <a href="../tags/emulator.html">emulator</a>
+  
+</div>
+<h3>Table of contents</h3><ul>
+<li><a href="#review">Review</a></li>
+<li><a href="#lexemes-and-space">Lexemes And Space</a><ul>
+<li><a href="#megaparsec-space-function">Megaparsec Space Function</a></li>
+</ul></li>
+<li><a href="#bytes">bytes</a><ul>
+<li><a href="#properties">Properties</a></li>
+<li><a href="#implementation">Implementation</a></li>
+</ul></li>
+<li><a href="#mnemonic">mnemonic</a><ul>
+<li><a href="#properties-1">Properties</a></li>
+<li><a href="#implementation-1">Implementation</a></li>
+<li><a href="#putting-it-all-together">Putting it all together…</a></li>
+</ul></li>
+<li><a href="#label">label</a><ul>
+<li><a href="#properties-2">Properties</a><ul>
+<li><a href="#shouldfailwith">shouldFailWith</a></li>
+</ul></li>
+<li><a href="#implementation-2">Implementation</a><ul>
+<li><a href="#functorapplicative-quick-description">Functor/Applicative Quick Description</a></li>
+</ul></li>
+<li><a href="#breaking-it-down">Breaking it down</a></li>
+<li><a href="#packing-it-up">Packing It Up</a></li>
+</ul></li>
+<li><a href="#labelassign">labelAssign</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+<h1 id="review">Review</h1>
+<p>In the last post we wrote a grammar for a simple assembly language, wrote the outline of our parser, derived some properties from the grammar for a simple parser <code>byte</code> and implemented <code>byte</code>. We also saw that there are a few deficiencies in our grammar. In this post we’ll implement <code>bytes</code>, <code>menmonic</code>, <code>label</code> and <code>labelAssign</code>. For each parser I’ll start with some <em>QuickCheck</em> properties then use those as the spec to implement the parser. Let’s get to it!</p>
+<hr />
+<h1 id="lexemes-and-space">Lexemes And Space</h1>
+<p>The <em>lexemes</em> of a language are the smallest syntactic unit. <em>Tokens</em> are categories of <em>lexemes</em>. In our case, the <em>“STORE”</em> string is an example of a lexeme in the category of <em>label</em> tokens. Let’s also assume we can safely eat any whitespace proceeding lexemes. With this in mind, and before we continue implementing the parsers for our language, let’s create convenience functions for parsing trailing space after our lexemes.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">spaceEater ::</span> <span class="dt">Parser</span> ()
+spaceEater <span class="fu">=</span> L.space
+  (void spaceChar)
+  (L.skipLineComment <span class="st">&quot;;&quot;</span>)
+  (L.skipBlockComment <span class="st">&quot;/*&quot;</span> <span class="st">&quot;*/&quot;</span>)
+
+<span class="ot">lexeme ::</span> <span class="dt">Parser</span> a <span class="ot">-&gt;</span> <span class="dt">Parser</span> a
+lexeme <span class="fu">=</span> L.lexeme spaceEater</code></pre></div>
+<p><code>spaceEater</code> uses <em>megaparsec’s</em> <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec-Lexer.html#v:space">space</a> function to build a parser that consumes and discards whitespace and comments. Note that it is prefixed with <code>L.</code> here (<code>L.space</code>) because <code>Text.Megaparsec.Lexer</code> is imported qualified as <code>L</code>, see <a href="https://github.com/wayofthepie/emu-mos6502-asm-blog/blob/e454cce2af3c938e229f1d60a2f3c3d0bf3a3adb/src/Assembler.hs#L6">here</a>.</p>
+<h2 id="megaparsec-space-function">Megaparsec Space Function</h2>
+<p><code>space</code> comes from <code>Text.Megaparsec.Lexer</code>.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">space ::</span> <span class="dt">MonadParsec</span> e s m
+      <span class="ot">=&gt;</span> m () <span class="co">-- ^ A parser for a space character (e.g. @'void' 'C.spaceChar'@)</span>
+      <span class="ot">-&gt;</span> m () <span class="co">-- ^ A parser for a line comment (e.g. 'skipLineComment')</span>
+      <span class="ot">-&gt;</span> m () <span class="co">-- ^ A parser for a block comment (e.g. 'skipBlockComment')</span>
+      <span class="ot">-&gt;</span> m ()</code></pre></div>
+<p>The type of <code>space</code> corresponds to the following:</p>
+<ul>
+<li>The first argument is a parser for space, we use <code>void spaceChar</code> here. <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec-Char.html#v:spaceChar">spaceChar</a> parses a space character, and <a href="https://hackage.haskell.org/package/base-4.9.0.0/docs/Data-Functor.html#v:void">void</a> discards the parsed character.</li>
+<li><p>The second argument is a line comment parser. We use a function from <em>megaparsec</em> called <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec-Lexer.html#v:skipLineComment">skipLineComment</a>, which does what it says - skips line comments starting with the provided character, “;” in our case.</p></li>
+<li><p>The last argument is a block comment parser, here we use <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec-Lexer.html#v:skipBlockComment">skipBlockComment</a>, which parses and discards data between “/*&quot; and “*/“.</p></li>
+</ul>
+<p>Using <code>spaceEater</code> we create a function called <code>lexeme</code> which uses <a href>lexeme</a> from <em>megaparsec</em> to build a function that takes a parser and produces a parser which consumes trailing whitespace and comments, with our <code>spaceEater</code>.</p>
+<p>I left out the description of the <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec-Prim.html#t:MonadParsec">MonadParsec</a> typeclass, I’ll leave this until a future post where I’ll dive into the <em>megaparsec</em> types in more depth.</p>
+<hr />
+<h1 id="bytes">bytes</h1>
+<h2 id="properties">Properties</h2>
+<p>First, let’s write some properties!</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">newtype</span> <span class="dt">TwoCharHexString</span> <span class="fu">=</span> <span class="dt">TwoCharHexString</span> <span class="dt">T.Text</span> <span class="kw">deriving</span> <span class="dt">Show</span>
+
+<span class="kw">instance</span> <span class="dt">Arbitrary</span> <span class="dt">TwoCharHexString</span> <span class="kw">where</span>
+  arbitrary <span class="fu">=</span> <span class="kw">do</span>
+    upper <span class="ot">&lt;-</span> choose (<span class="ch">'A'</span>, <span class="ch">'F'</span>)
+    lower <span class="ot">&lt;-</span> choose (<span class="ch">'a'</span>, <span class="ch">'f'</span>)
+    num   <span class="ot">&lt;-</span> choose (<span class="ch">'0'</span>, <span class="ch">'9'</span>)
+    <span class="kw">let</span> vals <span class="fu">=</span> [upper, lower, num]
+    x <span class="ot">&lt;-</span> elements vals
+    y <span class="ot">&lt;-</span> elements vals
+    pure <span class="fu">$</span> <span class="dt">TwoCharHexString</span> (T.pack (x<span class="fu">:</span>[y]))
+
+<span class="co">-- Should parse valid two char hexstring.</span>
+prop_byte_parseValidData (<span class="dt">TwoCharHexString</span> s) <span class="fu">=</span> parse byte <span class="st">&quot;&quot;</span> s  <span class="ot">`shouldParse`</span> s
+
+<span class="co">-- When successful should not consume more input.</span>
+prop_byte_parseSuccessShouldNotConsume (<span class="dt">TwoCharHexString</span> s) extra <span class="fu">=</span>
+  runParser' byte (initialState (T.append s extra)) <span class="ot">`succeedsLeaving`</span> extra</code></pre></div>
+<p><code>byte</code> should parse a two character hex string, representing a byte, so we create a newtype <code>TwoCharHexString</code> to represent this. The <code>Arbitrary</code> instance is made up of a random selection of two characters from the set of upper case <code>A</code> to <code>F</code>, lower case <code>a</code> to <code>f</code> letters and any single digit. With this arbitrary instance <em>QuickCheck</em> can now generate random instances of our <code>TwoCharHexString</code> type.</p>
+<p>Note the use of:</p>
+<ul>
+<li><a href="https://hackage.haskell.org/package/hspec-megaparsec-0.3.1/docs/Test-Hspec-Megaparsec.html#v:shouldParse">shouldParse</a> - <code>shouldParse</code> takes a parse result, the expected value and returns an <a href="https://hackage.haskell.org/package/hspec-expectations-0.8.2/docs/Test-Hspec-Expectations.html#t:Expectation">Expectation</a>. The <code>Expectation</code> succeeds if the result is equal to the expected value, and fails otherwise.</li>
+<li><a href="https://hackage.haskell.org/package/hspec-megaparsec-0.3.1/docs/Test-Hspec-Megaparsec.html#v:succeedsLeaving">succeedsLeaving</a> - <code>succeedsLeaving</code> checks whether a parser has succeeded leaving the specified input untouched.</li>
+</ul>
+<p>Simple! We now have a property which checks that the parser parses what we expect and another which checks that it does not consume more input than it should. As of now I have nothing in mind for custom error messages, the ones <em>megaparsec</em> spits out are generally useful enough for parsers this small, so for now I don’t think there is a need for a property which checks the error case.</p>
+<p>Ok, now that’s done, we have a spec for our implementation to follow!</p>
+<h2 id="implementation">Implementation</h2>
+<p>The <code>bytes</code> parser parses two bytes, the second being optional. We can use our <a href="../posts/2017-03-03-Building-an-assembler-in-haskell.html#implementation">single byte parser</a> (which we defined in the previous post) to parse each one, along with <em>megaparsec’s</em> <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec.html#v:option">option</a> function to optionally parse the second byte.</p>
+<p><code>option x p</code> tries to apply parser <code>p</code>, if <code>p</code> fails without consuming input it will return the value <code>x</code>. In our case this is exactly what we want, if <code>byte</code> fails to parse when parsing the second byte we can just return the empty string. As we are building a <code>Text</code> value with this parser we can then append the first byte onto the second and if the second is empty, we just get the first.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">bytes ::</span> <span class="dt">Parser</span> <span class="dt">T.Text</span>
+bytes <span class="fu">=</span> <span class="kw">do</span>
+  char <span class="ch">'$'</span>
+  firstByte <span class="ot">&lt;-</span> byte
+  anotherByte <span class="ot">&lt;-</span> option T.empty byte
+  pure <span class="fu">$</span> T.append firstByte anotherByte</code></pre></div>
+<p>Run the properties and all should be green!</p>
+<hr />
+<h1 id="mnemonic">mnemonic</h1>
+<h2 id="properties-1">Properties</h2>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">newtype</span> <span class="dt">ValidMnemonic</span> <span class="fu">=</span> <span class="dt">ValidMnemonic</span> <span class="dt">T.Text</span> <span class="kw">deriving</span> <span class="dt">Show</span>
+
+<span class="kw">instance</span> <span class="dt">Arbitrary</span> <span class="dt">ValidMnemonic</span> <span class="kw">where</span>
+  arbitrary <span class="fu">=</span> <span class="kw">do</span>
+    upper  <span class="ot">&lt;-</span> choose (<span class="ch">'A'</span>, <span class="ch">'Z'</span>)
+    pure <span class="fu">$</span> <span class="dt">ValidMnemonic</span> (T.pack [upper, upper, upper])
+
+prop_mnemonic_parseValidMnemString (<span class="dt">ValidMnemonic</span> s) <span class="fu">=</span>
+  parse mnemonic <span class="st">&quot;&quot;</span> s <span class="ot">`shouldParse`</span> (<span class="dt">Mnemonic</span> s)</code></pre></div>
+<p>Really simple, a valid mnemonic is any upper case three letter string, so that’s exactly what our <code>Arbitrary</code> instance specifies.</p>
+<h2 id="implementation-1">Implementation</h2>
+<p>Here we use <em>megaparsec’s</em> <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec.html#v:count">count</a> and <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec.html#v:upperChar">upperChar</a> functions.</p>
+<ul>
+<li><code>count n p</code> runs the parser <code>p</code> <code>n</code> times.</li>
+<li><code>upperChar</code> is a parser for upper case Unicode characters.</li>
+</ul>
+<p>Following is the implementation.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">mnemonic ::</span> <span class="dt">Parser</span> <span class="dt">Mnemonic</span>
+mnemonic <span class="fu">=</span> lexeme <span class="fu">$</span> <span class="dt">Mnemonic</span> <span class="fu">.</span> T.pack <span class="fu">&lt;$&gt;</span> mnem
+ <span class="kw">where</span>
+  mnem <span class="fu">=</span> count <span class="dv">3</span> upperChar</code></pre></div>
+<p>So what does this actually do?</p>
+<ul>
+<li>We create a function called <code>mnem</code>, defined as <code>count 3 upperChar</code>, this parses three upper case characters,</li>
+<li><code>T.pack</code> is <code>pack</code> from <code>Data.Text</code>, it packs a <code>String</code> into a <code>Text</code> value.</li>
+<li><code>Mnemonic</code> is the constructor for our <code>newtype</code> which we defined in the last post - <code>newtype Mnemonic = Mnemonic T.Text deriving Show</code>.</li>
+<li><code>lexeme</code> we defined above, it eats trailing whitespace and comments.</li>
+<li>Finally <code>&lt;$&gt;</code> is the infix synonym for <code>fmap</code>, which lifts a single argument function into a <a href="https://hackage.haskell.org/package/base-4.9.1.0/docs/Data-Functor.html#t:Functor">Functor</a>.</li>
+</ul>
+<h2 id="putting-it-all-together">Putting it all together…</h2>
+<p>Putting it all together, what we get is a function which parses three upper case characters as a <code>String</code>, we then map <code>Mnemonic . T.pack</code> over the value that <code>mnem</code> parses which packs it into a <code>Text</code> value and builds a <code>Mnemonic</code> from that value, finally it consumes whitespace or comments after the three characters with <code>lexeme</code>.</p>
+<hr />
+<h1 id="label">label</h1>
+<h2 id="properties-2">Properties</h2>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="kw">newtype</span> <span class="dt">LabelWithLetter</span> <span class="fu">=</span> <span class="dt">LabelWithLetter</span> <span class="dt">T.Text</span> <span class="kw">deriving</span> <span class="dt">Show</span>
+<span class="kw">newtype</span> <span class="dt">LabelWithNonLetter</span> <span class="fu">=</span> <span class="dt">LabelWithNonLetter</span> <span class="dt">T.Text</span> <span class="kw">deriving</span> <span class="dt">Show</span>
+
+<span class="kw">instance</span> <span class="dt">Arbitrary</span> <span class="dt">LabelWithLetter</span> <span class="kw">where</span>
+  arbitrary <span class="fu">=</span> <span class="kw">do</span>
+    lbl <span class="ot">&lt;-</span> genAlphaNum
+    lowerLetter <span class="ot">&lt;-</span> choose (<span class="ch">'a'</span>, <span class="ch">'z'</span>)
+    upperLetter <span class="ot">&lt;-</span> choose (<span class="ch">'A'</span>, <span class="ch">'Z'</span>)
+    start <span class="ot">&lt;-</span> elements [lowerLetter, upperLetter]
+    pure <span class="fu">.</span> <span class="dt">LabelWithLetter</span> <span class="fu">$</span> T.pack (start<span class="fu">:</span>lbl)
+
+<span class="kw">instance</span> <span class="dt">Arbitrary</span> <span class="dt">LabelWithNonLetter</span> <span class="kw">where</span>
+  arbitrary <span class="fu">=</span> <span class="kw">do</span>
+    (<span class="dt">LabelWithLetter</span> lbl) <span class="ot">&lt;-</span> arbitrary
+    nonAlphaChar <span class="ot">&lt;-</span> suchThat (<span class="ot">arbitrary ::</span> <span class="dt">Gen</span> <span class="dt">Char</span>) (\s <span class="ot">-&gt;</span> not <span class="fu">$</span> isAlpha s)
+    pure <span class="fu">.</span> <span class="dt">LabelWithNonLetter</span> <span class="fu">$</span> T.append (T.pack [nonAlphaChar]) lbl
+
+prop_label_validLabelString (<span class="dt">LabelWithLetter</span> lbl) <span class="fu">=</span>
+  parse label <span class="st">&quot;&quot;</span> lbl <span class="ot">`shouldParse`</span> (<span class="dt">Label</span> lbl)
+
+prop_label_invalidLabelString (<span class="dt">LabelWithNonLetter</span> lbl) <span class="fu">=</span>
+  parse label <span class="st">&quot;&quot;</span> lbl <span class="ot">`shouldFailWith`</span>  err posI (utok (T.head lbl) <span class="fu">&lt;&gt;</span> elabel <span class="st">&quot;letter&quot;</span>)</code></pre></div>
+<p><code>label</code> is a little more involved than the last few parsers. In this case we want to verify that if does fail when trying to parse a string that does not start with a letter. So we need two <code>Arbitrary</code> instances - the first, <code>LabelWithLetter</code>, is for all letter strings which start with a letter and the second, <code>LabelWithNonLetter</code>, is for strings which start with a non letter character.</p>
+<p>We’ve seen <code>shouldParse</code>, it was used in the <code>bytes</code> parser, however we haven’t seen <a href="https://hackage.haskell.org/package/hspec-megaparsec-0.3.1/docs/Test-Hspec-Megaparsec.html#v:shouldFailWith">shouldFailWith</a> yet and there seems to be quite a bit to it! Let’s break it down.</p>
+<h3 id="shouldfailwith">shouldFailWith</h3>
+<p>Sometimes you want to verify that a parser fails on a given input. Not only that, but you want to verify that the error which is given on that failure contains the right message, position information, etc… <code>shouldFailWith</code> allows you to do this. Let’s have a look at its type.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">shouldFailWith ::</span> (<span class="dt">Ord</span> t, <span class="dt">ShowToken</span> t, <span class="dt">ShowErrorComponent</span> e, <span class="dt">Show</span> a)
+               <span class="ot">=&gt;</span> <span class="dt">Either</span> (<span class="dt">ParseError</span> t e) a
+               <span class="ot">-&gt;</span> <span class="dt">ParseError</span> t e
+               <span class="ot">-&gt;</span> <span class="dt">Expectation</span></code></pre></div>
+<p>So it takes:</p>
+<ul>
+<li>An <code>Either (ParseError t e) a</code>, which is the return type of <code>Text.Megaparsec</code>’s <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec.html#v:parse">parse</a> function.</li>
+<li>A <code>ParseError t e</code>, which we can build with <code>Test.Hspec.Megaparsec</code>’s <a href="https://hackage.haskell.org/package/hspec-megaparsec-0.3.1/docs/Test-Hspec-Megaparsec.html#v:err">err</a> function.</li>
+</ul>
+<p>The <code>parse</code> and <code>err</code> functions have the following types:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">err ::</span> <span class="dt">NonEmpty</span> <span class="dt">SourcePos</span> <span class="co">-- ^ 'ParseError' position</span>
+    <span class="ot">-&gt;</span> <span class="dt">EC</span> t e             <span class="co">-- ^ Error components</span>
+    <span class="ot">-&gt;</span> <span class="dt">ParseError</span> t e     <span class="co">-- ^ Resulting 'ParseError'</span>
+
+parse
+<span class="ot">  ::</span> <span class="dt">Parsec</span> e s a <span class="co">-- ^ Parser to run</span>
+  <span class="ot">-&gt;</span> <span class="dt">String</span>       <span class="co">-- ^ Name of source file</span>
+  <span class="ot">-&gt;</span> s            <span class="co">-- ^ Input for parser</span></code></pre></div>
+<p>Looking at our <code>prop_label_invalidLabelString</code> property:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">prop_label_invalidLabelString (<span class="dt">LabelWithNonLetter</span> lbl) <span class="fu">=</span>
+  parse label <span class="st">&quot;&quot;</span> lbl <span class="ot">`shouldFailWith`</span> err posI (utok (T.head lbl) <span class="fu">&lt;&gt;</span> elabel <span class="st">&quot;letter&quot;</span>)</code></pre></div>
+<p>We run the parser <code>label</code> on the string <code>lbl</code> which is generated from the <code>Arbitrary</code> instance of <code>LabelWithNonLetter</code>. We then assert that it fails with the following information in the error.</p>
+<ul>
+<li>The initial character of <code>lbl</code> is the cause, this is specified in the <code>err</code> call with <a href="https://hackage.haskell.org/package/hspec-megaparsec-0.3.1/docs/Test-Hspec-Megaparsec.html#v:posI">posI</a>.</li>
+<li>It was an unexpected token, <code>utok (T.head lbl)</code>.</li>
+<li>It was expected to be a letter, <code>elabel letter</code>.</li>
+<li>Finally we combine the unexpected token and expected token into one <a href="https://hackage.haskell.org/package/hspec-megaparsec-0.3.1/docs/Test-Hspec-Megaparsec.html#t:EC">EC</a> using <code>&lt;&gt;</code> (this is from <code>EC</code>’s <a href="https://hackage.haskell.org/package/base-4.9.0.0/docs/Data-Monoid.html#t:Monoid">Monoid</a> instance) - i.e. <code>utok (T.head lbl) &lt;&gt; elabel &quot;letter&quot;</code>.</li>
+</ul>
+<p>In English, we expect the <code>label</code> parser to fail on any string which does not start with a letter and the error information should say that it failed at the initial position because of an unexpected token (giving the actual unexpected character) and finally that it expected to see a letter here.</p>
+<h2 id="implementation-2">Implementation</h2>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">label ::</span> <span class="dt">Parser</span> <span class="dt">Label</span>
+label <span class="fu">=</span> lexeme <span class="fu">$</span> <span class="dt">Label</span> <span class="fu">.</span> T.pack <span class="fu">&lt;$&gt;</span> ((<span class="fu">:</span>) <span class="fu">&lt;$&gt;</span> letterChar <span class="fu">&lt;*&gt;</span>  many alphaNumChar)</code></pre></div>
+<p>Let’s forget about everything outside of the brackets for now, and only focus on the following.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">(<span class="fu">:</span>) <span class="fu">&lt;$&gt;</span> letterChar <span class="fu">&lt;*&gt;</span>  many alphaNumChar</code></pre></div>
+<p>To parse a label we first need to parse <em>some</em> string of any length which starts with a letter, according to our grammar.</p>
+<p><a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec.html#v:letterChar">letterChar</a> and <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec.html#v:alphaNumChar">alphaNumChar</a> are functions from megaparsec that parse a single letter and a single alpha-numeric character, respectively. <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec.html#v:many">many</a> parses zero or more occurences of the given parser, so <code>many alphaNumChar</code> parses zero or more alpha-numeric characters.</p>
+<p>We saw <code>&lt;$&gt;</code> (<code>fmap</code>) when building <code>mnemonic</code>, however we haven’t used <a href="https://hackage.haskell.org/package/base-4.9.1.0/docs/Control-Applicative.html#v:-60--42--62-">&lt;*&gt;</a> yet. <code>&lt;*&gt;</code> (“apply”) is from the <a href="https://hackage.haskell.org/package/base-4.9.1.0/docs/Control-Applicative.html#t:Applicative">Applicative</a> typeclass, it is just function application for <em>Applicative Functors</em>.</p>
+<h3 id="functorapplicative-quick-description">Functor/Applicative Quick Description</h3>
+<p>I’ll go into more depth on <a href="https://hackage.haskell.org/package/base-4.9.1.0/docs/Control-Applicative.html">Applicative</a> in a future post, for now just think of a <a href="https://hackage.haskell.org/package/base-4.9.1.0/docs/Data-Functor.html">Functor</a> as something you can map over (a list is a <em>Functor</em>) and an <em>Applicative Functor</em> as something that you can sequence functions through. Lists give a nice example comparing the two. Let’s say I have a list of <code>[1,2]</code> and want to add <code>1</code> to each element. List is a <code>Functor</code> so I can use <code>fmap</code>:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">&gt;</span> fmap (<span class="fu">+</span><span class="dv">1</span>) [<span class="dv">1</span>,<span class="dv">2</span>]
+[<span class="dv">2</span>,<span class="dv">3</span>]
+
+<span class="co">-- Or the inline version</span>
+<span class="fu">&gt;</span> (<span class="fu">+</span><span class="dv">1</span>) <span class="fu">&lt;$&gt;</span> [<span class="dv">1</span>,<span class="dv">2</span>]
+[<span class="dv">2</span>,<span class="dv">3</span>]</code></pre></div>
+<p>Now, lets say I have a list <code>x = [1,2]</code> and a function <em>inside</em> a list, <code>[(+1)]</code>, that I want to apply to each element of <code>x</code>. I can’t use <code>fmap</code> here as its type is <code>(a -&gt; b) -&gt; f a -&gt; f b</code> - meaning it lifts the function <code>(a -&gt; b)</code> into the <code>Functor</code> <code>f a</code> which gives an <code>f b</code>. What we want is a function, like <code>fmap</code>, but where the function to apply is <em>within</em> the <code>Functor</code> already - and this is precisely what <code>Applicative</code> gives us with the function <code>&lt;*&gt;</code>. The type of <code>&lt;*&gt;</code> is:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">(&lt;*&gt;) ::</span> f (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> f a <span class="ot">-&gt;</span> f b</code></pre></div>
+<p>Excellent! Turns out list also has an <code>Applicative</code> instance, so lets use it in our problem:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">&gt;</span> [(<span class="fu">+</span><span class="dv">1</span>)] <span class="fu">&lt;*&gt;</span> [<span class="dv">1</span>,<span class="dv">2</span>]
+[<span class="dv">2</span>,<span class="dv">3</span>]</code></pre></div>
+<p>Hopefully that gives some intuition as to what <em>Functors</em> and <em>Applicative Functors</em> are and how they can be used. It may not be clear yet as to <em>why</em> we use them in our parsers, but I’ll leave that discussion for another post, as it’s not really needed for the rest of this post, and there is quite a bit more to both that I have not mentioned.</p>
+<h2 id="breaking-it-down">Breaking it down</h2>
+<p>Now the interesting bit. <code>letterChar</code> will parse a single <code>Char</code>, and <code>many alphaNumChar</code> will parse a <code>String</code>, which is a <code>[Char]</code>, we need a way of combining the values produced from these parsers so we just get a <code>[Char]</code>.</p>
+<p>To do this we map <code>:</code> (the list constructor) over <code>letterChar</code> which has type <code>Parser Char</code>. What we end up creating is a function of type <code>Parser ([Char] -&gt; [Char])</code>. Let’s assume <code>letterChar</code> parses a ‘c’:</p>
+<div class="alert alert-info">
+<p>Note that I’m using <code>p</code> here as a constructor for values of type <code>Parser a</code> for the intermediate steps. This keeps things short and simple as the real value of <code>p</code> for each step doesn’t really matter in this case.</p>
+</div>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- In case you forgot, here is the type of (:)</span>
+<span class="fu">&gt;</span><span class="ot"> (:) ::</span> a <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [a]
+
+<span class="co">-- So, given</span>
+<span class="fu">&gt;</span> (<span class="fu">:</span>) <span class="fu">&lt;$&gt;</span> letterChar <span class="fu">&lt;*&gt;</span>  many alphaNumChar
+
+<span class="co">-- After mapping (:) over the value letterChar parsed ('c' in this case) we get</span>
+<span class="fu">&gt;</span> p ((<span class="fu">:</span>) <span class="ch">'c'</span>) <span class="fu">&lt;*&gt;</span> many alphaNumChar</code></pre></div>
+<p>Using <code>&lt;*&gt;</code> we then apply <code>p ((:) 'c')</code> over the value of <code>many alphaNumChar</code>, which itself has type <code>Parser [Char]</code>. Let’s assume <code>many alphaNumChar</code> parses “abc123”:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="co">-- From here</span>
+<span class="fu">&gt;</span> p ((<span class="fu">:</span>) <span class="ch">'c'</span>) <span class="fu">&lt;*&gt;</span> many alphaNumChar
+
+<span class="co">-- we get</span>
+<span class="fu">&gt;</span> p ((<span class="fu">:</span>) <span class="ch">'c'</span>) <span class="fu">&lt;*&gt;</span> p <span class="st">&quot;abc123&quot;</span>
+
+<span class="co">-- giving</span>
+<span class="fu">&gt;</span> p ((<span class="fu">:</span>) <span class="ch">'c'</span> <span class="st">&quot;abc123&quot;</span>)
+
+<span class="co">-- which gives</span>
+<span class="fu">&gt;</span> p <span class="st">&quot;cabc123&quot;</span></code></pre></div>
+<p>Now we have the value we want, our letter char combined with many alpha-numeric chars, with the type <code>Parser [Char]</code> (or <code>Parser String</code>).</p>
+<h2 id="packing-it-up">Packing It Up</h2>
+<p>Following the example above we now have:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">label <span class="fu">=</span> lexeme <span class="fu">$</span> <span class="dt">Label</span> <span class="fu">.</span> T.pack <span class="fu">&lt;$&gt;</span> (p <span class="st">&quot;cabc123&quot;</span>)</code></pre></div>
+<p>With our parsed string, we pack it into a <code>Text</code> value, wrap it up in a <code>Label</code> and parse (and discard) possible whitespace with <code>lexeme</code>. We’ve seen this above in other parsers, no need to repeat.</p>
+<p>Phew! There was quite a lot to implementing <code>label</code> but we’re done now, and can use this info later in other parsers.</p>
+<hr />
+<h1 id="labelassign">labelAssign</h1>
+<p>Now that <code>label</code> is complete, <code>labelAssign</code> is simple. We will build it from <code>label</code> so really when creating a property all we need to check is that it parses and discards a ‘:’.</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell">prop_labelAssign_shouldDiscardColon (<span class="dt">LabelWithLetter</span> lbl) <span class="fu">=</span>
+  parse labelAssign <span class="st">&quot;&quot;</span> (T.snoc lbl <span class="ch">':'</span>) <span class="ot">`shouldParse`</span> <span class="dt">Label</span> lbl</code></pre></div>
+<p>The implementation:</p>
+<div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">labelAssign ::</span> <span class="dt">Parser</span> <span class="dt">Label</span>
+labelAssign <span class="fu">=</span> lexeme <span class="fu">$</span> label <span class="fu">&lt;*</span> char <span class="ch">':'</span></code></pre></div>
+<p><code>&lt;*</code> is similar to <code>&lt;*&gt;</code>, the difference is <code>&lt;*</code> discards the value of the second argument. In our case <code>label &lt;* char ':'</code> says parse a label, then parse a ‘:’ but discard it, so it’s not part of the <code>Label</code> which <code>labelAssign</code> builds.</p>
+<hr />
+<h1 id="conclusion">Conclusion</h1>
+<p>Now we have ~80% of our parser completed, properties for each of the parsers, and some understanding (I hope) of one way to test <em>megaparsec</em> parsers. In the next post I’ll dive deeper into <em>megaparsec</em> and implement the remaining parsers. You can view the code up to this point at <a href="https://github.com/wayofthepie/emu-mos6502-asm-blog/tree/hasm-blog02" class="uri">https://github.com/wayofthepie/emu-mos6502-asm-blog/tree/hasm-blog02</a>.</p>
+
+<div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = '//wayofthepie.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<script id="dsq-count-scr" src="//wayofthepie.disqus.com/count.js" async></script>
+
+        <!-- FIXME : These are here so the footer doesn't cover the last part of the body. Fix! -->
+        <br />
+        <br />
+        <br />
+    </div>
+
+    <div class="navbar navbar-default navbar-fixed-bottom">
+        <div class="container">
+            <p class="navbar-text pull-left">&copy; 2016 - Stephen O'Brien.</p>
+            <div class="pull-right">
+                <a class="btn navbar-btn btn-social-icon btn-github" href="https://github.com/wayofthepie">
+                    <span class="fa fa-github"></span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+     <script src="../js/highlight.pack.js" type="text/javascript"></script>
+     <script>hljs.initHighlightingOnLoad();</script>
+</script>
+</div>
+
+</body>
+</html>

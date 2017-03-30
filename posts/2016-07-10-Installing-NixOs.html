@@ -59,6 +59,28 @@
     Tags: <a href="../tags/nix.html">nix</a>, <a href="../tags/nixos.html">nixos</a>, <a href="../tags/systems.html">systems</a>
   
 </div>
+<h3>Table of contents</h3><ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#partition">Partition</a><ul>
+<li><a href="#creating-partitions-with-gdisk">Creating Partitions With gdisk</a></li>
+<li><a href="#notes-on-the-partitions">Notes On The Partitions</a><ul>
+<li><a href="#grub-compatibility-devsda1">Grub Compatibility: /dev/sda1</a></li>
+<li><a href="#efi-partition-devsda2">EFI Partition: /dev/sda2</a></li>
+<li><a href="#main-data-partition-devsda3">Main Data Partition: /dev/sda3</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#linux-unified-key-setup-luks">Linux Unified Key Setup (LUKS)</a><ul>
+<li><a href="#encrypting-devsda3">Encrypting /dev/sda3</a></li>
+</ul></li>
+<li><a href="#lvm-setup">LVM Setup</a><ul>
+<li><a href="#physical-volume">Physical Volume</a></li>
+<li><a href="#volume-group">Volume Group</a></li>
+<li><a href="#logical-volume">Logical Volume</a></li>
+</ul></li>
+<li><a href="#final-disk-setup">Final Disk Setup</a></li>
+<li><a href="#install-nixos">Install NixOS</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
 <h1 id="introduction">Introduction</h1>
 <p>I’ve recently started diving into <em><a href="https://nixos.org/nix/">Nix</a></em> and <em><a href="https://nixos.org/">NixOS</a></em>. <strong>Nix</strong> is a package manager for Linux/Unix systems, a quick description from its own site:</p>
 <blockquote>
