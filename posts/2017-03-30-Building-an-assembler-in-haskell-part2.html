@@ -99,7 +99,7 @@
 <p>Note that <code>Text.Megaparsec</code> contains a type <code>Label</code> and a function <code>label</code>, we use both these as names for our own type and function for label parsing, so we hide them when importing.</p>
 <hr />
 <h1 id="lexemes-and-space">Lexemes And Space</h1>
-<p>The <em>lexemes</em> of a language are the smallest syntactic unit. <em>Tokens</em> are categories of <em>lexemes</em>. In our case, the <em>“STORE”</em> string is an example of a lexeme in the category of <em>label</em> tokens. Let’s also assume we can safely eat any whitespace proceeding lexemes. With this in mind, and before we continue implementing the parsers for our language, let’s create convenience functions for parsing trailing space after our lexemes.</p>
+<p>The <em>lexemes</em> of a language are the smallest syntactic unit. <em>Tokens</em> are categories of <em>lexemes</em>. In our case, the <em>“STORE”</em> string is an example of a lexeme in the category of <em>label</em> tokens. Let’s assume we can safely eat any whitespace proceeding lexemes. With this in mind, and before we continue implementing the parsers for our language, let’s create convenience functions for parsing trailing space after our lexemes.</p>
 <div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="ot">spaceEater ::</span> <span class="dt">Parser</span> ()
 spaceEater <span class="fu">=</span> L.space
   (void spaceChar)
