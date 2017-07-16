@@ -271,7 +271,7 @@ backend.tf  init.tf  terraform.tfvars  variables.tf</code></pre>
 <span class="ex">...</span></code></pre></div>
 <h2 id="list-the-nodes">List The Nodes</h2>
 <p>Did it actually work? Let’s test. To retrieve the credentials and load the context for our cluster into kubectl:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="ex">gcloud</span> container clusters get-credentials test-cluster --zone <span class="va">${our_zone}</span> --project my-project
+<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="ex">gcloud</span> container clusters get-credentials test-cluster --zone europe-west1-b --project my-project
 <span class="ex">Fetching</span> cluster endpoint and auth data.
 <span class="ex">kubeconfig</span> entry generated for test-cluster.</code></pre></div>
 <p>Switch to this context in kubectl:</p>
