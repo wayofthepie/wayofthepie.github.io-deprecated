@@ -86,7 +86,7 @@
 <p>This tells terraform it should store and lookup state in GCS in the project <code>my-project</code>, a bucket within that project, <code>my-bucket</code>, and the path <code>my-folder/cluster-infra/terraform.tfstate</code> within that bucket. You need to make sure this project, bucket and path exist. Just a few more lines, and we can build our cluster!</p>
 <h2 id="cluster-definition">Cluster Definition</h2>
 <p>The definition for the <a href="https://cloud.google.com/container-engine/">Container Cluster</a> itself is quite short. Let’s create another file called <code>init.tf</code>.</p>
-<pre><code>provider &quot;google&quot; {
+<pre class="hcl"><code>provider &quot;google&quot; {
   region  = &quot;${var.region}&quot;
   project = &quot;${var.project}&quot;
 }
@@ -270,7 +270,7 @@ backend.tf  init.tf  terraform.tfvars  variables.tf</code></pre>
 <span class="ex">State</span> path:
 <span class="ex">...</span></code></pre></div>
 <h2 id="list-the-nodes">List The Nodes</h2>
-<p>Did it actually work? Let’s test. To retrieve the credentials and load the context for our cluster into kubectl:</p>
+<p>Did it actually work? Before we can test, we need to get some credentials. To retrieve the credentials for the cluster:</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="ex">gcloud</span> container clusters get-credentials test-cluster --zone europe-west1-b --project my-project
 <span class="ex">Fetching</span> cluster endpoint and auth data.
 <span class="ex">kubeconfig</span> entry generated for test-cluster.</code></pre></div>
