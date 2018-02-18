@@ -261,7 +261,7 @@ label <span class="fu">=</span> lexeme <span class="fu">$</span> <span class="dt
 <p><a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec.html#v:letterChar">letterChar</a> and <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec.html#v:alphaNumChar">alphaNumChar</a> are functions from megaparsec that parse a single letter and a single alpha-numeric character, respectively. <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec.html#v:many">many</a> parses zero or more occurences of the given parser, so <code>many alphaNumChar</code> parses zero or more alpha-numeric characters.</p>
 <p>We saw <code>&lt;$&gt;</code> (<code>fmap</code>) when building <code>mnemonic</code>, however we haven’t used <a href="https://hackage.haskell.org/package/base-4.9.1.0/docs/Control-Applicative.html#v:-60--42--62-">&lt;*&gt;</a> yet. <code>&lt;*&gt;</code> (“apply”) is from the <a href="https://hackage.haskell.org/package/base-4.9.1.0/docs/Control-Applicative.html#t:Applicative">Applicative</a> typeclass, it is just function application for <em>Applicative Functors</em>.</p>
 <h3 id="functorapplicative-quick-description">Functor/Applicative Quick Description</h3>
-<p>I’ll go into more depth on <a href="https://hackage.haskell.org/package/base-4.9.1.0/docs/Control-Applicative.html">Applicative</a> in a future post, for now just think of a <a href="https://hackage.haskell.org/package/base-4.9.1.0/docs/Data-Functor.html">Functor</a> as something you can map over (a list is a <em>Functor</em>) and an <em>Applicative Functor</em> as something that you can sequence functions through. Lists give a nice example comparing the two. Let’s say I have a list of <code>[1,2]</code> and want to add <code>1</code> to each element. List is a <code>Functor</code> so I can use <code>fmap</code>:</p>
+<p>A <a href="https://hackage.haskell.org/package/base-4.9.1.0/docs/Data-Functor.html">Functor</a> is something you can map over (a list is a <em>Functor</em>) and an <a href="https://hackage.haskell.org/package/base-4.9.1.0/docs/Control-Applicative.html">Applicative</a> (or <em>Appplicative Functor</em>) is something that you can sequence functions through. For a more in depth description see <a href="http://learnyouahaskell.com/functors-applicative-functors-and-monoids">Learn You A Haskell: Functors, Applicative Functors and Monoids</a>. Lists give a nice example comparing the two. Let’s say I have a list of <code>[1,2]</code> and want to add <code>1</code> to each element. List is a <code>Functor</code> so I can use <code>fmap</code>:</p>
 <div class="sourceCode"><pre class="sourceCode haskell"><code class="sourceCode haskell"><span class="fu">&gt;</span> fmap (<span class="fu">+</span><span class="dv">1</span>) [<span class="dv">1</span>,<span class="dv">2</span>]
 [<span class="dv">2</span>,<span class="dv">3</span>]
 
@@ -347,9 +347,9 @@ s.setAttribute('data-timestamp', +new Date());
         <br />
     </div>
 
-    <div class="navbar navbar-default navbar-fixed-bottom">
-        <div class="container">
-            <p class="navbar-text pull-left">&copy; 2016 - Stephen O'Brien.</p>
+    <div class="navbar navbar-default">
+        <div class="container-fluid">
+            <p class="navbar-text pull-left">&copy; 2018 - Stephen O'Brien.</p>
             <div class="pull-right">
                 <a class="btn navbar-btn btn-social-icon btn-github" href="https://github.com/wayofthepie">
                     <span class="fa fa-github"></span>
