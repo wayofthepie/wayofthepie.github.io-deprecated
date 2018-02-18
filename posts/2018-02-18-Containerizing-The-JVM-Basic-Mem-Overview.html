@@ -348,7 +348,8 @@ $ <span class="fu">cat</span> /sys/fs/cgroup/memory/docker/<span class="va">${CO
 <span class="ex">524288000</span>
 
 <span class="co"># Again, this time without limits to see the difference</span>
-$ <span class="ex">docker</span> run -d --rm --memory 500M --memory-swappiness 0 --name memeater jvm-test bash^C
+$ <span class="ex">docker</span> run -d --rm --name memeater jvm-test bash
+$ <span class="va">CONTAINER_ID=</span><span class="kw">`</span><span class="ex">docker</span> ps --no-trunc <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{if (NR!=1) print $1}'</span><span class="kw">`</span>
 $ <span class="bu">echo</span> <span class="va">$CONTAINER_ID</span>
 <span class="ex">52dfe3b591f851af2e2f74e033cdeddf04eb08537f3cede957be5c45ea229df1</span>
 $ <span class="fu">cat</span> /sys/fs/cgroup/memory/docker/<span class="va">${CONTAINER_ID}</span>/memory.swappiness 
