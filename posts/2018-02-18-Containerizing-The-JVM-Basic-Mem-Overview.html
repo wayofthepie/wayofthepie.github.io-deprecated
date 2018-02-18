@@ -216,7 +216,7 @@ $ <span class="ex">java</span> InstanceName
 <p>That’s a quick overview of one way to look at what’s loaded on the heap. I mentioned other memory regions in the JVM earlier, what are these?</p>
 <h1 id="heap-and-non-heap-memory">Heap and Non-Heap memory</h1>
 <p>The JVM can be divided into many different memory segments (segments/regions/areas, I’ll use these words interchangeably, but generally they mean the same thing), if we take a high level view first we have two segments - memory used for objects on the heap and non-heap memory.</p>
-<p>If we zoom in, the heap has different areas within which we can talk about, depending on what we want to discuss - there is the Eden space, where most new objects are initially created, the Survivor space, where objects go if they survive an Eden space garbage collection (GC) and the Old Generation which contains objects that have lived in Survivor Space for a while. It contains objects that have been initialized - e.g. <code>List&lt;String&gt; s = new ArrayList&lt;String&gt;();</code> will create an <code>ArrayList</code> object on the heap, and <code>s</code> will point to this.</p>
+<p>If we zoom in, the heap has different areas within which we can talk about, depending on what we want to discuss - there is the Eden space, where most new objects are initially created, the Survivor space, where objects go if they survive an Eden space garbage collection (GC) and the Old Generation which contains objects that have lived in Survivor space for a while. Specifically, it contains objects that have been initialized - e.g. <code>List&lt;String&gt; s = new ArrayList&lt;String&gt;();</code> will create an <code>ArrayList</code> object on the heap, and <code>s</code> will point to this.</p>
 <p>In the previous section I ran through what objects are loaded into the heap for our HelloWorld program, so what about non-heap memory?</p>
 <h2 id="non-heap-memory">Non-Heap Memory</h2>
 <p>If you have ever written a non-trivial java application with jdk8 you have probably heard of <em>Metaspace</em>. This is an example of non-heap memory. It’s where the JVM will store class definitions, static variables, methods, classloaders and other metadata. But there are many other non-heap memory regions the JVM will use. Let’s list them!</p>
@@ -451,7 +451,7 @@ this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your pag
 */
 (function() { // DON'T EDIT BELOW THIS LINE
 var d = document, s = d.createElement('script');
-s.src = '//wayofthepie.disqus.com/embed.js';
+s.src = 'https://wayofthepie.disqus.com/embed.js';
 s.setAttribute('data-timestamp', +new Date());
 (d.head || d.body).appendChild(s);
 })();
