@@ -230,16 +230,13 @@ $ <span class="ex">java</span> InstanceName
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="ex">docker</span> build --tag jvm-test . 
 $ <span class="ex">docker</span> run -ti --rm --name hello-jvm jvm-test
 <span class="ex">Hello</span> world!</code></pre></div>
-<p>In another terminal, exec into the container and get a baseline with <code>jcmd</code>’s <code>VM.native_memory</code> command:</p>
+<p>In another terminal, exec into the container and get a summary of overall memory usage with <code>jcmd</code>’s <code>VM.native_memory</code> command:</p>
 <div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="ex">docker</span> exec --privileged -ti hello-jvm bash
 <span class="ex">root@aa5ae77e1305</span>:/ $ jcmd 
 <span class="ex">33</span> sun.tools.jcmd.JCmd
 <span class="ex">7</span> HelloWorld
-<span class="ex">root@aa5ae77e1305</span>:/ $ jcmd 7 VM.native_memory baseline
-<span class="ex">7</span>:
-<span class="ex">Baseline</span> succeeded</code></pre></div>
-<p>Finally, to get a summary of used memory:</p>
-<div class="sourceCode"><pre class="sourceCode bash"><code class="sourceCode bash"><span class="ex">root@aa5ae77e1305</span>:/# jcmd 7 VM.native_memory summary
+
+<span class="ex">root@aa5ae77e1305</span>:/ $ jcmd 7 VM.native_memory summary
 <span class="ex">7</span>:
 
 <span class="ex">Native</span> Memory Tracking:
