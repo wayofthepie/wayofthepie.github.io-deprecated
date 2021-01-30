@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+
+    <title></title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css" media="print">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    
+
+    
+    
+</head>
+
+<body class="">
+    
+    <div class="sidebar">
+        <div class="container sidebar-sticky">
+            <ul class="sidebar-nav">
+                <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+            </ul>
+            <ul class="sidebar-nav-social">
+                <a href="https://github.com/wayofthepie" class="fa fa-github sidebar-nav-social-item"></a>
+                <a href="https://twitter.com/wayofthepie" class="fa fa-twitter sidebar-nav-social-item"></a>
+            </ul>
+        </div>
+    </div>
+    
+
+    <div class="content container">
+        
+<div class="post">
+  <h1 class="post-title">Some JS and Haskell stuff</h1>
+  <span class="post-date">2017-01-22</span>
+  <h1 id="vulgr-ui-react">Vulgr UI - React</h1>
+<p>Vulgr is a project I've been working on, on and off, for a while. The goal is to build a
+dependency analysis platform - analyze your <code>gradle</code>/<code>node</code>/<code>whatever</code> dependencies to see
+whether they contain known vulnerabilities or bugs, reading from whatever data sources (CVE
+database, github issues, etc...) that make sense.</p>
+<p>This week, I did some work on how this information could be displayed to users on a web
+interface, e.g.:</p>
+<img src="/images/vulgr-ui-jan3-weekly.png" class="img-responsive" />
+<p>This is built with <a href="https://facebook.github.io/react/">react</a> and <a href="http://www.material-ui.com/#/">material-ui</a>.
+The code for the card is located at
+<a href="https://github.com/wayofthepie/vulgr-ui-experimental/blob/material/src/components/analysis/summary/AnalysisSummaryCard.js">AnalysisSummaryCard.js</a>.
+Following is the code for the status icon's in the card, nice, flexible re-usable component!</p>
+<pre style="background-color:#2b303b;">
+<code class="language-{.javascript}" data-lang="{.javascript}"><span style="color:#c0c5ce;">&#39;use strict&#39;;
+
+import React, {PropTypes} from &#39;react&#39;;
+import ReactTooltip from &#39;react-tooltip&#39;;
+
+let statusIcon = (iconType, attributes, style) =&gt; {
+  return (
+    &lt;i className=&#39;material-icons md-36&#39; {...attributes}
+       style={style}&gt;
+      {iconType}
+    &lt;/i&gt;
+  );
+};
+
+let tooltippableStatusIcon = (iconType, tooltipInfo, style) =&gt; {
+  let tooltip = function () {
+    if (tooltipInfo) {
+      return (
+        &lt;ReactTooltip place=&#39;top&#39;
+                      id={tooltipInfo.id}
+                      type={tooltipInfo.type}
+                      effect=&#39;solid&#39;&gt;
+          &lt;span &gt;&lt;strong&gt;{tooltipInfo.message}&lt;/strong&gt;&lt;/span&gt;
+        &lt;/ReactTooltip&gt;
+      );
+    } else {
+      return null;
+    }
+  };
+
+  let tooltippedAttributes = () =&gt; {
+    return tooltipInfo ? {&#39;data-tip&#39;: &#39;&#39;, &#39;data-for&#39;: tooltipInfo.id} : [];
+  };
+
+  return (
+    &lt;div&gt;
+      { tooltip() }
+      { statusIcon(iconType, tooltippedAttributes(), style) }
+    &lt;/div&gt;
+  );
+};
+
+export const StatusIcon = ({iconType, tooltipInfo, style}) =&gt; {
+  return tooltippableStatusIcon(iconType, tooltipInfo, style);
+};
+
+StatusIcon.propTypes = {
+  iconType: PropTypes.string.isRequired,
+  tooltipInfo: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    type: PropTypes.string.isRequired,
+    message: PropTypes.string.isRequired
+  }),
+  style: PropTypes.object
+};
+
+export default StatusIcon;
+</span></code></pre>
+<p>Here is an example of its use to render the error icon, first a function to wrap up the JSX:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-javascript" data-lang="javascript"><span style="color:#b48ead;">let </span><span style="color:#8fa1b3;">createStatusIcon </span><span style="color:#c0c5ce;">= (</span><span style="color:#bf616a;">iconType</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">tooltipInfo</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">style</span><span style="color:#c0c5ce;">) </span><span style="color:#b48ead;">=&gt; </span><span style="color:#c0c5ce;">{
+  </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">(
+    &lt;StatusIcon
+      iconType={</span><span style="color:#bf616a;">iconType</span><span style="color:#c0c5ce;">}
+      tooltipInfo={</span><span style="color:#bf616a;">tooltipInfo</span><span style="color:#c0c5ce;">}
+      style={</span><span style="color:#bf616a;">style</span><span style="color:#c0c5ce;">} /&gt;
+  );
+};
+</span></code></pre>
+<p>Concrete usage:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-javascript" data-lang="javascript"><span style="color:#b48ead;">let </span><span style="color:#8fa1b3;">errorIcon </span><span style="color:#c0c5ce;">= () </span><span style="color:#b48ead;">=&gt; </span><span style="color:#c0c5ce;">{
+  </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">icon </span><span style="color:#c0c5ce;">= &#39;</span><span style="color:#a3be8c;">error</span><span style="color:#c0c5ce;">&#39;;
+  </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">marginLeft </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">10</span><span style="color:#c0c5ce;">;
+  </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">tooltipInfo </span><span style="color:#c0c5ce;">= </span><span style="color:#8fa1b3;">buildTooltipInfo</span><span style="color:#c0c5ce;">(&#39;</span><span style="color:#a3be8c;">analysis-card-error-tooltip</span><span style="color:#c0c5ce;">&#39;, &#39;</span><span style="color:#a3be8c;">error</span><span style="color:#c0c5ce;">&#39;, &#39;</span><span style="color:#a3be8c;">Error!</span><span style="color:#c0c5ce;">&#39;, {</span><span style="color:#bf616a;">marginLeft</span><span style="color:#c0c5ce;">});
+  </span><span style="color:#b48ead;">let </span><span style="color:#bf616a;">style </span><span style="color:#c0c5ce;">= {color: &#39;</span><span style="color:#a3be8c;">red</span><span style="color:#c0c5ce;">&#39;, float: &#39;</span><span style="color:#a3be8c;">left</span><span style="color:#c0c5ce;">&#39;, </span><span style="color:#bf616a;">marginLeft</span><span style="color:#c0c5ce;">};
+  </span><span style="color:#b48ead;">return </span><span style="color:#8fa1b3;">createStatusIcon</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">icon</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">tooltipInfo</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">style</span><span style="color:#c0c5ce;">);
+};
+</span></code></pre>
+<p>Pretty flexible! The color and style can easily be changed so the icon can fit in without
+much hassle in components with complex styles, or can be greyed out, etc...</p>
+<p>I use Angular and bootstrap at work, so far <em>react</em> and <em>material</em> have been a dream in
+comparison.</p>
+<h1 id="haskell-criu-rpc-client">Haskell Criu RPC Client</h1>
+<p>I've been toying about with <a href="https://criu.org/">criu</a> for the last few weeks. I decided to
+write some bindings to it in haskell.</p>
+<p>Criu's RPC API <sup class="footnote-reference"><a href="#1">1</a></sup> uses <a href="https://github.com/google/protobuf">protobuf</a>. I used the
+<a href="https://github.com/google/proto-lens">proto-lens</a> library to generate lenses and data
+types. This gives a pretty nice foundation to build upon - the project for generation is on
+github, <a href="https://github.com/wayofthepie/haskell-criu-rpc-types">haskell-criu-rpc-types</a>
+<sup class="footnote-reference"><a href="#2">2</a></sup>.</p>
+<p>With that foundation, I threw together a quick client:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-haskell" data-lang="haskell"><span style="color:#c0c5ce;">{-# </span><span style="color:#b48ead;">LANGUAGE</span><span style="color:#c0c5ce;"> OverloadedStrings #-}
+{-# </span><span style="color:#b48ead;">LANGUAGE</span><span style="color:#c0c5ce;"> ScopedTypeVariables #-}
+</span><span style="color:#b48ead;">module </span><span style="color:#c0c5ce;">Criu (
+  </span><span style="color:#8fa1b3;">module </span><span style="color:#b48ead;">Proto</span><span style="color:#c0c5ce;">.</span><span style="color:#b48ead;">Criu</span><span style="color:#c0c5ce;">.</span><span style="color:#b48ead;">Rpc
+  </span><span style="color:#c0c5ce;">, </span><span style="color:#8fa1b3;">module </span><span style="color:#b48ead;">Lens</span><span style="color:#c0c5ce;">.</span><span style="color:#b48ead;">Family2
+  </span><span style="color:#c0c5ce;">, </span><span style="color:#8fa1b3;">callCriu
+  </span><span style="color:#c0c5ce;">, </span><span style="color:#8fa1b3;">callCriu&#39;
+</span><span style="color:#c0c5ce;">  ) </span><span style="color:#b48ead;">where
+
+import </span><span style="color:#c0c5ce;">Control.Exception.Base (</span><span style="color:#b48ead;">IOException</span><span style="color:#c0c5ce;">, </span><span style="color:#8fa1b3;">bracket</span><span style="color:#c0c5ce;">, </span><span style="color:#8fa1b3;">try</span><span style="color:#c0c5ce;">)
+</span><span style="color:#b48ead;">import </span><span style="color:#c0c5ce;">Lens.Family2 ((.~))
+</span><span style="color:#b48ead;">import </span><span style="color:#c0c5ce;">Data.ProtoLens (</span><span style="color:#8fa1b3;">decodeMessage</span><span style="color:#c0c5ce;">, </span><span style="color:#8fa1b3;">encodeMessage</span><span style="color:#c0c5ce;">)
+</span><span style="color:#b48ead;">import </span><span style="color:#c0c5ce;">Proto.Criu.Rpc
+</span><span style="color:#b48ead;">import </span><span style="color:#c0c5ce;">Network.Socket (</span><span style="color:#b48ead;">Family</span><span style="color:#c0c5ce;">(AF_UNIX), </span><span style="color:#b48ead;">SocketType</span><span style="color:#c0c5ce;">(SeqPacket), </span><span style="color:#b48ead;">SockAddr</span><span style="color:#c0c5ce;">(SockAddrUnix), </span><span style="color:#8fa1b3;">close</span><span style="color:#c0c5ce;">, </span><span style="color:#8fa1b3;">connect</span><span style="color:#c0c5ce;">, </span><span style="color:#8fa1b3;">socket</span><span style="color:#c0c5ce;">)
+</span><span style="color:#b48ead;">import </span><span style="color:#c0c5ce;">Network.Socket.ByteString (</span><span style="color:#8fa1b3;">recv</span><span style="color:#c0c5ce;">, </span><span style="color:#8fa1b3;">send</span><span style="color:#c0c5ce;">)
+
+</span><span style="color:#65737e;">-- | Send request to criu socket. Can throw exceptions.
+</span><span style="color:#8fa1b3;">callCriu </span><span style="color:#b48ead;">:: FilePath -&gt; Criu_req -&gt; IO</span><span style="color:#c0c5ce;"> (</span><span style="color:#b48ead;">Either String Criu_resp</span><span style="color:#c0c5ce;">)
+callCriu fp req = </span><span style="color:#b48ead;">do
+</span><span style="color:#c0c5ce;">  resp &lt;- withSocket $ \sock -&gt; </span><span style="color:#b48ead;">do
+</span><span style="color:#c0c5ce;">    connect sock (</span><span style="color:#d08770;">SockAddrUnix</span><span style="color:#c0c5ce;"> fp)
+    send sock (encodeMessage req)
+    recv sock </span><span style="color:#d08770;">1024
+</span><span style="color:#c0c5ce;">  pure (decodeMessage resp :: </span><span style="color:#d08770;">Either String Criu_resp</span><span style="color:#c0c5ce;">)
+ </span><span style="color:#b48ead;">where
+</span><span style="color:#c0c5ce;">  withSocket f = bracket
+    (socket </span><span style="color:#d08770;">AF_UNIX SeqPacket 0</span><span style="color:#c0c5ce;">)
+    (close)
+    (\sock -&gt; f sock)
+
+</span><span style="color:#65737e;">-- | Send a request to criu, but wrap up IOExceptions in Either.
+</span><span style="color:#8fa1b3;">callCriu&#39; </span><span style="color:#b48ead;">:: FilePath -&gt; Criu_req -&gt; IO</span><span style="color:#c0c5ce;"> (</span><span style="color:#b48ead;">Either String Criu_resp</span><span style="color:#c0c5ce;">)
+callCriu&#39; fp req = </span><span style="color:#b48ead;">do
+</span><span style="color:#c0c5ce;">  eitherResp &lt;- try (callCriu fp req)
+  </span><span style="color:#b48ead;">case</span><span style="color:#c0c5ce;"> eitherResp </span><span style="color:#b48ead;">of
+    </span><span style="color:#d08770;">Right</span><span style="color:#c0c5ce;"> resp -&gt; pure resp
+    </span><span style="color:#d08770;">Left</span><span style="color:#c0c5ce;"> (e :: </span><span style="color:#d08770;">IOException</span><span style="color:#c0c5ce;">) -&gt; pure . </span><span style="color:#d08770;">Left </span><span style="color:#c0c5ce;">. show $ e
+</span></code></pre>
+<p>Both <code>callCriu</code> and <code>callCriu'</code> expect the path to the <code>criu</code> socket and a <code>Criu_req</code> type.</p>
+<p>To build the actual <code>Criu_req</code> expected by the calls is is pretty straightforward. In
+<code>ghci</code>:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-haskell" data-lang="haskell"><span style="color:#c0c5ce;">&gt; build (</span><span style="color:#b48ead;">type</span><span style="color:#c0c5ce;">&#39; .~ </span><span style="color:#d08770;">CHECK</span><span style="color:#c0c5ce;">) :: </span><span style="color:#d08770;">Criu_req
+Criu_req</span><span style="color:#c0c5ce;"> {
+  _Criu_req&#39;</span><span style="color:#b48ead;">type</span><span style="color:#c0c5ce;">&#39; = </span><span style="color:#d08770;">CHECK
+  </span><span style="color:#c0c5ce;">, _Criu_req&#39;opts = </span><span style="color:#d08770;">Nothing
+  </span><span style="color:#c0c5ce;">, _Criu_req&#39;notifySuccess = </span><span style="color:#d08770;">Nothing
+  </span><span style="color:#c0c5ce;">, _Criu_req&#39;keepOpen = </span><span style="color:#d08770;">Nothing
+  </span><span style="color:#c0c5ce;">, _Criu_req&#39;features = </span><span style="color:#d08770;">Nothing
+</span><span style="color:#c0c5ce;">  }
+</span></code></pre>
+<p><code>build (type' .~ CHECK) :: Criu_req</code> builds a request for a <code>criu</code> check. So, an actual call
+looks as follows:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-haskell" data-lang="haskell"><span style="color:#c0c5ce;">&gt; callCriu&#39; &quot;</span><span style="color:#a3be8c;">criu_service.socket</span><span style="color:#c0c5ce;">&quot; (build (</span><span style="color:#b48ead;">type</span><span style="color:#c0c5ce;">&#39; .~ </span><span style="color:#d08770;">CHECK</span><span style="color:#c0c5ce;">) :: </span><span style="color:#d08770;">Criu_req</span><span style="color:#c0c5ce;">)
+</span><span style="color:#d08770;">Right</span><span style="color:#c0c5ce;"> (
+  </span><span style="color:#d08770;">Criu_resp</span><span style="color:#c0c5ce;"> {
+    _Criu_resp&#39;</span><span style="color:#b48ead;">type</span><span style="color:#c0c5ce;">&#39; = </span><span style="color:#d08770;">CHECK
+    </span><span style="color:#c0c5ce;">, _Criu_resp&#39;success = </span><span style="color:#d08770;">True
+    </span><span style="color:#c0c5ce;">, _Criu_resp&#39;dump = </span><span style="color:#d08770;">Nothing
+    </span><span style="color:#c0c5ce;">, _Criu_resp&#39;restore = </span><span style="color:#d08770;">Nothing
+    </span><span style="color:#c0c5ce;">, _Criu_resp&#39;notify = </span><span style="color:#d08770;">Nothing
+    </span><span style="color:#c0c5ce;">, _Criu_resp&#39;ps = </span><span style="color:#d08770;">Nothing
+    </span><span style="color:#c0c5ce;">, _Criu_resp&#39;crErrno = </span><span style="color:#d08770;">Nothing
+    </span><span style="color:#c0c5ce;">, _Criu_resp&#39;features = </span><span style="color:#d08770;">Nothing
+    </span><span style="color:#c0c5ce;">, _Criu_resp&#39;crErrmsg = </span><span style="color:#d08770;">Nothing
+</span><span style="color:#c0c5ce;">    }
+  )
+</span></code></pre>
+<p>From the service logs:</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">$ criu service
+Warn  (cr-service.c:1023): Binding to local dir address!
+Warn  (cr-check.c:827): Skipping cgroup namespaces check
+Looks good.
+</span></code></pre>
+<p>Success! Lots to improve, but a good start. I'll do a more in-depth post on this once it
+matures.</p>
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>See <a href="https://criu.org/RPC">https://criu.org/RPC</a> for more information.
+<sup class="footnote-reference"><a href="#2">2</a></sup>: It's also on hackage, <a href="https://hackage.haskell.org/package/criu-rpc-types-0.0.0.1">https://hackage.haskell.org/package/criu-rpc-types-0.0.0.1</a>,
+however I'm not sure what the standard is for libraries that generate their code.</p>
+</div>
+
+</div>
+
+    </div>
+
+</body>
+
+</html>

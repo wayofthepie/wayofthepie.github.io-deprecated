@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>https://wayofthepie.github.io/</loc>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/about/</loc>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/building-an-assembler-in-haskell-part2/</loc>
+        <lastmod>2017-03-30</lastmod>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/building-an-assembler-in-haskell/</loc>
+        <lastmod>2017-03-03</lastmod>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/</loc>
+        <lastmod>2018-02-18</lastmod>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/installing-nixos/</loc>
+        <lastmod>2016-07-10</lastmod>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/js-and-haskell-stuff/</loc>
+        <lastmod>2017-01-22</lastmod>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/terraform-gcp/</loc>
+        <lastmod>2017-07-15</lastmod>
+    </url>
+</urlset>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+
+    <title></title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css" media="print">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    
+
+    
+    
+</head>
+
+<body class="">
+    
+    <div class="sidebar">
+        <div class="container sidebar-sticky">
+            <ul class="sidebar-nav">
+                <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+            </ul>
+            <ul class="sidebar-nav-social">
+                <a href="https://github.com/wayofthepie" class="fa fa-github sidebar-nav-social-item"></a>
+                <a href="https://twitter.com/wayofthepie" class="fa fa-twitter sidebar-nav-social-item"></a>
+            </ul>
+        </div>
+    </div>
+    
+
+    <div class="content container">
+        
+<div class="post">
+  <h1 class="post-title">Building An Assembler In Haskell</h1>
+  <span class="post-date">2017-03-03</span>
+  <p>Recently I started building an emulator for the MosTech 6502 Cpu, this post is
+about the initial stages of building an assembler for a simple assembly language
+that compiles to runnable 6502 machine code. I've created a repo and updated it as I wrote
+this post, so at the end of most sections that introduce new code I'll link to a commit
+which has the code up to that point.</p>
+<span id="continue-reading"></span>
+<p>You can see the repo here:
+<a href="https://github.com/wayofthepie/emu-mos6502-asm-blog/tree/hasm-blog01">https://github.com/wayofthepie/emu-mos6502-asm-blog/tree/hasm-blog01</a>. The only pre-requisite is installing
+<a href="https://docs.haskellstack.org/en/stable/README/#how-to-install">stack</a>, once the project is
+cloned you can use <code>stack install</code> to install dependencies and build the project.</p>
+<h1 id="the-language">The Language</h1>
+<p>First, let's define what we want our assembly language to be able to do. To keep it simple,
+we only want to allow assignment and the definition of instructions for now:</p>
+<ul>
+<li>We should be able to define instructions and their operands, e.g. <code>LDA #$20</code>. This says
+load the value $20 into the accumulator.
+<ul>
+<li><code>LDA</code> means load date into the accumulator</li>
+<li><code>#</code> means this is immediate addressing so use the operand as a <em>value</em> not as an address.</li>
+<li><code>$20</code> stands for <code>20</code> in hexadecimal</li>
+</ul>
+</li>
+<li>We should be able to assign values to variables, e.g. <code>LOCATION = $2020</code>.
+<ul>
+<li>Now anywhere we see <code>LOCATION</code> we can replace with <code>$2020</code>.</li>
+</ul>
+</li>
+</ul>
+<p>Now for a quick and dirty grammar for our simple language:</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">&lt;expr&gt;        := &lt;instruction&gt; | &lt;assignment&gt;
+&lt;assignment&gt;  := &lt;label&gt; &quot;=&quot; &lt;bytes&gt;
+&lt;instruction&gt; := [&lt;label&gt; &quot;:&quot;] &lt;menmonic&gt; [&lt;label&gt; | &lt;operand&gt;]
+&lt;operand&gt;     := [&quot;#&quot;] &lt;bytes&gt;
+&lt;bytes&gt;       := &quot;$&quot; &lt;byte&gt; [&lt;byte&gt;]
+&lt;label&gt;       := ([A-Za-z]*[A-Za-z0-9]*)
+&lt;mnemonic&gt;    := 3 * ([A-Z])
+&lt;byte&gt;        := 2 * ([A-Fa-f0-9])
+</span></code></pre>
+<p>The above is a variation of EBNF (Extended Backus Naur Form) notation, we allow regular
+expressions (denoted by brackets <code>()</code> e.g. <code>([A-Z])</code> denotes a single upper case letter)
+for simplicity.</p>
+<p>Here's a breakdown, from the bottom up:</p>
+<ul>
+<li>
+<p><code>&lt;byte&gt;</code> is defined as <code>2 * ([A-Fa-f0-9])</code>, this means two consecutive characters that
+are upper or lower case letters betwen <code>A</code> and <code>F</code> or digits, i.e. a two digit hexadecimal value.</p>
+<ul>
+<li>e.g. <code>2F</code></li>
+</ul>
+</li>
+<li>
+<p><code>&lt;mnemonic&gt;</code> is a three letter string - all upper case.</p>
+<ul>
+<li>e.g. <code>LDA</code></li>
+</ul>
+</li>
+<li>
+<p><code>&lt;label&gt;</code> is an alphanumeric string of any size, which must start with a letter.</p>
+<ul>
+<li>e.g. <code>Stor3</code></li>
+<li>Note that we <em>should</em> limit it's size, but lets leave it infinite for now!</li>
+</ul>
+</li>
+<li>
+<p><code>&lt;bytes&gt;</code> is a string which starts with a <code>$</code> and must contain at least one <code>&lt;byte&gt;</code>, at
+most two.</p>
+<ul>
+<li>e.g. <code>$2F</code></li>
+</ul>
+</li>
+<li>
+<p><code>&lt;operand&gt;</code> starts with an optional <code>#</code> followed by <code>&lt;bytes&gt;</code>.</p>
+<ul>
+<li>e.g. <code>#$2f</code></li>
+</ul>
+</li>
+<li>
+<p><code>&lt;instruction&gt;</code> starts with an optional <code>&lt;label&gt;</code> which <em>must</em> be followed by a <code>:</code> if
+it exists, this is followed by a <code>&lt;mnemonic&gt;</code> and finally an optional <code>&lt;label&gt;</code> <em>xor</em> an <code>&lt;operand&gt;</code>.
+Some instructions use implicit addressing and require no operand or label, hence why this is
+optional.</p>
+<ul>
+<li>e.g. <code>LABEL LDA #$20</code></li>
+<li>Note that the possible label at the end is only for certain instructions, for example
+<code>BNE LABEL</code> will jump to the address corresponding to <code>LABEL</code> if the zero flag is not
+set.</li>
+</ul>
+</li>
+<li>
+<p><code>&lt;assignment&gt;</code> simply an <code>=</code> with a <code>&lt;label&gt;</code> on the left hand side and a <code>&lt;bytes&gt;</code> on
+the right.</p>
+<ul>
+<li>e.g. <code>STORE = $2020</code></li>
+</ul>
+</li>
+<li>
+<p>Finally an <code>&lt;expr&gt;</code> can be either an <code>&lt;instruction&gt;</code> or an <code>&lt;assignment&gt;</code>.</p>
+</li>
+</ul>
+<p>An example program would look as follows.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-{.no-highlight}" data-lang="{.no-highlight}"><span style="color:#c0c5ce;">LDA #$01
+CMP #$02
+BNE notequal
+STA $22
+notequal: BRK
+</span></code></pre>
+<p>And the machine code this compiles to <sup class="footnote-reference"><a href="#1">1</a></sup>:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-{.no-highlight}" data-lang="{.no-highlight}"><span style="color:#c0c5ce;">a9 01 c9 02 d0 02 85 22 00
+</span></code></pre>
+<p>Now that the language is somewhat spec'd out, we have an nice overview of how we can start
+building a parser for it. There are a lot of rules not defined in the above spec, for example a
+<code>&lt;label&gt;</code> cannot match a mnemonic - e.g. <code>LDA</code> cannot be a <code>&lt;label&gt;</code> - let's not worry about
+these for now.</p>
+<h1 id="building-our-parser">Building Our Parser</h1>
+<p>Now that we have our grammar, we can start thinking about how we want to build our
+parser. Normally I would work out some types first along with some top-level functions
+and go from there, so lets do that.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-haskell" data-lang="haskell"><span style="color:#b48ead;">module </span><span style="color:#c0c5ce;">Assembler </span><span style="color:#b48ead;">where
+
+import qualified </span><span style="color:#c0c5ce;">Data.Text </span><span style="color:#b48ead;">as </span><span style="color:#c0c5ce;">T </span><span style="color:#65737e;">-- from the &quot;text&quot; package
+</span><span style="color:#c0c5ce;">import Text.Megaparsec  </span><span style="color:#65737e;">-- from the &quot;megaparsec&quot; package
+
+-- | Create a custom parser type. This is megaparsec specific, we will gloss over this in
+-- this post.
+</span><span style="color:#b48ead;">type </span><span style="color:#d08770;">Parser </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">Parsec Dec T</span><span style="color:#c0c5ce;">.</span><span style="color:#d08770;">Text
+
+</span><span style="color:#65737e;">-- | A Label is just a Text value.
+</span><span style="color:#b48ead;">newtype </span><span style="color:#d08770;">Label </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">Label T</span><span style="color:#c0c5ce;">.</span><span style="color:#d08770;">Text </span><span style="color:#b48ead;">deriving </span><span style="color:#d08770;">Show
+
+</span><span style="color:#65737e;">-- | Indicates whether an address/ value is preceeded by a &quot;#&quot;.
+</span><span style="color:#b48ead;">newtype </span><span style="color:#d08770;">IsImmediate </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">IsImmediate Bool </span><span style="color:#b48ead;">deriving </span><span style="color:#d08770;">Show
+
+</span><span style="color:#65737e;">-- | An address/value of one or two bytes which may have a &quot;#&quot;, meaning
+-- immediate, before it.
+</span><span style="color:#b48ead;">data </span><span style="color:#d08770;">Operand </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">Operand IsImmediate T</span><span style="color:#c0c5ce;">.</span><span style="color:#d08770;">Text </span><span style="color:#b48ead;">deriving </span><span style="color:#d08770;">Show
+
+</span><span style="color:#65737e;">-- | A three letter upper case string.
+</span><span style="color:#b48ead;">newtype </span><span style="color:#d08770;">Mnemonic </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">Mnemonic T</span><span style="color:#c0c5ce;">.</span><span style="color:#d08770;">Text </span><span style="color:#b48ead;">deriving </span><span style="color:#d08770;">Show
+
+</span><span style="color:#65737e;">-- | A label, which should be assigned a value.
+</span><span style="color:#b48ead;">newtype </span><span style="color:#d08770;">Var </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">Var Label  </span><span style="color:#b48ead;">deriving </span><span style="color:#d08770;">Show
+
+</span><span style="color:#65737e;">-- | A value, which should be assigned to a Var.
+</span><span style="color:#b48ead;">newtype </span><span style="color:#d08770;">Val </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">Val T</span><span style="color:#c0c5ce;">.</span><span style="color:#d08770;">Text </span><span style="color:#b48ead;">deriving </span><span style="color:#d08770;">Show
+
+</span><span style="color:#65737e;">-- | Either a label or an operand.
+</span><span style="color:#b48ead;">data </span><span style="color:#d08770;">LabelOrOperand </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">Lbl Label </span><span style="color:#c0c5ce;">| </span><span style="color:#d08770;">Op Operand </span><span style="color:#b48ead;">deriving </span><span style="color:#d08770;">Show
+
+</span><span style="color:#65737e;">-- | Either an instruction or an assignment.
+</span><span style="color:#b48ead;">data </span><span style="color:#d08770;">Expr
+  </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">Instruction</span><span style="color:#c0c5ce;"> (</span><span style="color:#d08770;">Maybe Label</span><span style="color:#c0c5ce;">) </span><span style="color:#d08770;">Mnemonic</span><span style="color:#c0c5ce;"> (</span><span style="color:#d08770;">Maybe LabelOrOperand</span><span style="color:#c0c5ce;">)
+  | </span><span style="color:#d08770;">Assignment Var Val
+  </span><span style="color:#b48ead;">deriving </span><span style="color:#d08770;">Show
+</span></code></pre>
+<p>Most of the values will just be strings (<code>Text</code> types) so to distinguish between them we
+wrap <code>Text</code> in a <code>newtype</code> wrapper for each type we care about.
+For now we're not going to worry about constructing anything other than strings (I'll be using the
+type <code>Text</code> to denote strings instead of the built-in <code>String</code> in this post <sup class="footnote-reference"><a href="#2">2</a></sup>).
+Looking back at our grammar we have eight symbols, each one can be represented as a
+function which is itself a parser for some subset of the grammar. So the <em>top-level</em>
+functions in this case would be the <em>symbols</em> in our grammar - <code>&lt;expression&gt;</code>, <code>&lt;label&gt;</code> etc...
+We'll also add an extra function here for parsing label assignment - labels with a &quot;:&quot;
+after them as in the first part of <code>&lt;instruction&gt;</code> - let's call it <code>labelAssign</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-haskell" data-lang="haskell"><span style="color:#8fa1b3;">expression </span><span style="color:#b48ead;">:: Parser Expr
+</span><span style="color:#c0c5ce;">expression = undefined
+
+</span><span style="color:#8fa1b3;">assignment </span><span style="color:#b48ead;">:: Parser Expr
+</span><span style="color:#c0c5ce;">assignment = undefined
+
+</span><span style="color:#8fa1b3;">instruction </span><span style="color:#b48ead;">:: Parser Expr
+</span><span style="color:#c0c5ce;">instruction = undefined
+
+</span><span style="color:#8fa1b3;">operand </span><span style="color:#b48ead;">:: Parser Operand
+</span><span style="color:#c0c5ce;">operand = undefined
+
+</span><span style="color:#8fa1b3;">bytes </span><span style="color:#b48ead;">:: Parser T</span><span style="color:#c0c5ce;">.</span><span style="color:#b48ead;">Text
+</span><span style="color:#c0c5ce;">bytes = undefined
+
+</span><span style="color:#8fa1b3;">labelAssign </span><span style="color:#b48ead;">:: Parser Label
+</span><span style="color:#c0c5ce;">labelAssign = undefined
+
+</span><span style="color:#8fa1b3;">label </span><span style="color:#b48ead;">:: Parser Label
+</span><span style="color:#c0c5ce;">label = undefined
+
+</span><span style="color:#8fa1b3;">mnemonic </span><span style="color:#b48ead;">:: Parser Mnemonic
+</span><span style="color:#c0c5ce;">mnemonic = undefined
+
+</span><span style="color:#8fa1b3;">byte </span><span style="color:#b48ead;">:: Parser T</span><span style="color:#c0c5ce;">.</span><span style="color:#b48ead;">Text
+</span><span style="color:#c0c5ce;">byte = undefined
+</span></code></pre>
+<p>All functions are <code>undefined</code> so the type checker will pass before we
+begin to implement the logic. With our grammar, we know what each symbol corresponds
+to, so we can use <a href="https://hackage.haskell.org/package/QuickCheck">QuickCheck</a>
+to write properties for each function that adhere to its specification in the
+grammar.</p>
+<h2 id="property-driven-parser-development">Property Driven Parser Development</h2>
+<p>To build the parser I'm going to use a parser combinator library called
+<a href="https://mrkkrp.github.io/megaparsec/">megaparsec</a>. I
+won't go into much detail on megaparsec or parser combinators in this post, simply put,
+parser combinators are a way of building more complex parsers by combining parsers.</p>
+<p>The simplest parser above would be <code>byte</code>, from our grammar this is just a two character
+hexadecimal string. Before we start implementing it, let's write a property which encodes
+what we expect it to do.</p>
+<h3 id="generating-our-data-quickcheck-arbitrary">Generating Our Data - QuickCheck Arbitrary</h3>
+<p>Using QuickCheck to test parsers is really simple and quite powerful. It involves writing
+properties which encode expectations about the ouput of a function given some input.</p>
+<p>To build a property for <code>byte</code> first we need to create  an
+<a href="https://hackage.haskell.org/package/QuickCheck-2.9.2/docs/Test-QuickCheck-Arbitrary.html#t:Arbitrary">Arbitrary</a>
+instance <sup class="footnote-reference"><a href="#3">3</a></sup> for
+the data it expects - two character hexadecimal strings. Creating an instance of <code>Arbitrary</code>
+for a type allows random values of that type to be generated, by default
+QuickCheck will generate 100 random values of the type each test run. For <code>byte</code> this might look
+as follows.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-haskell" data-lang="haskell"><span style="color:#65737e;">-- | Wrapper for our two character hexadecimal strings.
+</span><span style="color:#b48ead;">newtype </span><span style="color:#d08770;">TwoCharHexString </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">TwoCharHexString T</span><span style="color:#c0c5ce;">.</span><span style="color:#d08770;">Text </span><span style="color:#b48ead;">deriving </span><span style="color:#d08770;">Show
+
+</span><span style="color:#b48ead;">instance Arbitrary TwoCharHexString where
+</span><span style="color:#c0c5ce;">  arbitrary = </span><span style="color:#b48ead;">do
+</span><span style="color:#c0c5ce;">    upper &lt;- choose (&#39;</span><span style="color:#a3be8c;">A</span><span style="color:#c0c5ce;">&#39;, &#39;</span><span style="color:#a3be8c;">F</span><span style="color:#c0c5ce;">&#39;)
+    lower &lt;- choose (&#39;</span><span style="color:#a3be8c;">a</span><span style="color:#c0c5ce;">&#39;, &#39;</span><span style="color:#a3be8c;">f</span><span style="color:#c0c5ce;">&#39;)
+    num   &lt;- choose (&#39;</span><span style="color:#a3be8c;">0</span><span style="color:#c0c5ce;">&#39;, &#39;</span><span style="color:#a3be8c;">9</span><span style="color:#c0c5ce;">&#39;)
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> vals = [upper, lower, num]
+    x &lt;- elements vals
+    y &lt;- elements vals
+    pure $ </span><span style="color:#d08770;">TwoCharHexString</span><span style="color:#c0c5ce;"> (</span><span style="color:#d08770;">T</span><span style="color:#c0c5ce;">.pack (x:[y]))
+</span></code></pre>
+<p>Here we define a <code>newtype</code> called <code>TwoCharHexString</code>, which is just a wrapper for <code>Text</code>.
+Then we create an <code>Arbitrary</code> instance for this type which builds two character hex string
+<code>Text</code> values. Let's run through the instance:</p>
+<ul>
+<li><a href="https://hackage.haskell.org/package/QuickCheck-2.9.2/docs/Test-QuickCheck-Gen.html#v:choose">choose</a>
+generates a random element in the given range, <code>choose (1, 4)</code> generates integers between
+1 and 4 inclusive.</li>
+<li><a href="https://hackage.haskell.org/package/QuickCheck-2.9.2/docs/Test-QuickCheck-Gen.html#v:elements">elements</a>
+generates a single value from the given list.</li>
+<li>With these functions we can generate <code>x</code> and <code>y</code> and build our two character
+string by building a two element list of characters made up of <code>x</code> and <code>y</code> -
+see <code>x:[y]</code> above, this is just a <code>String</code> which is a list of <code>Char</code> - we then pack this
+with <code>T.pack</code> to get our <code>Text</code> value.</li>
+</ul>
+<h3 id="building-our-property">Building Our Property</h3>
+<p>Next we need to write a property that defines what should happen when <code>byte</code> parses these
+string values.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-haskell" data-lang="haskell"><span style="color:#c0c5ce;">prop_byte_parse (</span><span style="color:#d08770;">TwoCharHexString</span><span style="color:#c0c5ce;"> s) = parse byte &quot;&quot; s  </span><span style="color:#8fa1b3;">`</span><span style="color:#c0c5ce;">shouldParse</span><span style="color:#8fa1b3;">`</span><span style="color:#c0c5ce;"> s
+</span></code></pre>
+<p>This is simply a function called <code>prop_byte_parse</code> which takes a value of type
+<code>TwoCharHexString</code> runs the parser <code>byte</code> with the megaparsec <code>parse</code> function <sup class="footnote-reference"><a href="#4">4</a></sup> and
+checks that the result is as expected, in this case parsing a string <code>s</code> should return that
+same string. <code>parse</code> is a function from the <em>megaparsec</em> package which runs our parser on the
+supplied string.</p>
+<p>Finally, <code>shouldParse</code> is a function from
+<a href="https://hackage.haskell.org/package/hspec-megaparsec">hspec-megaparsec</a> - a library
+containing utility functions for testing parsers built with megaparsec. Here we are using it to
+say <code>parse byte &quot;&quot; s</code> should parse to the string <code>s</code> - meaning the <code>byte</code> parser run on string <code>s</code> should
+just give us back <code>s</code>.</p>
+<p>Let's add this to our spec so the property check gets run when we launch <code>stack test</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-haskell" data-lang="haskell"><span style="color:#c0c5ce;">asmSpec = </span><span style="color:#b48ead;">do
+</span><span style="color:#c0c5ce;">  describe &quot;</span><span style="color:#a3be8c;">byte</span><span style="color:#c0c5ce;">&quot; $
+    it &quot;</span><span style="color:#a3be8c;">should parse two consecutive characters in the hex range into a two character string</span><span style="color:#c0c5ce;">&quot; $
+      property prop_byte_parse
+</span></code></pre>
+<p>Running the tests with <code>stack test</code> will run this spec and check that the property <code>prop_byte_parse</code>
+holds when parsing the random values of <code>TwoCharHexString</code> that quickcheck produces - which we
+defined in our <code>Arbitrary</code> instance.</p>
+<p>But wait! The <code>byte</code> function was <code>undefined</code> so the test should fail! Yip, it should give
+output similar to the following.</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">...
+Assembler
+  byte
+    should parse two consecutive characters in the hex range into a two character string FAILED [1]
+
+Failures:
+
+  test/AssemblerSpec.hs:19:
+  1) Assembler.byte should parse two consecutive characters in the hex range into a two character string
+       uncaught exception: ErrorCall (Prelude.undefined
+       CallStack (from HasCallStack):
+         error, called at libraries/base/GHC/Err.hs:79:14 in base:GHC.Err
+         undefined, called at src/Assembler.hs:52:8 in emu-mos6502-asm-blog-0.1.0.0-J3FxRJn8XZkGwqJZfEo09O:Assembler) (after 1 test)
+       *** Failed! (after 1 test):
+       Exception:
+         Prelude.undefined
+         CallStack (from HasCallStack):
+           error, called at libraries/base/GHC/Err.hs:79:14 in base:GHC.Err
+           undefined, called at src/Assembler.hs:52:8 in emu-mos6502-asm-blog-0.1.0.0-J3FxRJn8XZkGwqJZfEo09O:Assembler
+       TwoCharHexString &quot;fF&quot;
+
+Randomized with seed 1913513661
+
+Finished in 0.0023 seconds
+1 example, 1 failure
+...
+</span></code></pre>
+<p>Good, now we can implement <code>byte</code>. I've deliberatly left out some boiler plate such as dependencies
+and test setup, but you can view the full code up to this point, see
+<a href="https://github.com/wayofthepie/emu-mos6502-asm-blog/blob/ff2c770ec79dc1b56446b80cff28c6bfc87ca57a/src/Assembler.hs">Assembler.hs</a>
+for the types and functions and
+<a href="https://github.com/wayofthepie/emu-mos6502-asm-blog/blob/ff2c770ec79dc1b56446b80cff28c6bfc87ca57a/test/AssemblerSpec.hs">AssemblerSpec.hs</a>
+for the the property and <code>Arbitrary</code> instance.</p>
+<h3 id="implementation">Implementation</h3>
+<p>So now that we have a property which defines what our <code>byte</code> function should do, we can
+implement it. <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec.html#v:hexDigitChar">hexDigitChar</a>
+is a parser from <em>megaparsec</em> which parses a a hexadecimal digit. A byte is made up of two
+such digits so <code>byte</code> is simply a parser which tries to parse two hexadecimal chars.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-haskell" data-lang="haskell"><span style="color:#8fa1b3;">byte </span><span style="color:#b48ead;">:: Parser T</span><span style="color:#c0c5ce;">.</span><span style="color:#b48ead;">Text
+</span><span style="color:#c0c5ce;">byte = </span><span style="color:#b48ead;">do
+</span><span style="color:#c0c5ce;">  high &lt;- hexDigitChar
+  low &lt;- hexDigitChar
+  pure $ </span><span style="color:#d08770;">T</span><span style="color:#c0c5ce;">.pack [high,low]
+</span></code></pre>
+<p>Nice! We read a hex char and call it <code>high</code> and another called <code>low</code> and build a <code>Text</code>
+value.</p>
+<p>The rest of the parsers can be implemented in a similar way - define <code>Arbitrary</code> instances
+for the data they should take, define properties for the expected output and implement!</p>
+<p>I'll leave the rest of the implementation for another post. Running <code>stack test</code> now
+should give the following output.</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">...
+Assembler
+  byte
+    should parse two consecutive characters in the hex range into a two character string
+
+Finished in 0.0016 seconds
+1 example, 0 failures
+...
+</span></code></pre>
+<p>Excellent, our implementation passed the property check! You can check out the code up to this point
+<a href="https://github.com/wayofthepie/emu-mos6502-asm-blog/tree/90ccef30de0aac6cc0f74df4e688d392c4607846">here</a>.</p>
+<h1 id="conclusion">Conclusion</h1>
+<p>This is where I'll leave this post. I think it's long enough! In the next post we'll create the rest
+of the parsers and their properties, and also run through <em>megaparsec</em> in some more detail.
+There are definitely quite a few improvements that can be added to the language,
+and plenty more features that would be useful to have which we can implement in the
+future.</p>
+<p>There are also some limitations in the grammar, for example it currently does not allow
+<code>X</code> or <code>Y</code> indexed addressing <sup class="footnote-reference"><a href="#5">5</a></sup> - e.g. <code>LDA ($2020,X)</code> - we can address these too.</p>
+<p>This post outlines what I have done so far when building the assembler, and really just
+shows my own thought process around designing and implementing. Im actively working on the
+6502 emulator, so I hope to do a post every week. The main goal is to outline my development
+process in implementing the project, hopefully I'll introduce some bugs or have some
+interesting issues along the way!</p>
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>The reference I'm using for the emulator is mainly
+<a href="http://obelisk.me.uk/6502/reference.html">http://obelisk.me.uk/6502/reference.html</a>.</p>
+</div>
+<div class="footnote-definition" id="2"><sup class="footnote-definition-label">2</sup>
+<p><a href="http://www.alexeyshmalko.com/2015/haskell-string-types/">Haskell String Types</a> is a
+good post detailing the different string types.</p>
+</div>
+<div class="footnote-definition" id="3"><sup class="footnote-definition-label">3</sup>
+<p>See the documentation for
+<a href="https://hackage.haskell.org/package/QuickCheck-2.9.2/docs/Test-QuickCheck-Arbitrary.html">Arbitrary</a>, this <a href="https://stackoverflow.com/questions/16440208/how-to-generate-arbitrary-instances-of-a-simple-type-for-quickcheck">StackOverflow answer</a> is also good.</p>
+</div>
+<div class="footnote-definition" id="4"><sup class="footnote-definition-label">4</sup>
+<p>See the documentation for <a href="https://hackage.haskell.org/package/megaparsec-5.2.0/docs/Text-Megaparsec.html#v:parse">parse</a>.</p>
+</div>
+<div class="footnote-definition" id="5"><sup class="footnote-definition-label">5</sup>
+<p>See Indexed Indirect, and Indirect Indexed addressing modes
+<a href="http://www.obelisk.me.uk/6502/addressing.html">here</a>.</p>
+</div>
+
+</div>
+
+    </div>
+
+</body>
+
+</html>

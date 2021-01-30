@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+
+    <title></title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css" media="print">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    
+
+    
+    
+</head>
+
+<body class="">
+    
+    <div class="sidebar">
+        <div class="container sidebar-sticky">
+            <ul class="sidebar-nav">
+                <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+            </ul>
+            <ul class="sidebar-nav-social">
+                <a href="https://github.com/wayofthepie" class="fa fa-github sidebar-nav-social-item"></a>
+                <a href="https://twitter.com/wayofthepie" class="fa fa-twitter sidebar-nav-social-item"></a>
+            </ul>
+        </div>
+    </div>
+    
+
+    <div class="content container">
+        
+<div class="post">
+  <h1 class="post-title">Containerizing The JVM: Basic Memory Overview</h1>
+  <span class="post-date">2018-02-18</span>
+  <p>For the past few years where I work has been running JVM applications on <a href="https://www.cloudfoundry.org/">Cloud Foundry</a>. 
+We have come across many issues in relation to memory when running JVM's within memory 
+bounded containers. </p>
+<span id="continue-reading"></span>
+<p>Cloud foundry runs applications inside <a href="https://www.cloudfoundry.org/blog/cloud-foundry-containers-difference-warden-docker-garden/">garden containers</a>. 
+These containers have memory limits set on application creation, they use cgroups to impose these limits
+just as docker does - if the sum of the memory allocated to each process within the container
+exceeds the limit, the kernel <em>oom-killer</em> will kick in and kill the container. The main issue we've seen with JVM 
+applications is non-heap memory. Tracking and tuning the heap is trivial in comparison to tracking 
+and tuning non-heap memory usage - by non-heap I don't just mean <em>Metaspace</em>, but also 
+direct buffers, code cache, stack sizes, and so on.</p>
+<p>I've been wanting to do a series of posts
+on the topic of JVM's in containers for a while, I finally put the time aside to start!</p>
+<h2 id="what-is-this-post-about">What is this post about?</h2>
+<p>The goal of this post is to give an overview of the heap and non-heap 
+memory regions of the JVM - with some small introduction to both - and also to 
+show what happens in the event of a heap/non-heap memory issue within a <code>docker</code> container. I assume some
+basic knowledge of Java, the JVM, docker and linux. You will need docker and openjdk 8 installed on 
+a linux system (I used ubuntu 16.04 to write this post). </p>
+<h1 id="containerizing-a-java-app">Containerizing a java app</h1>
+<p>To start I'm going to keep things super simple. Let's build a program
+which prints &quot;Hello world!&quot; and waits forever:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-java" data-lang="java"><span style="color:#65737e;">// HelloWorld.java
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">HelloWorld </span><span style="color:#eff1f5;">{
+    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) </span><span style="color:#b48ead;">throws </span><span style="color:#ebcb8b;">Exception </span><span style="color:#eff1f5;">{
+        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(</span><span style="color:#c0c5ce;">&quot;</span><span style="color:#a3be8c;">Hello world!</span><span style="color:#c0c5ce;">&quot;</span><span style="color:#eff1f5;">);
+        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.in.</span><span style="color:#bf616a;">read</span><span style="color:#eff1f5;">();
+    }
+}
+</span></code></pre>
+<p>Now, a simple Dockerfile:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-dockerfile" data-lang="dockerfile"><span style="color:#b48ead;">FROM</span><span style="color:#c0c5ce;"> openjdk:8-jdk
+</span><span style="color:#b48ead;">ADD </span><span style="color:#c0c5ce;">HelloWorld.java .
+</span><span style="color:#b48ead;">RUN </span><span style="color:#c0c5ce;">javac HelloWorld.java
+ENTRYPOINT java HelloWorld
+</span></code></pre>
+<p>With that we can build and launch our application in a container:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-shell" data-lang="shell"><span style="background-color:#65737e30;color:#c0c5ce;">$ docker build --tag jvm-test . 
+$ docker run -ti --rm --name hello-jvm jvm-test
+</span><span style="color:#c0c5ce;">Hello world!
+
+</span></code></pre>
+<p>You can use CTRL-C to kill the container when you are done. Right, now we have a simple 
+program running, what can we do? Let's analyze the JVM.</p>
+<h2 id="basic-jvm-analysis">Basic JVM analysis</h2>
+<p>Lets get a list what objects we have on the heap within our application. 
+First, get into the container (assuming it's still running from above) and get the JVM processes PID.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-shell" data-lang="shell"><span style="color:#c0c5ce;">$ docker exec -ti hello-jvm bash
+root@5f20ae043968:/ $ ps aux|grep [j]ava
+root         1  0.1  0.0   4292   708 pts/0    Ss+  12:27   0:00 /bin/sh -c java HelloWorld
+root         7  0.2  0.1 6877428 23756 pts/0   Sl+  12:27   0:00 java HelloWorld
+</span></code></pre>
+<p>From the above, we see the PID is 7. For analysis, the openjdk comes with a number of tools.
+<code>jmap</code> is one such tool which allows us to view heap information about
+a JVM process.
+To get a list of objects, their number of instances and the space they take up in the heap
+you can use <code>jmap -histo &lt;JVM_PID&gt;</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">root@5f20ae043968:/</span><span style="color:#c0c5ce;"> $ jmap</span><span style="color:#bf616a;"> -histo</span><span style="color:#c0c5ce;"> 7
+
+ </span><span style="color:#bf616a;">num     </span><span style="color:#65737e;">#instances         #bytes  class name
+</span><span style="color:#bf616a;">----------------------------------------------
+   1:</span><span style="color:#c0c5ce;">           422        2256744  [I
+   </span><span style="color:#bf616a;">2:</span><span style="color:#c0c5ce;">          1600         141520  [C
+   </span><span style="color:#bf616a;">3:</span><span style="color:#c0c5ce;">           364          58560  [B
+   </span><span style="color:#bf616a;">4:</span><span style="color:#c0c5ce;">           470          53544  java.lang.Class
+   </span><span style="color:#bf616a;">5:</span><span style="color:#c0c5ce;">          1204          28896  java.lang.String
+   </span><span style="color:#bf616a;">6:</span><span style="color:#c0c5ce;">           551          28152  [Ljava.lang.Object;
+   </span><span style="color:#bf616a;">7:</span><span style="color:#c0c5ce;">           110           7920  java.lang.reflect.Field
+   </span><span style="color:#bf616a;">8:</span><span style="color:#c0c5ce;">           258           4128  java.lang.Integer
+   </span><span style="color:#bf616a;">9:</span><span style="color:#c0c5ce;">            97           3880  java.lang.ref.SoftReference
+  </span><span style="color:#bf616a;">10:</span><span style="color:#c0c5ce;">           111           3552  java.util.Hashtable$</span><span style="color:#bf616a;">Entry
+  11:</span><span style="color:#c0c5ce;">           133           3192  java.lang.StringBuilder
+  </span><span style="color:#bf616a;">12:</span><span style="color:#c0c5ce;">             8           3008  java.lang.Thread
+  </span><span style="color:#bf616a;">13:</span><span style="color:#c0c5ce;">            75           2400  java.io.File
+  </span><span style="color:#bf616a;">14:</span><span style="color:#c0c5ce;">            54           2080  [Ljava.lang.String;
+  </span><span style="color:#bf616a;">15:</span><span style="color:#c0c5ce;">            38           1824  sun.util.locale.LocaleObjectCache$</span><span style="color:#bf616a;">CacheEntry
+  16:</span><span style="color:#c0c5ce;">            12           1760  [Ljava.util.Hashtable$</span><span style="color:#bf616a;">Entry</span><span style="color:#c0c5ce;">;
+  </span><span style="color:#bf616a;">17:</span><span style="color:#c0c5ce;">            55           1760  java.util.concurrent.ConcurrentHashMap$</span><span style="color:#bf616a;">Node
+  18:</span><span style="color:#c0c5ce;">            27           1728  java.net.URL
+  </span><span style="color:#bf616a;">19:</span><span style="color:#c0c5ce;">            20           1600  [S
+  </span><span style="color:#bf616a;">...
+  222:</span><span style="color:#c0c5ce;">             1             16  sun.reflect.ReflectionFactory
+</span><span style="color:#bf616a;">Total</span><span style="color:#c0c5ce;">          6583        2642792
+</span></code></pre>
+<p>As you can see above there are 6583 instances of a mixture of 222 different classes, taking
+up over 2.6MB of the heap, for our simple HelloWorld program! When I first saw this it raised
+a lot of questions - what is <code>[I</code>, why is there a <code>java.lang.String</code> and a <code>[Ljava.lang.String</code>?</p>
+<h2 id="what-are-all-these-classes">What are all these classes?</h2>
+<p>The single letter class names you see above are all documented under 
+<a href="https://docs.oracle.com/javase/6/docs/api/java/lang/Class.html#getName()">Class.getName()</a>.</p>
+<hr />
+<table><thead><tr><th>Encoding</th><th>Element Type</th></tr></thead><tbody>
+<tr><td>Z</td><td>boolean</td></tr>
+<tr><td>B</td><td>byte</td></tr>
+<tr><td>C</td><td>char</td></tr>
+<tr><td>L<em>className</em></td><td>class/interface</td></tr>
+<tr><td>D</td><td>double</td></tr>
+<tr><td>F</td><td>float</td></tr>
+<tr><td>I</td><td>int</td></tr>
+<tr><td>J</td><td>long</td></tr>
+<tr><td>S</td><td>short</td></tr>
+</tbody></table>
+<p>Note the above are all <em>native</em> types. If you look back to the <code>jmap</code> output, the 
+first few instances all have <code>[</code> prefixing them - e.g. <code>[I</code>. <code>[</code> denotes a 1 dimensional 
+array of the type proceeding it - <code>[I</code> denotes an array of <code>int</code> e.g. <code>new int[3]</code>. 
+<code>[[I</code> denotes a 2D array, <code>new int[2][3]</code> and so on. Also in the <code>jmap</code> output above were instances 
+of <code>[L.java.lang.String</code> which is just an array of String's - <code>new String[3]</code>.</p>
+<p>To see this for yourself:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-java" data-lang="java"><span style="color:#65737e;">// InstanceName.java
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">InstanceName </span><span style="color:#eff1f5;">{
+    </span><span style="color:#b48ead;">public static void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) </span><span style="color:#b48ead;">throws </span><span style="color:#ebcb8b;">Exception </span><span style="color:#eff1f5;">{
+      </span><span style="color:#b48ead;">int[]</span><span style="color:#eff1f5;"> is </span><span style="color:#c0c5ce;">= </span><span style="color:#b48ead;">new int</span><span style="color:#eff1f5;">[</span><span style="color:#d08770;">3</span><span style="color:#eff1f5;">];
+      </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(is.</span><span style="color:#bf616a;">getClass</span><span style="color:#eff1f5;">().</span><span style="color:#bf616a;">getName</span><span style="color:#eff1f5;">());
+
+      </span><span style="color:#b48ead;">boolean[][][]</span><span style="color:#eff1f5;"> bs </span><span style="color:#c0c5ce;">= </span><span style="color:#b48ead;">new boolean</span><span style="color:#eff1f5;">[</span><span style="color:#d08770;">2</span><span style="color:#eff1f5;">][</span><span style="color:#d08770;">5</span><span style="color:#eff1f5;">][</span><span style="color:#d08770;">4</span><span style="color:#eff1f5;">];
+      </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(bs.</span><span style="color:#bf616a;">getClass</span><span style="color:#eff1f5;">().</span><span style="color:#bf616a;">getName</span><span style="color:#eff1f5;">());
+
+      </span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[]</span><span style="color:#eff1f5;"> ss </span><span style="color:#c0c5ce;">= </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">String</span><span style="color:#eff1f5;">[</span><span style="color:#d08770;">3</span><span style="color:#eff1f5;">];
+      </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(ss.</span><span style="color:#bf616a;">getClass</span><span style="color:#eff1f5;">().</span><span style="color:#bf616a;">getName</span><span style="color:#eff1f5;">());
+    } 
+}
+</span></code></pre>
+<p>Compiling and running this we get:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> javac InstanceName.java 
+</span><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> java InstanceName 
+</span><span style="color:#bf616a;">[I
+[[[Z
+[Ljava.lang.String</span><span style="color:#c0c5ce;">;
+</span></code></pre>
+<p>That's a quick overview of one way to look at what's loaded on the heap. I mentioned other memory 
+regions in the JVM earlier, what are these?</p>
+<h1 id="heap-and-non-heap-memory">Heap and Non-Heap memory</h1>
+<p>The JVM can be divided into many different memory segments (segments/regions/areas, I'll use these 
+words interchangeably, but generally they mean the same thing), 
+if we take a high level view first we have two segments - memory used for objects on the heap and 
+non-heap memory. </p>
+<p>If we zoom in, the heap has different areas within 
+which we can talk about, depending on what we want to discuss - there is the Eden space, where most
+new objects are initially created, the Survivor space, where objects go if they survive an Eden space
+garbage collection (GC) and the Old Generation which contains objects that have lived in 
+Survivor space for a while. Specifically, it contains objects that have been initialized - e.g. 
+<code>List&lt;String&gt; s = new ArrayList&lt;String&gt;();</code> will create an <code>ArrayList</code> object on the heap, and <code>s</code>
+will point to this.</p>
+<p>In the previous section I ran through what objects are loaded into the heap for our HelloWorld program,
+so what about non-heap memory?</p>
+<h2 id="non-heap-memory">Non-Heap Memory</h2>
+<p>If you have ever written a non-trivial java application with jdk8 you have probably heard of <em>Metaspace</em>.
+This is an example of non-heap memory. It's where the JVM will store class definitions, static variables, methods, 
+classloaders and other metadata. But there are many other non-heap memory regions the JVM will use.
+Let's list them! </p>
+<p>To do so, first we need to enable native memory tracking in our java app:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-{.dockerfile .nginx}" data-lang="{.dockerfile .nginx}"><span style="color:#c0c5ce;">FROM openjdk:8-jdk
+ADD HelloWorld.java .
+RUN cat HelloWorld.java
+RUN javac HelloWorld.java
+ENTRYPOINT java -XX:NativeMemoryTracking=detail HelloWorld
+</span></code></pre>
+<p>Now build and re-run:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> docker build</span><span style="color:#bf616a;"> --tag</span><span style="color:#c0c5ce;"> jvm-test . 
+</span><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> docker run</span><span style="color:#bf616a;"> -ti --rm --name</span><span style="color:#c0c5ce;"> hello-jvm jvm-test
+</span><span style="color:#bf616a;">Hello</span><span style="color:#c0c5ce;"> world!
+</span></code></pre>
+<p>In another terminal, exec into the container and get a summary of overall memory usage 
+with <code>jcmd</code>'s <code>VM.native_memory</code> command:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> docker exec</span><span style="color:#bf616a;"> --privileged -ti</span><span style="color:#c0c5ce;"> hello-jvm bash
+</span><span style="color:#bf616a;">root@aa5ae77e1305:/</span><span style="color:#c0c5ce;"> $ jcmd 
+</span><span style="color:#bf616a;">33</span><span style="color:#c0c5ce;"> sun.tools.jcmd.JCmd
+</span><span style="color:#bf616a;">7</span><span style="color:#c0c5ce;"> HelloWorld
+
+</span><span style="color:#bf616a;">root@aa5ae77e1305:/</span><span style="color:#c0c5ce;"> $ jcmd 7 VM.native_memory summary
+</span><span style="color:#bf616a;">7:
+
+Native</span><span style="color:#c0c5ce;"> Memory Tracking:
+
+</span><span style="color:#bf616a;">Total:</span><span style="color:#c0c5ce;"> reserved=5576143KB, committed=1117747KB
+</span><span style="color:#bf616a;">-</span><span style="color:#c0c5ce;">                 Java Heap (reserved=4069376KB, committed=920064KB)
+                            (</span><span style="color:#bf616a;">mmap:</span><span style="color:#c0c5ce;"> reserved=4069376KB, committed=920064KB) 
+ 
+</span><span style="color:#bf616a;">-</span><span style="color:#c0c5ce;">                     Class (reserved=1066121KB, committed=14217KB)
+                            (</span><span style="color:#bf616a;">classes </span><span style="color:#65737e;">#405)
+</span><span style="color:#c0c5ce;">                            (malloc=9353KB </span><span style="color:#65737e;">#178) 
+</span><span style="color:#c0c5ce;">                            (mmap: reserved=1056768KB, committed=4864KB) 
+ 
+</span><span style="color:#bf616a;">-</span><span style="color:#c0c5ce;">                    Thread (reserved=20646KB, committed=20646KB)
+                            (</span><span style="color:#bf616a;">thread </span><span style="color:#65737e;">#21)
+</span><span style="color:#c0c5ce;">                            (stack: reserved=20560KB, committed=20560KB)
+                            (</span><span style="color:#bf616a;">malloc</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">62KB </span><span style="color:#65737e;">#110) 
+                            </span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">arena</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">23KB </span><span style="color:#65737e;">#40)
+ 
+</span><span style="color:#bf616a;">-</span><span style="color:#c0c5ce;">                      Code (reserved=249655KB, committed=2591KB)
+                            (</span><span style="color:#bf616a;">malloc</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">55KB </span><span style="color:#65737e;">#346) 
+                            </span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">mmap:</span><span style="color:#c0c5ce;"> reserved=249600KB, committed=2536KB) 
+ 
+</span><span style="color:#bf616a;">-</span><span style="color:#c0c5ce;">                        GC (reserved=159063KB, committed=148947KB)
+                            (</span><span style="color:#bf616a;">malloc</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">10383KB </span><span style="color:#65737e;">#129) 
+                            </span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">mmap:</span><span style="color:#c0c5ce;"> reserved=148680KB, committed=138564KB) 
+ 
+</span><span style="color:#bf616a;">-</span><span style="color:#c0c5ce;">                  Compiler (reserved=134KB, committed=134KB)
+                            (</span><span style="color:#bf616a;">malloc</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">3KB </span><span style="color:#65737e;">#37) 
+                            </span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">arena</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">131KB </span><span style="color:#65737e;">#3)
+ 
+</span><span style="color:#bf616a;">-</span><span style="color:#c0c5ce;">                  Internal (reserved=9455KB, committed=9455KB)
+                            (</span><span style="color:#bf616a;">malloc</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">9423KB </span><span style="color:#65737e;">#1417) 
+                            </span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">mmap:</span><span style="color:#c0c5ce;"> reserved=32KB, committed=32KB) 
+ 
+</span><span style="color:#bf616a;">-</span><span style="color:#c0c5ce;">                    Symbol (reserved=1358KB, committed=1358KB)
+                            (</span><span style="color:#bf616a;">malloc</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">902KB </span><span style="color:#65737e;">#85) 
+                            </span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">arena</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">456KB </span><span style="color:#65737e;">#1)
+ 
+</span><span style="color:#bf616a;">-</span><span style="color:#c0c5ce;">    Native Memory Tracking (reserved=161KB, committed=161KB)
+                            (</span><span style="color:#bf616a;">malloc</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">99KB </span><span style="color:#65737e;">#1559) 
+                            </span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">tracking</span><span style="color:#c0c5ce;"> overhead=61KB)
+ 
+</span><span style="color:#bf616a;">-</span><span style="color:#c0c5ce;">               Arena Chunk (reserved=175KB, committed=175KB)
+                            (</span><span style="color:#bf616a;">malloc</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">175KB</span><span style="color:#c0c5ce;">) 
+ 
+
+</span></code></pre>
+<p>A lot more regions than just the heap! Our hello world program just got even more complex...</p>
+<p>What does all this mean? <sup class="footnote-reference"><a href="#nmt-details">1</a></sup> <a name="nmt-details-ref"></a></p>
+<ul>
+<li><strong>Java Heap</strong> : heap memory. </li>
+<li><strong>Class</strong> : is the <em>Metaspace</em> region we previously spoke about.</li>
+<li><strong>Thread</strong> : is the space taken up by threads on this JVM's.</li>
+<li><strong>Code</strong> : is the code cache - this is used by the JIT to cache compiled code.</li>
+<li><strong>GC</strong> : space used by the garbage collector.</li>
+<li><strong>Compiler</strong> : space used by the JIT when generating code.</li>
+<li><strong>Symbols</strong> : this is for symbols, by which I believe field names, method signatures fall under. <sup class="footnote-reference"><a href="#arenas">2</a></sup> <a name="arenas-ref"></a></li>
+<li><strong>Native Memory Tracking</strong> : memory used by the native memory tracker itself.</li>
+<li><strong>Arena Chunk</strong> : not entirely sure what this gets used for. <sup class="footnote-reference"><a href="#arena-chunk">3</a></sup> <a name="arena-chunk-ref"></a></li>
+</ul>
+<h2 id="practical-memory-issues">Practical memory issues</h2>
+<p>Ok, so why should you care about any of the above? Let's create an app that eats a tonne of memory.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-java" data-lang="java"><span style="color:#65737e;">// MemEater.java
+</span><span style="color:#b48ead;">import </span><span style="color:#c0c5ce;">java.util.</span><span style="color:#ebcb8b;">Vector</span><span style="color:#c0c5ce;">;
+
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">MemEater </span><span style="color:#eff1f5;">{
+    </span><span style="color:#b48ead;">public static final void </span><span style="color:#8fa1b3;">main</span><span style="color:#eff1f5;">(</span><span style="color:#ebcb8b;">String</span><span style="color:#b48ead;">[] </span><span style="color:#bf616a;">args</span><span style="color:#eff1f5;">) </span><span style="color:#b48ead;">throws </span><span style="color:#ebcb8b;">Exception </span><span style="color:#eff1f5;">{
+        </span><span style="color:#ebcb8b;">Vector</span><span style="color:#eff1f5;">&lt;</span><span style="color:#b48ead;">byte[]</span><span style="color:#eff1f5;">&gt; v </span><span style="color:#c0c5ce;">= </span><span style="color:#b48ead;">new </span><span style="color:#ebcb8b;">Vector</span><span style="color:#eff1f5;">&lt;</span><span style="color:#b48ead;">byte[]</span><span style="color:#eff1f5;">&gt;();
+        </span><span style="color:#b48ead;">for </span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">int</span><span style="color:#eff1f5;"> i </span><span style="color:#c0c5ce;">= </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">; i </span><span style="color:#c0c5ce;">&lt; </span><span style="color:#d08770;">400</span><span style="color:#eff1f5;">; i</span><span style="color:#c0c5ce;">++</span><span style="color:#eff1f5;">) {
+            </span><span style="color:#b48ead;">byte[]</span><span style="color:#eff1f5;"> b </span><span style="color:#c0c5ce;">= </span><span style="color:#b48ead;">new byte</span><span style="color:#eff1f5;">[</span><span style="color:#d08770;">1048576</span><span style="color:#eff1f5;">]; </span><span style="color:#65737e;">// allocate 1 MiB
+</span><span style="color:#eff1f5;">            v.</span><span style="color:#bf616a;">add</span><span style="color:#eff1f5;">(b);
+        }
+        </span><span style="color:#ebcb8b;">System</span><span style="color:#eff1f5;">.out.</span><span style="color:#bf616a;">println</span><span style="color:#eff1f5;">(v.</span><span style="color:#bf616a;">size</span><span style="color:#eff1f5;">());
+        </span><span style="color:#ebcb8b;">Thread</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">sleep</span><span style="color:#eff1f5;">(</span><span style="color:#d08770;">10000</span><span style="color:#eff1f5;">);
+    }
+}
+</span></code></pre>
+<p>This will create a <code>Vector</code> which contains 400 byte arrays of size 1 MiB <sup class="footnote-reference"><a href="#mb">4</a></sup><a name="mb-ref"></a>, so this will use ~400MiB memory on the heap.
+It will then sleep for 10 seconds so we can get the memory usage easily while it runs.
+Let's constrain the heap to 450MiB and run this locally we can see the actual memory usage of the process. 
+RSS Resident Set Size <sup class="footnote-reference"><a href="#rss">5</a></sup><a name="rss-ref"></a> is how this is measured, note that this value also contains pages mapped from <em>shared memory</em>, 
+but we can gloss over that for this post.</p>
+<p>So, lets compile our app, run in the background and get its RSS:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> javac MemEater.java 
+</span><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> nohup java</span><span style="color:#bf616a;"> -Xms450M -Xmx450M</span><span style="color:#c0c5ce;"> MemEater &amp; 
+</span><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> ps aux | </span><span style="color:#bf616a;">awk </span><span style="color:#c0c5ce;">&#39;</span><span style="color:#a3be8c;">NR==1; /[M]emEater/</span><span style="color:#c0c5ce;">&#39; 
+</span><span style="color:#bf616a;">USER</span><span style="color:#c0c5ce;">       PID %</span><span style="color:#bf616a;">CPU </span><span style="color:#c0c5ce;">%</span><span style="color:#bf616a;">MEM</span><span style="color:#c0c5ce;">    VSZ   RSS TTY      STAT START   TIME COMMAND
+</span><span style="color:#bf616a;">chaospie</span><span style="color:#c0c5ce;"> 18019 10.5  3.0 3138368 494448 pts/19 Sl   16:06   0:00 java</span><span style="color:#bf616a;"> -Xms450M -Xmx450M</span><span style="color:#c0c5ce;"> MemEater
+</span></code></pre>
+<p>In total, the JVM process needs about 500 MiB to run (RSS is 494448 KiB). What happens if we set the heap to a size lower than it needs?</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> java</span><span style="color:#bf616a;"> -Xms400M -Xmx400M</span><span style="color:#c0c5ce;"> MemEater
+</span><span style="color:#bf616a;">Exception</span><span style="color:#c0c5ce;"> in thread &quot;</span><span style="color:#a3be8c;">main</span><span style="color:#c0c5ce;">&quot; java.lang.OutOfMemoryError: Java heap space
+	</span><span style="color:#bf616a;">at</span><span style="color:#c0c5ce;"> MemEater.main(MemEater.java:7)
+</span></code></pre>
+<p>If you have used java (or any JVM language) before, you have more than likely come across this. It means that the 
+JVM ran out of heap space to allocate objects. There are quite a few other types of <code>OutOfMemoryError</code> the JVM can 
+throw in certain situations <sup class="footnote-reference"><a href="#jvm-oom">6</a></sup><a name="jvm-oom-ref"></a>, but I won't go into more detail right now.</p>
+<p>Now we know what happens if the JVM does not have enough heap space, what about the case where you are running 
+in a container and hit the overall memory limit for that container?</p>
+<p>The simplest way to reproduce this is to package up our <code>MemEater</code> program into a docker image and run it with 
+less memory than it needs.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-{.dockerfile .nginx}" data-lang="{.dockerfile .nginx}"><span style="color:#c0c5ce;">FROM openjdk:8-jdk
+ADD MemEater.java .
+RUN cat MemEater.java
+RUN javac MemEater.java
+ENTRYPOINT java -Xms450M -Xmx450M MemEater
+</span></code></pre>
+<p>Again, we need to build the image. However this time when we are running we limit the memory the 
+container is allowed to use to 5M:</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">$ docker build --tag jvm-test .
+$ docker run -ti --rm --memory 5M --memory-swappiness 0 --name memeater jvm-test
+WARNING: Your kernel does not support swap limit capabilities or the cgroup is not mounted. Memory limited without swap.
+Killed
+</span></code></pre>
+<p>After a few seconds you should see the output above, <code>Killed</code>. What happened? Before we dive into that, lets have
+a look at the <code>--memory</code> and <code>--memory-swappiness</code> flags used by <code>docker</code>.</p>
+<h3 id="limiting-memory-with-docker">Limiting memory with docker</h3>
+<p>Lets digress for a second, and look at the two docker flags I used above for controlling memory settings <sup class="footnote-reference"><a href="#docker-mem">7</a></sup><a name="docker-mem-ref"></a>.
+First, for these flags to work, your kernel will need to have cgroup support enabled and the following boot 
+parameters set (assuming <code>grub</code>):</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> cat /etc/default/grub
+</span><span style="color:#bf616a;">...
+GRUB_CMDLINE_LINUX</span><span style="color:#c0c5ce;">=&quot;</span><span style="color:#a3be8c;">cgroup_enable=memory swapaccount=1</span><span style="color:#c0c5ce;">&quot;
+</span><span style="color:#bf616a;">...
+</span></code></pre>
+<p><code>--memory</code> sets an upper bound on the sum of all processes memory usage within a container,
+the smallest this can go is 4MiB, above we set it to 5m which is 5MiB. When this is set, 
+the containers <code>cgroup</code> <code>memory.limit_in_bytes</code> is set to the value. I can't
+find the code that does this in <code>docker</code>, however we can see it as follows:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> docker run</span><span style="color:#bf616a;"> -d --rm --memory</span><span style="color:#c0c5ce;"> 500M</span><span style="color:#bf616a;"> --memory-swappiness</span><span style="color:#c0c5ce;"> 0</span><span style="color:#bf616a;"> --name</span><span style="color:#c0c5ce;"> memeater jvm-test 
+</span><span style="color:#bf616a;">WARNING:</span><span style="color:#c0c5ce;"> Your kernel does not support swap limit capabilities or the cgroup is not mounted. Memory limited without swap.
+</span><span style="color:#bf616a;">812dbc3417eacdaf221c2f0c93ceab41f7626dca17f959298a5700358f931897
+$</span><span style="color:#c0c5ce;"> CONTAINER_ID=`</span><span style="color:#bf616a;">docker</span><span style="color:#c0c5ce;"> ps</span><span style="color:#bf616a;"> --no-trunc </span><span style="color:#c0c5ce;">| </span><span style="color:#bf616a;">awk </span><span style="color:#c0c5ce;">&#39;</span><span style="color:#a3be8c;">{if (NR!=1) print $1}</span><span style="color:#c0c5ce;">&#39;`
+</span><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> echo $</span><span style="color:#bf616a;">CONTAINER_ID
+812dbc3417eacdaf221c2f0c93ceab41f7626dca17f959298a5700358f931897
+$</span><span style="color:#c0c5ce;"> cat /sys/fs/cgroup/memory/docker/${</span><span style="color:#bf616a;">CONTAINER_ID</span><span style="color:#c0c5ce;">}/memory.swappiness 
+</span><span style="color:#bf616a;">0
+$</span><span style="color:#c0c5ce;"> cat /sys/fs/cgroup/memory/docker/${</span><span style="color:#bf616a;">CONTAINER_ID</span><span style="color:#c0c5ce;">}/memory.limit_in_bytes
+</span><span style="color:#bf616a;">524288000
+
+</span><span style="color:#65737e;"># Again, this time without limits to see the difference
+</span><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> docker run</span><span style="color:#bf616a;"> -d --rm --name</span><span style="color:#c0c5ce;"> memeater jvm-test 
+</span><span style="color:#bf616a;">d3e25423814ee1d79759aa87a83d416d63bdb316a305e390c2b8b98777484822
+$</span><span style="color:#c0c5ce;"> CONTAINER_ID=`</span><span style="color:#bf616a;">docker</span><span style="color:#c0c5ce;"> ps</span><span style="color:#bf616a;"> --no-trunc </span><span style="color:#c0c5ce;">| </span><span style="color:#bf616a;">awk </span><span style="color:#c0c5ce;">&#39;</span><span style="color:#a3be8c;">{if (NR!=1) print $1}</span><span style="color:#c0c5ce;">&#39;`
+</span><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> echo $</span><span style="color:#bf616a;">CONTAINER_ID
+d3e25423814ee1d79759aa87a83d416d63bdb316a305e390c2b8b98777484822
+$</span><span style="color:#c0c5ce;"> cat /sys/fs/cgroup/memory/docker/${</span><span style="color:#bf616a;">CONTAINER_ID</span><span style="color:#c0c5ce;">}/memory.swappiness 
+</span><span style="color:#bf616a;">60
+$</span><span style="color:#c0c5ce;"> cat /sys/fs/cgroup/memory/docker/${</span><span style="color:#bf616a;">CONTAINER_ID</span><span style="color:#c0c5ce;">}/memory.limit_in_bytes
+</span><span style="color:#bf616a;">9223372036854771712
+</span></code></pre><div class="alert alert-warning">
+Note the `WARNING`, I'm not entirely sure why this appears as swap support is enabled, and seems to work. 
+You can ignore this for now.
+</div>
+<p><code>--memory-swappiness</code> sets the <em>swappiness</em> level of the cgroup herarchy the container runs in. 
+This maps directly to the cgroup setting <strong>memory.swappiness</strong> (at least in version 17.12 of <em>docker</em> <sup class="footnote-reference"><a href="#docker-swap">8</a></sup><a name="docker-swap-ref"></a>) as seen above.
+Setting this to 0 disables swap for the container. </p>
+<h2 id="what-kills-the-container">What kills the container?</h2>
+<p>So, why was the container killed? Lets run it again:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-{.dockerfile .nginx}" data-lang="{.dockerfile .nginx}"><span style="color:#c0c5ce;">$ docker run -ti --rm --memory 5M --memory-swappiness 0 --name memeater jvm-test
+WARNING: Your kernel does not support swap limit capabilities or the cgroup is not mounted. Memory limited without swap.
+Killed
+</span></code></pre>
+<p>To see the cause of this kill, run <code>journalctl -k</code> and search for <code>oom-killer</code>, you should see 
+logs like the following:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> journalctl</span><span style="color:#bf616a;"> -k
+...
+Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: java invoked oom-killer: gfp_mask=0x14000c0(GFP_KERNEL)</span><span style="color:#bf616a;">,</span><span style="color:#c0c5ce;"> nodemask=(null)</span><span style="color:#bf616a;">,</span><span style="color:#c0c5ce;">  order=0, oom_score_adj=0
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: java cpuset=35f18c48d432510c76e76f2e7a962e64a1372de1dc4abd830417263907bea6e0 mems_allowed=0
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: CPU: 0 PID: 16432 Comm: java Tainted: G           OE   4.13.0-32-generic </span><span style="color:#65737e;">#35~16.04.1-Ubuntu
+</span><span style="color:#c0c5ce;">Feb 18 17:34:47  kernel: Hardware name: Dell Inc. Precision 5520/0R6JFH, BIOS 1.3.3 05/08/2017
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: Call Trace:
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  dump_stack+0x63/0x8b
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  dump_header+0x97/0x225
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  ? mem_cgroup_scan_tasks+0xc4/0xf0
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  oom_kill_process+0x219/0x420
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  out_of_memory+0x11d/0x4b0
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  mem_cgroup_out_of_memory+0x4b/0x80
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  mem_cgroup_oom_synchronize+0x325/0x340
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  ? get_mem_cgroup_from_mm+0xa0/0xa0
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  pagefault_out_of_memory+0x36/0x7b
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  mm_fault_error+0x8f/0x190
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  ? handle_mm_fault+0xcc/0x1c0
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  __do_page_fault+0x4c3/0x4f0
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  do_page_fault+0x22/0x30
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  ? page_fault+0x36/0x60
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel:  page_fault+0x4c/0x60
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: RIP: 0033:0x7fdeafb0fe2f
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: RSP: 002b:00007fdeb0e1db80 EFLAGS: 00010206
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: RAX: 000000000001dff0 RBX: 00007fdea802d490 RCX: 00007fdeac17b010
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: RDX: 0000000000003bff RSI: 0000000000075368 RDI: 00007fdeac17b010
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: RBP: 00007fdeb0e1dc20 R08: 0000000000000000 R09: 0000000000000000
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: R10: 0000000000000022 R11: 0000000000000246 R12: 0000000000000000
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: R13: 00007fdeb0e1db90 R14: 00007fdeafff851b R15: 0000000000075368
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: Task in /docker/35f18c48d432510c76e76f2e7a962e64a1372de1dc4abd830417263907bea6e0 killed as a result of limit of /docker/35f18c48d432510c76e76f2e7a962e64a137
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: memory: usage 5120kB, limit 5120kB, failcnt 69
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: memory+swap: usage 0kB, limit 9007199254740988kB, failcnt 0
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: kmem: usage 1560kB, limit 9007199254740988kB, failcnt 0
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: Memory cgroup stats for /docker/35f18c48d432510c76e76f2e7a962e64a1372de1dc4abd830417263907bea6e0: cache:176KB rss:3384KB rss_huge:0KB shmem:144KB mapped_fil
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;"> pid </span><span style="color:#b48ead;">]</span><span style="color:#c0c5ce;">   uid  tgid total_vm      rss nr_ptes nr_pmds swapents oom_score_adj name
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">16360</span><span style="color:#b48ead;">]</span><span style="color:#c0c5ce;">     0 16360     1073      178       8       3        0             0 sh
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">16426</span><span style="color:#b48ead;">]</span><span style="color:#c0c5ce;">     0 16426   609544     3160      47       4        0             0 java
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: Memory cgroup out of memory: Kill process 16426 (java) </span><span style="color:#bf616a;">score</span><span style="color:#c0c5ce;"> 2508 or sacrifice child
+</span><span style="color:#bf616a;">Feb</span><span style="color:#c0c5ce;"> 18 17:34:47  kernel: Killed process 16426 (java) </span><span style="color:#bf616a;">total-vm:2438176kB,</span><span style="color:#c0c5ce;"> anon-rss:3200kB, file-rss:9440kB, shmem-rss:0kB
+</span><span style="color:#bf616a;">...
+</span></code></pre>
+<p>The kernels OOM killer killed the application because it violated it's <code>cgroup</code> memory limit.
+From the logs above: <code>memory: usage 5120kB, limit 5120kB, failcnt 69</code> shows it hit the limit,
+<code>Killed process 16426 (java) total-vm:2438176kB, anon-rss:3200kB, file-rss:9440kB, shmem-rss:0kB</code> shows
+that it decided to kill process <strong>16426</strong> which was our java process. There is a lot more information in the 
+logs which can help identify the reason why the OOM killer killed your process, however in our case we know why - 
+we violated the container memory limit. </p>
+<p>With a heap issue, if we hit an out of memory error with <code>Java Heap Space</code> as the cause, we know
+immediately that the cause is the heap and we are either allocating too much, or we need to increase 
+the heap (actually identifying the underlying cause of this overallocation in the code is another issue...). 
+When the OOM killer kills our process, it's not so straightforward - it could be direct buffers,
+unconstrained non-heap memory areas (<em>Metaspace</em>, Code cache etc...) or even another process within the container.
+There is quite a bit to cover when investigating. On that note, I'll finish this post.</p>
+<h1 id="conclusion">Conclusion</h1>
+<p>There is quite a lot more that could be said about heap/non-heap memory in the JVM, docker and the oom-killer - 
+but I want to keep this initial post short, it's just meant to be a basic intro to JVM memory usage. Hopefully, 
+if you took anything away from this post, it's that there is much more to think about than just the heap when 
+using the JVM, especially in memory bound containers.</p>
+<p>In the next post I'll dive 
+into non-heap memory in more depth, create and run a real containerized application, and go through some of the 
+pitfalls I've come across when running JVM's within containerized environments.</p>
+<hr />
+<div class="footnote-definition" id="nmt-details"><sup class="footnote-definition-label">1</sup>
+<p>See <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/tooldescr022.html">NMT details</a>. <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#nmt-details-ref">⮨</a></p>
+</div>
+<div class="footnote-definition" id="arenas"><sup class="footnote-definition-label">2</sup>
+<p>This one I need to look up more in-depth, as I have not been able to find solid information on it. <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#arenas-ref">⮨</a></p>
+</div>
+<div class="footnote-definition" id="arena-chunk"><sup class="footnote-definition-label">3</sup>
+<p>Arena Chunk seems to be related to malloc arenas, will definitely look into this in-depth. <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#arena-chunk-ref">⮨</a></p>
+</div>
+<div class="footnote-definition" id="mb"><sup class="footnote-definition-label">4</sup>
+<p>1 MiB = 1024 KiB = 1048576 bytes. Why use MiB? Because MB is ambiguous and can mean 1000 KB or 1024 KB, whereas MiB is always 1024 KiB. <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#mb-ref">⮨</a></p>
+</div>
+<div class="footnote-definition" id="rss"><sup class="footnote-definition-label">5</sup>
+<p>See <a href="https://stackoverflow.com/questions/7880784/what-is-rss-and-vsz-in-linux-memory-management#answer-21049737">this great answer</a> for a description of RSS. <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#rss-ref">⮨</a></p>
+</div>
+<div class="footnote-definition" id="jvm-oom"><sup class="footnote-definition-label">6</sup>
+<p>A detailed description of them can be found <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks002.html">here</a>. <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#jvm-oom-ref">⮨</a></p>
+</div>
+<div class="footnote-definition" id="docker-mem"><sup class="footnote-definition-label">7</sup>
+<p>The <code>docker</code> documentation on this subject is excellent - see <a href="https://docs.docker.com/config/containers/resource_constraints/">resource constraints</a>. <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#docker-mem-ref">⮨</a></p>
+</div>
+<div class="footnote-definition" id="docker-swap"><sup class="footnote-definition-label">8</sup>
+<p>See <a href="https://github.com/docker/docker-ce/blob/17.12/components/engine/pkg/sysinfo/sysinfo_linux.go#L90">docker memory swappiness</a>. <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#docker-swap-ref">⮨</a></p>
+</div>
+
+</div>
+
+    </div>
+
+</body>
+
+</html>

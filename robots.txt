@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://wayofthepie.github.io/sitemap.xml

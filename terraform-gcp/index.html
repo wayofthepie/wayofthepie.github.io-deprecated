@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+
+    <title></title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css" media="print">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    
+
+    
+    
+</head>
+
+<body class="">
+    
+    <div class="sidebar">
+        <div class="container sidebar-sticky">
+            <ul class="sidebar-nav">
+                <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+            </ul>
+            <ul class="sidebar-nav-social">
+                <a href="https://github.com/wayofthepie" class="fa fa-github sidebar-nav-social-item"></a>
+                <a href="https://twitter.com/wayofthepie" class="fa fa-twitter sidebar-nav-social-item"></a>
+            </ul>
+        </div>
+    </div>
+    
+
+    <div class="content container">
+        
+<div class="post">
+  <h1 class="post-title">Terraform, Google Cloud And Kubernetes</h1>
+  <span class="post-date">2017-07-15</span>
+  <p>I've been hacking about with automated infrastructure setup a lot lately. The two tools
+I've focused on the most are NixOps and Terraform. This post is about the use of terraform
+on <a href="https://cloud.google.com/docs/">Google Cloud Platform</a> (GCP) to create and manage a
+Kubernetes Container Cluster.</p>
+<span id="continue-reading"></span><h2 id="setup">Setup</h2>
+<p>Before we begin, if you want to run any of the code, you'll need an account on google cloud.
+If you do not know what either
+<a href="https://www.terraform.io/docs/providers/google/index.html#authentication-json-file">GCP</a>,
+<a href="https://www.terraform.io/docs/providers/google/index.html#authentication-json-file">Terraform</a>
+or <a href="https://www.terraform.io/docs/providers/google/index.html#authentication-json-file">Kubernetes</a>
+are you should follow those links. Note that you will also need the
+<a href="https://cloud.google.com/sdk/">google cloud sdk</a> (as we will be using the <code>gcloud</code> cli) and also
+the kubernetes cli, <a href="https://kubernetes.io/docs/tasks/tools/install-kubectl/">kubectl</a>.
+Once you are ready, you will need to create an auth json file as described
+<a href="https://www.terraform.io/docs/providers/google/index.html#authentication-json-file">here</a>, and
+that should be everything you need to proceed.</p>
+<h1 id="terraform-google-cloud-provider">Terraform Google Cloud Provider</h1>
+<p>Terraform's <a href="https://www.terraform.io/docs/providers/google/index.html">Google Cloud provider</a> covers a lot
+of the functionality of GCP. It also has a <a href="https://www.terraform.io/docs/backends/index.html">backend</a>
+for storing state on <a href="https://cloud.google.com/storage/">Google Cloud Storage</a> (GCS). By default
+terraform will store the state locally, so this backend is not required, but it is good practice <sup class="footnote-reference"><a href="#1">1</a></sup>.</p>
+<p>Let's set up our backend to store terraforms state on GCS. In a file called <code>backend.tf</code>:</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">terraform {
+  backend &quot;gcs&quot; {
+    bucket  = &quot;my-bucket&quot;
+    path    = &quot;my-folder/cluster-infra/terraform.tfstate&quot;
+    project = &quot;my-project&quot;
+  }
+}
+</span></code></pre>
+<p>This tells terraform it should store and lookup state in GCS in the project <code>my-project</code>,
+a bucket within that project, <code>my-bucket</code>, and the path <code>my-folder/cluster-infra/terraform.tfstate</code>
+within that bucket. You need to make sure this project, bucket and path exist.
+Just a few more lines, and we can build our cluster!</p>
+<h2 id="cluster-definition">Cluster Definition</h2>
+<p>The definition for the <a href="https://cloud.google.com/container-engine/">Container Cluster</a>
+itself is quite short. Let's create another file called <code>init.tf</code>.</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">provider &quot;google&quot; {
+  region  = &quot;${var.region}&quot;
+  project = &quot;${var.project}&quot;
+}
+
+resource &quot;google_container_cluster&quot; &quot;primary&quot; {
+  name = &quot;test-cluster&quot;
+  zone = &quot;${var.zone}&quot;
+  initial_node_count = 3
+
+  master_auth {
+    username = &quot;${var.kube_username}&quot;
+    password = &quot;${var.kube_password}&quot;
+  }
+
+  node_config {
+    oauth_scopes = [
+      &quot;https://www.googleapis.com/auth/compute&quot;,
+      &quot;https://www.googleapis.com/auth/devstorage.read_only&quot;,
+      &quot;https://www.googleapis.com/auth/logging.write&quot;,
+      &quot;https://www.googleapis.com/auth/monitoring&quot;,
+    ]
+  }
+}
+
+</span></code></pre>
+<p>That's it! This will build a three node kubernetes container cluster. Breaking it down:</p>
+<ul>
+<li><code>provider &quot;google&quot;</code> : this says we want to use the
+<a href="https://www.terraform.io/docs/providers/google/index.html">Google Cloud Provider</a>.
+<ul>
+<li><code>region</code> : the <a href="https://cloud.google.com/compute/docs/regions-zones/regions-zones">region</a>
+to spin up our resources.</li>
+<li><code>project</code> : the project our resources should live within.</li>
+</ul>
+</li>
+<li><code>resource &quot;google_container_cluster&quot; &quot;primary&quot;</code> <sup class="footnote-reference"><a href="#2">2</a></sup>: create a
+<a href="https://www.terraform.io/docs/providers/google/r/container_cluster.html">google_container_cluster</a>
+that can be referenced from other terraform resources but the name <code>primary</code>.
+<ul>
+<li><code>name</code> : the name of this cluster <em>within google cloud</em>.</li>
+<li><code>zone</code> : the <a href="https://cloud.google.com/compute/docs/regions-zones/regions-zones">zone</a>
+in the region we specified in our provider to spin up these resources.</li>
+<li><code>initial_node_count</code> : the number of nodes in this cluster.</li>
+<li><code>master_auth</code> : the credentials we can use to access the kubernetes cluster</li>
+<li><code>node_config</code> : the machine type and image used for all nodes, here we just define
+<a href="https://www.terraform.io/docs/providers/google/r/container_cluster.html#oauth_scopes">oauth_scopes</a>.</li>
+</ul>
+</li>
+</ul>
+<h2 id="variables">Variables</h2>
+<p>In the above configs you probably noticed <code>${var.something}</code> in a few places. Values for these variables
+can be loaded into the config when launching terraform in multiple ways <sup class="footnote-reference"><a href="#3">3</a></sup>. For this post I'll go the
+variable files route. First create a <code>variables.tf</code> with the following definitions:</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">variable &quot;project&quot; {}
+variable &quot;region&quot; {}
+variable &quot;zone&quot; {}
+variable &quot;kube_username&quot; {}
+variable &quot;kube_password&quot; {}
+</span></code></pre>
+<p>Now, create a file <code>terraform.tfvars</code> with the following key/value pairs:</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">project = &quot;my-project&quot;
+region = &quot;europe-west1&quot;
+zone = &quot;europe-west1-b&quot;
+kube_username = &quot;testuser&quot;
+kube_password = &quot;testpassword&quot;
+</span></code></pre><h1 id="launching-our-cluster">Launching Our Cluster</h1>
+<p>Let's put everything together and launch our cluster! You should have the following four files:</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">$ ls
+backend.tf  init.tf  terraform.tfvars  variables.tf
+</span></code></pre>
+<p>There is one more step before we can launch. If you try to run <code>terraform apply</code>
+or <code>terraform plan</code> you will get the following error:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-shell" data-lang="shell"><span style="color:#c0c5ce;">$ terraform plan
+Backend reinitialization required. Please run &quot;terraform init&quot;.
+Reason: Initial configuration of the requested backend &quot;gcs&quot;
+
+The &quot;backend&quot; is the interface that Terraform uses to store state,
+perform operations, etc. If this message is showing up, it means that the
+Terraform configuration you&#39;re using is using a custom configuration for
+the Terraform backend.
+
+...
+</span></code></pre>
+<p>Trying to run <code>terraform init</code> will also give an error:</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">$ terraform init
+Initializing the backend...
+
+Error configuring the backend &quot;gcs&quot;: Failed to configure remote backend &quot;gcs&quot;: google: could not find default credentials.
+See https://developers.google.com/accounts/docs/application-default-credentials for more information.
+
+Please update the configuration in your Terraform files to fix this error
+then run this command again.
+</span></code></pre>
+<p>What we need to do to correctly initialize the backend is pass the json credentials file created
+in the <strong>Setup</strong> section above. If you missed this, the instructions can be found
+<a href="https://www.terraform.io/docs/providers/google/index.html#authentication-json-file">here</a>.
+Download the json file and place it under <code>~/.gcp_creds.json</code>. Now we can finally start running things!</p>
+<p>The envvar <code>GOOGLE_APPLICATION_CREDENTIALS</code> tells terraform where to find the creds. To initialize the backend:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-{.bash}" data-lang="{.bash}"><span style="color:#c0c5ce;">$ GOOGLE_APPLICATION_CREDENTIALS=~/.gcp_creds.json terraform init
+Initializing the backend...
+
+
+Successfully configured the backend &quot;gcs&quot;! Terraform will automatically
+use this backend unless the backend configuration changes.
+
+Terraform has been successfully initialized!
+...
+</span></code></pre>
+<p>Let's see what terraform will build with <code>terraform plan</code>:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-{.bash}" data-lang="{.bash}"><span style="color:#c0c5ce;">$ GOOGLE_APPLICATION_CREDENTIALS=~/.gcp_creds.json terraform plan
+Refreshing Terraform state in-memory prior to plan...
+The refreshed state will be used to calculate this plan, but will not be
+persisted to local or remote state storage.
+
+The Terraform execution plan has been generated and is shown below.
+Resources are shown in alphabetical order for quick scanning. Green resources
+will be created (or destroyed and then created if an existing resource
+exists), yellow resources are being changed in-place, and red resources
+will be destroyed. Cyan entries are data sources to be read.
+
+Note: You didn&#39;t specify an &quot;-out&quot; parameter to save this plan, so when
+&quot;apply&quot; is called, Terraform can&#39;t guarantee this is what will execute.
+
++ google_container_cluster.primary
+    additional_zones.#:                   &quot;&lt;computed&gt;&quot;
+    cluster_ipv4_cidr:                    &quot;&lt;computed&gt;&quot;
+    endpoint:                             &quot;&lt;computed&gt;&quot;
+    initial_node_count:                   &quot;3&quot;
+    instance_group_urls.#:                &quot;&lt;computed&gt;&quot;
+    logging_service:                      &quot;&lt;computed&gt;&quot;
+    master_auth.#:                        &quot;1&quot;
+    master_auth.0.client_certificate:     &quot;&lt;computed&gt;&quot;
+    master_auth.0.client_key:             &quot;&lt;sensitive&gt;&quot;
+    master_auth.0.cluster_ca_certificate: &quot;&lt;computed&gt;&quot;
+    master_auth.0.password:               &quot;&lt;sensitive&gt;&quot;
+    master_auth.0.username:               &quot;kubeuser&quot;
+    monitoring_service:                   &quot;&lt;computed&gt;&quot;
+    name:                                 &quot;vulgr-cluster&quot;
+    network:                              &quot;default&quot;
+    node_config.#:                        &quot;1&quot;
+    node_config.0.disk_size_gb:           &quot;&lt;computed&gt;&quot;
+    node_config.0.image_type:             &quot;&lt;computed&gt;&quot;
+    node_config.0.local_ssd_count:        &quot;&lt;computed&gt;&quot;
+    node_config.0.machine_type:           &quot;&lt;computed&gt;&quot;
+    node_config.0.oauth_scopes.#:         &quot;4&quot;
+    node_config.0.oauth_scopes.0:         &quot;https://www.googleapis.com/auth/compute&quot;
+    node_config.0.oauth_scopes.1:         &quot;https://www.googleapis.com/auth/devstorage.read_only&quot;
+    node_config.0.oauth_scopes.2:         &quot;https://www.googleapis.com/auth/logging.write&quot;
+    node_config.0.oauth_scopes.3:         &quot;https://www.googleapis.com/auth/monitoring&quot;
+    node_config.0.service_account:        &quot;&lt;computed&gt;&quot;
+    node_pool.#:                          &quot;&lt;computed&gt;&quot;
+    node_version:                         &quot;&lt;computed&gt;&quot;
+    zone:                                 &quot;europe-west1-b&quot;
+
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+</span></code></pre>
+<p>Finally, let's build our cluster:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-{.bash}" data-lang="{.bash}"><span style="color:#c0c5ce;">$ GOOGLE_APPLICATION_CREDENTIALS=~/.gcp_creds.json terraform apply
+google_container_cluster.primary: Creating...
+  additional_zones.#:                   &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  cluster_ipv4_cidr:                    &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  endpoint:                             &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  initial_node_count:                   &quot;&quot; =&gt; &quot;3&quot;
+  instance_group_urls.#:                &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  logging_service:                      &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  master_auth.#:                        &quot;&quot; =&gt; &quot;1&quot;
+  master_auth.0.client_certificate:     &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  master_auth.0.client_key:             &quot;&lt;sensitive&gt;&quot; =&gt; &quot;&lt;sensitive&gt;&quot;
+  master_auth.0.cluster_ca_certificate: &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  master_auth.0.password:               &quot;&lt;sensitive&gt;&quot; =&gt; &quot;&lt;sensitive&gt;&quot;
+  master_auth.0.username:               &quot;&quot; =&gt; &quot;kubeuser&quot;
+  monitoring_service:                   &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  name:                                 &quot;&quot; =&gt; &quot;vulgr-cluster&quot;
+  network:                              &quot;&quot; =&gt; &quot;default&quot;
+  node_config.#:                        &quot;&quot; =&gt; &quot;1&quot;
+  node_config.0.disk_size_gb:           &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  node_config.0.image_type:             &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  node_config.0.local_ssd_count:        &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  node_config.0.machine_type:           &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  node_config.0.oauth_scopes.#:         &quot;&quot; =&gt; &quot;4&quot;
+  node_config.0.oauth_scopes.0:         &quot;&quot; =&gt; &quot;https://www.googleapis.com/auth/compute&quot;
+  node_config.0.oauth_scopes.1:         &quot;&quot; =&gt; &quot;https://www.googleapis.com/auth/devstorage.read_only&quot;
+  node_config.0.oauth_scopes.2:         &quot;&quot; =&gt; &quot;https://www.googleapis.com/auth/logging.write&quot;
+  node_config.0.oauth_scopes.3:         &quot;&quot; =&gt; &quot;https://www.googleapis.com/auth/monitoring&quot;
+  node_config.0.service_account:        &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  node_pool.#:                          &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  node_version:                         &quot;&quot; =&gt; &quot;&lt;computed&gt;&quot;
+  zone:                                 &quot;&quot; =&gt; &quot;europe-west1-b&quot;
+google_container_cluster.primary: Still creating... (10s elapsed)
+...
+google_container_cluster.primary: Still creating... (3m0s elapsed)
+google_container_cluster.primary: Creation complete (ID: test-cluster)
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+The state of your infrastructure has been saved to the path
+below. This state is required to modify and destroy your
+infrastructure, so keep it safe. To inspect the complete state
+use the `terraform show` command.
+
+State path:
+...
+</span></code></pre><h2 id="list-the-nodes">List The Nodes</h2>
+<p>Did it actually work? Before we can test, we need to get some credentials. To retrieve
+the credentials for the cluster:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-{.bash}" data-lang="{.bash}"><span style="color:#c0c5ce;">$ gcloud container clusters get-credentials test-cluster --zone europe-west1-b --project my-project
+Fetching cluster endpoint and auth data.
+kubeconfig entry generated for test-cluster.
+</span></code></pre>
+<p>Switch to this context in kubectl:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-{.bash}" data-lang="{.bash}"><span style="color:#c0c5ce;">$ kubectl config set-cluster test-cluster
+Cluster &quot;test-cluster&quot; set.
+</span></code></pre>
+<p>Now should be able to list the nodes:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-{.bash}" data-lang="{.bash}"><span style="color:#c0c5ce;">$ kubectl get nodes
+NAME                                          STATUS    AGE
+gke-test-cluster-default-pool-a1844955-h5w0   Ready     3m
+gke-test-cluster-default-pool-a1844955-vc3l   Ready     3m
+gke-test-cluster-default-pool-a1844955-wf4v   Ready     3m
+</span></code></pre>
+<p>Excellent! To destroy the cluster simply run:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-{.bash}" data-lang="{.bash}"><span style="color:#c0c5ce;">$ GOOGLE_APPLICATION_CREDENTIALS=~/.gcp_creds.json terraform destroy
+Do you really want to destroy?
+  Terraform will delete all your managed infrastructure.
+  There is no undo. Only &#39;yes&#39; will be accepted to confirm.
+
+  Enter a value: yes
+
+google_container_cluster.primary: Refreshing state... (ID: test-cluster)
+
+Destroy complete! Resources: 0 destroyed.
+</span></code></pre><h1 id="conclusion">Conclusion</h1>
+<p>There's not much to codifying a cluster setup on Google Cloud. Note that there are some limitations,
+one of the bigger ones being updates, you cannot update the <code>google_container_cluster</code> resource without terraform
+destroying the initial cluster and creating a new one. Depending on how you plan to apply updates this may
+or may not be a problem - for example you could choose to create <em>an entire new cluster</em> with updates
+and migrate any existing workloads on the old onto the new , finally destroying the old one.</p>
+<p>Now that you have a kubernetes cluster, you can also manage this using the
+<a href="https://www.terraform.io/docs/providers/kubernetes/index.html">Kubernetes Provider</a>, I'll leave that
+for another post.</p>
+<p>The code from this post was adapted from a project I'm toying about with. You can view the code up
+to this post <a href="https://github.com/wayofthepie/forge-gcp/tree/tfblog01">here</a>,
+note that some resource values are different.</p>
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p><a href="https://www.terraform.io/docs/state/remote.html">Remote State</a>.</p>
+</div>
+<div class="footnote-definition" id="2"><sup class="footnote-definition-label">2</sup>
+<p><a href="https://www.terraform.io/docs/providers/google/r/container_cluster.html">google_container_cluster</a>.</p>
+</div>
+<div class="footnote-definition" id="3"><sup class="footnote-definition-label">3</sup>
+<p>See the overview at <a href="https://www.terraform.io/docs/configuration/variables.html">variables</a>.</p>
+</div>
+
+</div>
+
+    </div>
+
+</body>
+
+</html>
