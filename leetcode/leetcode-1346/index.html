@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+
+    <title></title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css" media="print">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    
+
+    
+    
+</head>
+
+<body class="">
+    
+    <div class="sidebar">
+        <div class="container sidebar-sticky">
+            <ul class="sidebar-nav">
+                <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+            </ul>
+            <ul class="sidebar-nav-social">
+                <a href="https://github.com/wayofthepie" class="fa fa-github sidebar-nav-social-item"></a>
+                <a href="https://twitter.com/wayofthepie" class="fa fa-twitter sidebar-nav-social-item"></a>
+            </ul>
+        </div>
+    </div>
+    
+
+    <div class="content container">
+        
+<div class="post">
+    <h1 class="post-title">Leetcode: Check if N and its double exists</h1>
+    <span class="post-metadata">
+        <span class="post-date">2021-02-01</span>
+        <span class="post-tags">
+            
+            
+            
+            <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/leetcode">leetcode</a></span>
+            
+            
+            
+        </span>
+    </span>
+    <p>Quick post about a solution to the leetcode problem <a href="https://leetcode.com/problems/check-if-n-and-its-double-exist/">Check If N and Its Double Exist</a>.</p>
+<span id="continue-reading"></span><pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">check_if_exist</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">arr</span><span style="color:#c0c5ce;">: Vec&lt;</span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">&gt;) -&gt; </span><span style="color:#b48ead;">bool </span><span style="color:#c0c5ce;">{
+    arr.</span><span style="color:#96b5b4;">iter</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">enumerate</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">any</span><span style="color:#c0c5ce;">(|(</span><span style="color:#bf616a;">i</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">n</span><span style="color:#c0c5ce;">)| {
+        arr[..i]
+            .</span><span style="color:#96b5b4;">iter</span><span style="color:#c0c5ce;">()
+            .</span><span style="color:#96b5b4;">any</span><span style="color:#c0c5ce;">(|&amp;</span><span style="color:#bf616a;">elem</span><span style="color:#c0c5ce;">| ((n % </span><span style="color:#d08770;">2 </span><span style="color:#c0c5ce;">== </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">) &amp;&amp; (elem == n / </span><span style="color:#d08770;">2</span><span style="color:#c0c5ce;">)) || elem == (n * </span><span style="color:#d08770;">2</span><span style="color:#c0c5ce;">))
+    })
+}
+</span></code></pre>
+<p>This is looking at each element in the <code>Vec</code> of numbers. We iterate through the <code>Vec</code> getting both the value and index of the current number. Then, we compare all <em>previously seen</em> numbers before our current number by either multiplying or dividing the current number by 2. If <code>n</code> is the current number the rules are:</p>
+<ul>
+<li>if <em>n</em> is divisible by 2, compare the previously seen number (<code>elem</code> in the code above) with <em>n / 2</em></li>
+<li>if that is not true, or the number does not match, compare it to <em>n * 2</em></li>
+</ul>
+<p>If neither match, continue on to the next previously seen number until we reach the index of our current number. Then we know our current number has no doubles in the <code>Vec</code> and also that nothing doulbes to it. If we ever get a match, <em>any</em> is short-circuiting, so we return the first (if any) match in both iterations.</p>
+
+</div>
+
+    </div>
+
+</body>
+
+</html>

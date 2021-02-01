@@ -1,0 +1,820 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+	<title> - haskell</title>
+	<subtitle>Software Pie</subtitle>
+	<link href="https://wayofthepie.github.io/tags/haskell/atom.xml" rel="self" type="application/atom+xml"/>
+  <link href="https://wayofthepie.github.io"/>
+	<generator uri="https://www.getzola.org/">Zola</generator>
+	<updated>2017-03-30T00:00:00+00:00</updated>
+	<id>https://wayofthepie.github.io/tags/haskell/atom.xml</id>
+	<entry xml:lang="en">
+		<title>Building An Assembler In Haskell: Implementation</title>
+		<published>2017-03-30T00:00:00+00:00</published>
+		<updated>2017-03-30T00:00:00+00:00</updated>
+		<link href="https://wayofthepie.github.io/building-an-assembler-in-haskell-part2/" type="text/html"/>
+		<id>https://wayofthepie.github.io/building-an-assembler-in-haskell-part2/</id>
+		<content type="html">&lt;p&gt;In the
+&lt;a href=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;building-an-assembler-in-haskell&#x2F;&quot;&gt;previous post&lt;&#x2F;a&gt;
+we wrote a grammar for a simple assembly language, wrote the outline of our parser,
+derived some properties from the grammar for a simple parser &lt;code&gt;byte&lt;&#x2F;code&gt; and implemented &lt;code&gt;byte&lt;&#x2F;code&gt;.
+We also saw that there are a few deficiencies in our grammar. In this post we&#x27;ll implement
+&lt;code&gt;bytes&lt;&#x2F;code&gt;, &lt;code&gt;menmonic&lt;&#x2F;code&gt;, &lt;code&gt;label&lt;&#x2F;code&gt; and &lt;code&gt;labelAssign&lt;&#x2F;code&gt;. For each parser I&#x27;ll start with some &lt;em&gt;QuickCheck&lt;&#x2F;em&gt;
+properties then use those as the spec to implement the parser. Let&#x27;s get to it!&lt;&#x2F;p&gt;
+&lt;span id=&quot;continue-reading&quot;&gt;&lt;&#x2F;span&gt;
+&lt;hr &#x2F;&gt;
+&lt;h1 id=&quot;imports&quot;&gt;Imports&lt;&#x2F;h1&gt;
+&lt;p&gt;First, the imports for modules we use, that should make it clearer where functions are
+coming from.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Control.Monad (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;void&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- from the &amp;quot;text&amp;quot; package
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import qualified &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Data.Text &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;T       
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- from the &amp;quot;megaparsec&amp;quot; package
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Text.Megaparsec &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;hiding &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Label&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;label&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- from the &amp;quot;megaparsec&amp;quot; package
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import qualified &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Text.Megaparsec.Lexer &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;L 
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Note that &lt;code&gt;Text.Megaparsec&lt;&#x2F;code&gt; contains a type &lt;code&gt;Label&lt;&#x2F;code&gt; and a function &lt;code&gt;label&lt;&#x2F;code&gt;, we use both
+these as names for our own type and function for label parsing, so we hide them when
+importing.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h1 id=&quot;lexemes-and-space&quot;&gt;Lexemes And Space&lt;&#x2F;h1&gt;
+&lt;p&gt;The &lt;em&gt;lexemes&lt;&#x2F;em&gt; of a language are the smallest syntactic unit. &lt;em&gt;Tokens&lt;&#x2F;em&gt; are categories of
+&lt;em&gt;lexemes&lt;&#x2F;em&gt;. In our case, the &lt;em&gt;&amp;quot;STORE&amp;quot;&lt;&#x2F;em&gt; string is an example of a lexeme in the category of
+&lt;em&gt;label&lt;&#x2F;em&gt; tokens. Let&#x27;s assume we can safely eat any whitespace proceeding lexemes.
+With this in mind, and before we continue implementing the parsers for our language,
+let&#x27;s create convenience functions for parsing trailing space after our lexemes.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;spaceEater &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()
+spaceEater = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;L&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.space
+  (void spaceChar)
+  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;L&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.skipLineComment &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;)
+  (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;L&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.skipBlockComment &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&#x2F;*&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;*&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;)
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;lexeme &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;a &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;-&amp;gt; Parser &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;a
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;lexeme = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;L&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.lexeme spaceEater
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;spaceEater&lt;&#x2F;code&gt; uses &lt;em&gt;megaparsec&#x27;s&lt;&#x2F;em&gt;
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec-Lexer.html#v:space&quot;&gt;space&lt;&#x2F;a&gt;
+function to build a parser that consumes and discards whitespace and comments. Note that it is
+prefixed with &lt;code&gt;L.&lt;&#x2F;code&gt; here (&lt;code&gt;L.space&lt;&#x2F;code&gt;) because &lt;code&gt;Text.Megaparsec.Lexer&lt;&#x2F;code&gt; is imported qualified as
+&lt;code&gt;L&lt;&#x2F;code&gt;, see &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;emu-mos6502-asm-blog&#x2F;blob&#x2F;e454cce2af3c938e229f1d60a2f3c3d0bf3a3adb&#x2F;src&#x2F;Assembler.hs#L6&quot;&gt;here&lt;&#x2F;a&gt;.
+Using &lt;code&gt;spaceEater&lt;&#x2F;code&gt; we create a function called &lt;code&gt;lexeme&lt;&#x2F;code&gt; which we will use to &lt;em&gt;wrap&lt;&#x2F;em&gt; parsers
+so they also consume trailing whitespace. This uses
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec-Lexer.html#v:lexeme&quot;&gt;lexeme&lt;&#x2F;a&gt;
+from &lt;em&gt;megaparsec&lt;&#x2F;em&gt; which takes a space parser, in our case &lt;code&gt;spaceEater&lt;&#x2F;code&gt;, and a parser for a
+lexeme.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;megaparsec-space-function&quot;&gt;Megaparsec Space Function&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;code&gt;space&lt;&#x2F;code&gt; comes from &lt;code&gt;Text.Megaparsec.Lexer&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;space &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: MonadParsec &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;e s m
+      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;=&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;m &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- ^ A parser for a space character (e.g. @&amp;#39;void&amp;#39; &amp;#39;C.spaceChar&amp;#39;@)
+      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;-&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;m &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- ^ A parser for a line comment (e.g. &amp;#39;skipLineComment&amp;#39;)
+      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;-&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;m &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- ^ A parser for a block comment (e.g. &amp;#39;skipBlockComment&amp;#39;)
+      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;-&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;m &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The type of &lt;code&gt;space&lt;&#x2F;code&gt; corresponds to the following:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;The first argument is a parser for space, we use &lt;code&gt;void spaceChar&lt;&#x2F;code&gt; here.
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec-Char.html#v:spaceChar&quot;&gt;spaceChar&lt;&#x2F;a&gt;
+parses a space character, and
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;base-4.9.0.0&#x2F;docs&#x2F;Data-Functor.html#v:void&quot;&gt;void&lt;&#x2F;a&gt;
+discards the parsed character.&lt;&#x2F;li&gt;
+&lt;li&gt;The second argument is a line comment parser. We use a function from
+&lt;em&gt;megaparsec&lt;&#x2F;em&gt; called
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec-Lexer.html#v:skipLineComment&quot;&gt;skipLineComment&lt;&#x2F;a&gt;,
+which does what it says - skips line comments starting with the provided character, &amp;quot;;&amp;quot; in
+our case.&lt;&#x2F;li&gt;
+&lt;li&gt;The last argument is a block comment parser, here we use
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec-Lexer.html#v:skipBlockComment&quot;&gt;skipBlockComment&lt;&#x2F;a&gt;,
+which parses and discards data between &amp;quot;&#x2F;&lt;em&gt;&amp;quot; and &amp;quot;&lt;&#x2F;em&gt;&#x2F;&amp;quot;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;I left out the description of the
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec-Prim.html#t:MonadParsec&quot;&gt;MonadParsec&lt;&#x2F;a&gt;
+typeclass, I&#x27;ll leave this until a future post where I&#x27;ll dive into the &lt;em&gt;megaparsec&lt;&#x2F;em&gt; types
+in more depth.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h1 id=&quot;bytes&quot;&gt;bytes&lt;&#x2F;h1&gt;
+&lt;h2 id=&quot;properties&quot;&gt;Properties&lt;&#x2F;h2&gt;
+&lt;p&gt;First, let&#x27;s write some properties!&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;newtype &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;TwoCharHexString &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;TwoCharHexString T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Text &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;deriving &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Show
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;instance Arbitrary TwoCharHexString where
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  arbitrary = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;    upper &amp;lt;- choose (&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;A&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;, &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;F&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;)
+    lower &amp;lt;- choose (&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;a&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;, &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;)
+    num   &amp;lt;- choose (&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;, &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;9&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;)
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; vals = [upper, lower, num]
+    x &amp;lt;- elements vals
+    y &amp;lt;- elements vals
+    pure $ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;TwoCharHexString&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.pack (x:[y]))
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- Should parse valid two char hexstring.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;prop_byte_parseValidData (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;TwoCharHexString&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; s) = parse byte &amp;quot;&amp;quot; s  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;shouldParse&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; s
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- When successful should not consume more input.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;prop_byte_parseSuccessShouldNotConsume (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;TwoCharHexString&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; s) extra =
+  runParser&amp;#39; byte (initialState (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.append s extra)) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;succeedsLeaving&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; extra
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;byte&lt;&#x2F;code&gt; should parse a two character hex string, representing a byte, so we create a newtype
+&lt;code&gt;TwoCharHexString&lt;&#x2F;code&gt; to represent this. The &lt;code&gt;Arbitrary&lt;&#x2F;code&gt; instance is made up of a random
+selection of two characters from the set of upper case &lt;code&gt;A&lt;&#x2F;code&gt; to &lt;code&gt;F&lt;&#x2F;code&gt;, lower case &lt;code&gt;a&lt;&#x2F;code&gt; to &lt;code&gt;f&lt;&#x2F;code&gt;
+letters and any single digit. With this arbitrary instance &lt;em&gt;QuickCheck&lt;&#x2F;em&gt; can now generate
+random instances of our &lt;code&gt;TwoCharHexString&lt;&#x2F;code&gt; type.&lt;&#x2F;p&gt;
+&lt;p&gt;Note the use of:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;hspec-megaparsec-0.3.1&#x2F;docs&#x2F;Test-Hspec-Megaparsec.html#v:shouldParse&quot;&gt;shouldParse&lt;&#x2F;a&gt; -
+&lt;code&gt;shouldParse&lt;&#x2F;code&gt; takes a parse result, the expected value and returns an
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;hspec-expectations-0.8.2&#x2F;docs&#x2F;Test-Hspec-Expectations.html#t:Expectation&quot;&gt;Expectation&lt;&#x2F;a&gt;.
+The &lt;code&gt;Expectation&lt;&#x2F;code&gt; succeeds if the result is equal to the expected value, and fails otherwise.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;hspec-megaparsec-0.3.1&#x2F;docs&#x2F;Test-Hspec-Megaparsec.html#v:succeedsLeaving&quot;&gt;succeedsLeaving&lt;&#x2F;a&gt; -
+&lt;code&gt;succeedsLeaving&lt;&#x2F;code&gt; checks whether a parser has succeeded leaving the specified input untouched.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Simple! We now have a property which checks that the parser parses what we expect and
+another which checks that it does not consume more input than it should. As of now I have
+nothing in mind for custom error messages, the ones &lt;em&gt;megaparsec&lt;&#x2F;em&gt; spits out are generally
+useful enough for parsers this small, so for now I don&#x27;t think there is a need for a property
+which checks the error case.&lt;&#x2F;p&gt;
+&lt;p&gt;Ok, now that&#x27;s done, we have a spec for our implementation to follow!&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;implementation&quot;&gt;Implementation&lt;&#x2F;h2&gt;
+&lt;p&gt;The &lt;code&gt;bytes&lt;&#x2F;code&gt; parser parses two bytes, the second being optional. We can use our &lt;a href=&quot;&#x2F;posts&#x2F;2017-03-03-Building-an-assembler-in-haskell.html#implementation&quot;&gt;single
+byte parser&lt;&#x2F;a&gt;
+(which we defined in the previous post) to parse each one, along with &lt;em&gt;megaparsec&#x27;s&lt;&#x2F;em&gt;
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec.html#v:option&quot;&gt;option&lt;&#x2F;a&gt; function
+to optionally parse the second byte.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;code&gt;option x p&lt;&#x2F;code&gt; tries to apply parser &lt;code&gt;p&lt;&#x2F;code&gt;, if &lt;code&gt;p&lt;&#x2F;code&gt; fails without consuming input it will return
+the value &lt;code&gt;x&lt;&#x2F;code&gt;. In our case this is exactly what we want, if &lt;code&gt;byte&lt;&#x2F;code&gt; fails to parse when parsing
+the second byte we can just return the empty string. As we are building a &lt;code&gt;Text&lt;&#x2F;code&gt; value with
+this parser we can then append the first byte onto the second and if the second is empty, we
+just get the first.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;bytes &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Text
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;bytes = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  char &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;
+  firstByte &amp;lt;- byte
+  anotherByte &amp;lt;- option &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.empty byte
+  pure $ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.append firstByte anotherByte
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Run the properties and all should be green!&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h1 id=&quot;mnemonic&quot;&gt;mnemonic&lt;&#x2F;h1&gt;
+&lt;h2 id=&quot;properties-1&quot;&gt;Properties&lt;&#x2F;h2&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;newtype &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;ValidMnemonic &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;ValidMnemonic T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Text &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;deriving &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Show
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;instance Arbitrary ValidMnemonic where
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  arbitrary = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;    upper  &amp;lt;- choose (&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;A&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;, &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Z&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;)
+    pure $ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;ValidMnemonic&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.pack [upper, upper, upper])
+
+prop_mnemonic_parseValidMnemString (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;ValidMnemonic&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; s) =
+  parse mnemonic &amp;quot;&amp;quot; s &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;shouldParse&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Mnemonic&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; s)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Really simple, a valid mnemonic is any upper case three letter string, so that&#x27;s exactly
+what our &lt;code&gt;Arbitrary&lt;&#x2F;code&gt; instance specifies.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;implementation-1&quot;&gt;Implementation&lt;&#x2F;h2&gt;
+&lt;p&gt;Here we use
+&lt;em&gt;megaparsec&#x27;s&lt;&#x2F;em&gt; &lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec.html#v:count&quot;&gt;count&lt;&#x2F;a&gt;
+and &lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec.html#v:upperChar&quot;&gt;upperChar&lt;&#x2F;a&gt;
+functions.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;count n p&lt;&#x2F;code&gt; runs the parser &lt;code&gt;p&lt;&#x2F;code&gt; &lt;code&gt;n&lt;&#x2F;code&gt; times.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;upperChar&lt;&#x2F;code&gt; is a parser for upper case Unicode characters.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Following is the implementation.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;mnemonic &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser Mnemonic
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;mnemonic = lexeme $ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Mnemonic &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;. &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.pack &amp;lt;$&amp;gt; mnem
+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;where
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  mnem = count &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; upperChar
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;So what does this actually do?&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;We create a function called &lt;code&gt;mnem&lt;&#x2F;code&gt;, defined as &lt;code&gt;count 3 upperChar&lt;&#x2F;code&gt;, this
+parses three upper case characters,&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;T.pack&lt;&#x2F;code&gt; is &lt;code&gt;pack&lt;&#x2F;code&gt; from &lt;code&gt;Data.Text&lt;&#x2F;code&gt;, it packs a &lt;code&gt;String&lt;&#x2F;code&gt; into a &lt;code&gt;Text&lt;&#x2F;code&gt; value.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;Mnemonic&lt;&#x2F;code&gt; is the constructor for our &lt;code&gt;newtype&lt;&#x2F;code&gt; which we defined in the last post -
+&lt;code&gt;newtype Mnemonic = Mnemonic T.Text deriving Show&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;lexeme&lt;&#x2F;code&gt; we defined above, it eats trailing whitespace and comments.&lt;&#x2F;li&gt;
+&lt;li&gt;Finally &lt;code&gt;&amp;lt;$&amp;gt;&lt;&#x2F;code&gt; is the infix synonym for &lt;code&gt;fmap&lt;&#x2F;code&gt;, which lifts a single argument function into
+a
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;base-4.9.1.0&#x2F;docs&#x2F;Data-Functor.html#t:Functor&quot;&gt;Functor&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;putting-it-all-together&quot;&gt;Putting it all together...&lt;&#x2F;h2&gt;
+&lt;p&gt;Putting it all together, what we get is a function which parses three upper case characters as a &lt;code&gt;String&lt;&#x2F;code&gt;,
+we then map &lt;code&gt;Mnemonic . T.pack&lt;&#x2F;code&gt; over the
+value that &lt;code&gt;mnem&lt;&#x2F;code&gt; parses which packs it into a &lt;code&gt;Text&lt;&#x2F;code&gt; value and builds a
+&lt;code&gt;Mnemonic&lt;&#x2F;code&gt; from that value, finally it consumes whitespace or comments after the three characters
+with &lt;code&gt;lexeme&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h1 id=&quot;label&quot;&gt;label&lt;&#x2F;h1&gt;
+&lt;h2 id=&quot;properties-2&quot;&gt;Properties&lt;&#x2F;h2&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;newtype &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;LabelWithLetter &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;LabelWithLetter T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Text &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;deriving &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Show
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;newtype &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;LabelWithNonLetter &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;LabelWithNonLetter T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Text &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;deriving &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Show
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;instance Arbitrary LabelWithLetter where
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  arbitrary = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;    lbl &amp;lt;- genAlphaNum
+    lowerLetter &amp;lt;- choose (&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;a&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;, &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;z&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;)
+    upperLetter &amp;lt;- choose (&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;A&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;, &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;Z&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;)
+    start &amp;lt;- elements [lowerLetter, upperLetter]
+    pure . &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;LabelWithLetter &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;$ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.pack (start:lbl)
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;instance Arbitrary LabelWithNonLetter where
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  arbitrary = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;    (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;LabelWithLetter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; lbl) &amp;lt;- arbitrary
+    nonAlphaChar &amp;lt;- suchThat (arbitrary :: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Gen Char&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) (\s -&amp;gt; not $ isAlpha s)
+    pure . &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;LabelWithNonLetter &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;$ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.append (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.pack [nonAlphaChar]) lbl
+
+prop_label_validLabelString (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;LabelWithLetter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; lbl) =
+  parse label &amp;quot;&amp;quot; lbl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;shouldParse&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Label&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; lbl)
+
+prop_label_invalidLabelString (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;LabelWithNonLetter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; lbl) =
+  parse label &amp;quot;&amp;quot; lbl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;shouldFailWith&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  err posI (utok (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.head lbl) &amp;lt;&amp;gt; elabel &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;letter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;label&lt;&#x2F;code&gt; is a little more involved than the last few parsers. In this case we want to verify
+that it fails when trying to parse a string that does not start with a letter. So we
+need two &lt;code&gt;Arbitrary&lt;&#x2F;code&gt; instances - the first, &lt;code&gt;LabelWithLetter&lt;&#x2F;code&gt;, is for all letter strings which
+start with a letter and the second, &lt;code&gt;LabelWithNonLetter&lt;&#x2F;code&gt;, is for strings which start with a
+non letter character.&lt;&#x2F;p&gt;
+&lt;p&gt;We&#x27;ve seen &lt;code&gt;shouldParse&lt;&#x2F;code&gt;, it was used in the &lt;code&gt;bytes&lt;&#x2F;code&gt; parser, however we haven&#x27;t seen
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;hspec-megaparsec-0.3.1&#x2F;docs&#x2F;Test-Hspec-Megaparsec.html#v:shouldFailWith&quot;&gt;shouldFailWith&lt;&#x2F;a&gt;
+yet and there seems to be quite a bit to it! Let&#x27;s break it down.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;shouldfailwith&quot;&gt;shouldFailWith&lt;&#x2F;h3&gt;
+&lt;p&gt;Sometimes you want to verify that a parser fails on a given input. Not only that, but you
+want to verify that the error which is given on that failure contains the right message,
+position information, etc... &lt;code&gt;shouldFailWith&lt;&#x2F;code&gt; allows you to do this. Let&#x27;s have a look at
+its type.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;shouldFailWith &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;::&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Ord &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;t&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;ShowToken &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;t&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;ShowErrorComponent &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;e&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Show &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;a&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;)
+               &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;=&amp;gt; Either&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;ParseError &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;t e&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;a
+               &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;-&amp;gt; ParseError &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;t e
+               &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;-&amp;gt; Expectation
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;So it takes:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;An &lt;code&gt;Either (ParseError t e) a&lt;&#x2F;code&gt;, which is the return type of &lt;code&gt;Text.Megaparsec&lt;&#x2F;code&gt;&#x27;s
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec.html#v:parse&quot;&gt;parse&lt;&#x2F;a&gt;
+function.&lt;&#x2F;li&gt;
+&lt;li&gt;A &lt;code&gt;ParseError t e&lt;&#x2F;code&gt;, which we can build with &lt;code&gt;Test.Hspec.Megaparsec&lt;&#x2F;code&gt;&#x27;s
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;hspec-megaparsec-0.3.1&#x2F;docs&#x2F;Test-Hspec-Megaparsec.html#v:err&quot;&gt;err&lt;&#x2F;a&gt;
+function.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;The &lt;code&gt;parse&lt;&#x2F;code&gt; and &lt;code&gt;err&lt;&#x2F;code&gt; functions have the following types:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-{.haskell}&quot; data-lang=&quot;{.haskell}&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;err :: NonEmpty SourcePos -- ^ &amp;#39;ParseError&amp;#39; position
+    -&amp;gt; EC t e             -- ^ Error components
+    -&amp;gt; ParseError t e     -- ^ Resulting &amp;#39;ParseError&amp;#39;
+
+parse
+  :: Parsec e s a -- ^ Parser to run
+  -&amp;gt; String       -- ^ Name of source file
+  -&amp;gt; s            -- ^ Input for parser
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Looking at our &lt;code&gt;prop_label_invalidLabelString&lt;&#x2F;code&gt; property:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-{.haskell}&quot; data-lang=&quot;{.haskell}&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;prop_label_invalidLabelString (LabelWithNonLetter lbl) =
+  parse label &amp;quot;&amp;quot; lbl `shouldFailWith` err posI (utok (T.head lbl) &amp;lt;&amp;gt; elabel &amp;quot;letter&amp;quot;)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We run the parser &lt;code&gt;label&lt;&#x2F;code&gt; on the string &lt;code&gt;lbl&lt;&#x2F;code&gt; which is generated from the &lt;code&gt;Arbitrary&lt;&#x2F;code&gt;
+instance of &lt;code&gt;LabelWithNonLetter&lt;&#x2F;code&gt;. We then assert that it fails with the following
+information in the error.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;The initial character of &lt;code&gt;lbl&lt;&#x2F;code&gt; is the cause, this is specified in the &lt;code&gt;err&lt;&#x2F;code&gt; call with
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;hspec-megaparsec-0.3.1&#x2F;docs&#x2F;Test-Hspec-Megaparsec.html#v:posI&quot;&gt;posI&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;It was an unexpected token, &lt;code&gt;utok (T.head lbl)&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;It was expected to be a letter, &lt;code&gt;elabel letter&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;Finally we combine the unexpected token and expected token into one
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;hspec-megaparsec-0.3.1&#x2F;docs&#x2F;Test-Hspec-Megaparsec.html#t:EC&quot;&gt;EC&lt;&#x2F;a&gt;
+using
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;base-4.9.0.0&#x2F;docs&#x2F;Data-Monoid.html#v:-60--62-&quot;&gt;&amp;lt;&amp;gt;&lt;&#x2F;a&gt;
+which is an infix synonymn for
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;base-4.9.0.0&#x2F;docs&#x2F;Data-Monoid.html#v:mappend&quot;&gt;mappend&lt;&#x2F;a&gt;
+(this is from &lt;code&gt;EC&lt;&#x2F;code&gt;&#x27;s
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;base-4.9.0.0&#x2F;docs&#x2F;Data-Monoid.html#t:Monoid&quot;&gt;Monoid&lt;&#x2F;a&gt;
+instance) - i.e. &lt;code&gt;utok (T.head lbl) &amp;lt;&amp;gt; elabel &amp;quot;letter&amp;quot;&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;In English, we expect the &lt;code&gt;label&lt;&#x2F;code&gt; parser to fail on any string which does not start with a
+letter and the error information should say that it failed at the initial position because
+of an unexpected token (giving the actual unexpected character) and finally that it expected
+to see a letter here.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;implementation-2&quot;&gt;Implementation&lt;&#x2F;h2&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-{.haskell}&quot; data-lang=&quot;{.haskell}&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;label :: Parser Label
+label = lexeme $ Label . T.pack &amp;lt;$&amp;gt; ((:) &amp;lt;$&amp;gt; letterChar &amp;lt;*&amp;gt;  many alphaNumChar)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Let&#x27;s forget about everything outside of the brackets for now, and only focus on the
+following.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-{.haskell}&quot; data-lang=&quot;{.haskell}&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(:) &amp;lt;$&amp;gt; letterChar &amp;lt;*&amp;gt;  many alphaNumChar
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;To parse a label we first
+need to parse &lt;em&gt;some&lt;&#x2F;em&gt; string of any length which starts with a letter, according to our grammar.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec.html#v:letterChar&quot;&gt;letterChar&lt;&#x2F;a&gt;
+and
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec.html#v:alphaNumChar&quot;&gt;alphaNumChar&lt;&#x2F;a&gt;
+are functions from megaparsec that parse a single letter and a single alpha-numeric
+character, respectively.
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec.html#v:many&quot;&gt;many&lt;&#x2F;a&gt;
+parses zero or more occurences of the given parser, so &lt;code&gt;many alphaNumChar&lt;&#x2F;code&gt; parses zero or more alpha-numeric
+characters.&lt;&#x2F;p&gt;
+&lt;p&gt;We saw &lt;code&gt;&amp;lt;$&amp;gt;&lt;&#x2F;code&gt; (&lt;code&gt;fmap&lt;&#x2F;code&gt;) when building &lt;code&gt;mnemonic&lt;&#x2F;code&gt;, however we haven&#x27;t used
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;base-4.9.1.0&#x2F;docs&#x2F;Control-Applicative.html#v:-60--42--62-&quot;&gt;&amp;lt;*&amp;gt;&lt;&#x2F;a&gt;
+yet.  &lt;code&gt;&amp;lt;*&amp;gt;&lt;&#x2F;code&gt; (&amp;quot;apply&amp;quot;) is from the
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;base-4.9.1.0&#x2F;docs&#x2F;Control-Applicative.html#t:Applicative&quot;&gt;Applicative&lt;&#x2F;a&gt;
+typeclass, it is just function application for &lt;em&gt;Applicative Functors&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;functor-applicative-quick-description&quot;&gt;Functor&#x2F;Applicative Quick Description&lt;&#x2F;h3&gt;
+&lt;p&gt;A
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;base-4.9.1.0&#x2F;docs&#x2F;Data-Functor.html&quot;&gt;Functor&lt;&#x2F;a&gt;
+is
+something you can map over (a list is a &lt;em&gt;Functor&lt;&#x2F;em&gt;) and an 
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;base-4.9.1.0&#x2F;docs&#x2F;Control-Applicative.html&quot;&gt;Applicative&lt;&#x2F;a&gt;
+(or &lt;em&gt;Appplicative Functor&lt;&#x2F;em&gt;) is something
+that you can sequence functions through. For a more in depth description see 
+&lt;a href=&quot;http:&#x2F;&#x2F;learnyouahaskell.com&#x2F;functors-applicative-functors-and-monoids&quot;&gt;Learn You A Haskell: Functors, Applicative Functors and Monoids&lt;&#x2F;a&gt;.
+Lists give a nice example comparing the two. Let&#x27;s
+say I have a list of &lt;code&gt;[1,2]&lt;&#x2F;code&gt; and want to add &lt;code&gt;1&lt;&#x2F;code&gt; to each element. List is a &lt;code&gt;Functor&lt;&#x2F;code&gt; so I can
+use &lt;code&gt;fmap&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt; fmap (+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) [&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- Or the inline version
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt; (+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) &amp;lt;$&amp;gt; [&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now, lets say I have a list &lt;code&gt;x = [1,2]&lt;&#x2F;code&gt; and a function &lt;em&gt;inside&lt;&#x2F;em&gt; a list, &lt;code&gt;[(+1)]&lt;&#x2F;code&gt;, that I want to
+apply to each element of &lt;code&gt;x&lt;&#x2F;code&gt;. I can&#x27;t use &lt;code&gt;fmap&lt;&#x2F;code&gt; here as its type is &lt;code&gt;(a -&amp;gt; b) -&amp;gt; f a -&amp;gt; f b&lt;&#x2F;code&gt; -
+meaning it lifts the function &lt;code&gt;(a -&amp;gt; b)&lt;&#x2F;code&gt; into the &lt;code&gt;Functor&lt;&#x2F;code&gt; &lt;code&gt;f a&lt;&#x2F;code&gt; which gives an &lt;code&gt;f b&lt;&#x2F;code&gt;. What we want is a
+function, like &lt;code&gt;fmap&lt;&#x2F;code&gt;, but where the function to apply is &lt;em&gt;within&lt;&#x2F;em&gt; the &lt;code&gt;Functor&lt;&#x2F;code&gt; already -
+and this is precisely what &lt;code&gt;Applicative&lt;&#x2F;code&gt; gives us with the function &lt;code&gt;&amp;lt;*&amp;gt;&lt;&#x2F;code&gt;. The type of &lt;code&gt;&amp;lt;*&amp;gt;&lt;&#x2F;code&gt; is:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;(&amp;lt;*&amp;gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;:: f (a -&amp;gt; b) -&amp;gt; f a -&amp;gt; f b
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Excellent! Turns out list also has an &lt;code&gt;Applicative&lt;&#x2F;code&gt; instance, so lets use it in our problem:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt; [(+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;)] &amp;lt;*&amp;gt; [&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Hopefully that gives some intuition as to what &lt;em&gt;Functors&lt;&#x2F;em&gt; and &lt;em&gt;Applicative Functors&lt;&#x2F;em&gt; are and
+how they can be used. It may not be clear yet as to &lt;em&gt;why&lt;&#x2F;em&gt; we use them in our parsers, but I&#x27;ll
+leave that discussion for another post, as it&#x27;s not really needed for the rest of this post,
+and there is quite a bit more to both that I have not mentioned.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;breaking-it-down&quot;&gt;Breaking it down&lt;&#x2F;h2&gt;
+&lt;p&gt;Now the interesting bit. &lt;code&gt;letterChar&lt;&#x2F;code&gt; will parse a single &lt;code&gt;Char&lt;&#x2F;code&gt;, and &lt;code&gt;many alphaNumChar&lt;&#x2F;code&gt; will parse a &lt;code&gt;String&lt;&#x2F;code&gt;, which
+is a &lt;code&gt;[Char]&lt;&#x2F;code&gt;, we need a way of combining the values produced from these parsers so we just
+get a &lt;code&gt;[Char]&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;To do this we map &lt;code&gt;:&lt;&#x2F;code&gt; (the list constructor) over &lt;code&gt;letterChar&lt;&#x2F;code&gt; which has
+type &lt;code&gt;Parser Char&lt;&#x2F;code&gt;. What we end up creating is a function of type
+&lt;code&gt;Parser ([Char] -&amp;gt; [Char])&lt;&#x2F;code&gt;. Let&#x27;s assume &lt;code&gt;letterChar&lt;&#x2F;code&gt; parses a &#x27;c&#x27;:&lt;&#x2F;p&gt;
+&lt;div class=&quot;alert alert-info&quot;&gt;
+Note that I&#x27;m using `p` here as a constructor for values of type `Parser a` for
+the intermediate steps. This keeps things
+short and simple as the real value of `p` for each step doesn&#x27;t really matter in this case.
+&lt;&#x2F;div&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- In case you forgot, here is the type of (:)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;(:) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;:: a -&amp;gt; [a] -&amp;gt; [a]
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- So, given
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;(:) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;lt;$&amp;gt; letterChar &amp;lt;*&amp;gt;  many alphaNumChar
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- After mapping (:) over the value letterChar parsed (&amp;#39;c&amp;#39; in this case) we get
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt; p (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;(:) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;c&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;) &amp;lt;*&amp;gt; many alphaNumChar
+
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Using &lt;code&gt;&amp;lt;*&amp;gt;&lt;&#x2F;code&gt; we then apply &lt;code&gt;p ((:) &#x27;c&#x27;)&lt;&#x2F;code&gt;
+over the value of &lt;code&gt;many alphaNumChar&lt;&#x2F;code&gt;, which itself has type &lt;code&gt;Parser [Char]&lt;&#x2F;code&gt;. Let&#x27;s assume
+&lt;code&gt;many alphaNumChar&lt;&#x2F;code&gt; parses &amp;quot;abc123&amp;quot;:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- From here
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt; p (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;(:) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;c&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;) &amp;lt;*&amp;gt; many alphaNumChar
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- we get
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt; p (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;(:) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;c&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;) &amp;lt;*&amp;gt; p &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;abc123&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- giving
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt; p (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;(:) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;c&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39; &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;abc123&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;)
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- which gives
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt; p &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;cabc123&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;
+
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now we have the value we want, our letter char combined with many alpha-numeric chars,
+with the type &lt;code&gt;Parser [Char]&lt;&#x2F;code&gt; (or &lt;code&gt;Parser String&lt;&#x2F;code&gt;).&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;packing-it-up&quot;&gt;Packing It Up&lt;&#x2F;h2&gt;
+&lt;p&gt;Following the example above we now have:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;label = lexeme $ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Label &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;. &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.pack &amp;lt;$&amp;gt; (p &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;cabc123&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;With our parsed string, we pack it into a &lt;code&gt;Text&lt;&#x2F;code&gt; value, wrap it up in a &lt;code&gt;Label&lt;&#x2F;code&gt;
+and parse (and discard) possible whitespace with &lt;code&gt;lexeme&lt;&#x2F;code&gt;. We&#x27;ve seen this above in other
+parsers, no need to repeat.&lt;&#x2F;p&gt;
+&lt;p&gt;Phew! There was quite a lot to implementing &lt;code&gt;label&lt;&#x2F;code&gt; but we&#x27;re done now, and can use this
+info later in other parsers.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h1 id=&quot;labelassign&quot;&gt;labelAssign&lt;&#x2F;h1&gt;
+&lt;p&gt;Now that &lt;code&gt;label&lt;&#x2F;code&gt; is complete, &lt;code&gt;labelAssign&lt;&#x2F;code&gt; is simple. We will build it from &lt;code&gt;label&lt;&#x2F;code&gt; so
+really when creating a property all we need to check is that it parses and discards a &#x27;:&#x27;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;prop_labelAssign_shouldDiscardColon (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;LabelWithLetter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; lbl) =
+  parse labelAssign &amp;quot;&amp;quot; (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.snoc lbl &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;shouldParse&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;` &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Label&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; lbl
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The implementation:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-{.haskell}&quot; data-lang=&quot;{.haskell}&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;labelAssign :: Parser Label
+labelAssign = lexeme $ label &amp;lt;* char &amp;#39;:&amp;#39;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;*&lt;&#x2F;code&gt; is similar to &lt;code&gt;&amp;lt;*&amp;gt;&lt;&#x2F;code&gt;, the difference is &lt;code&gt;&amp;lt;*&lt;&#x2F;code&gt; discards the value of the second argument.
+In our case &lt;code&gt;label &amp;lt;* char &#x27;:&#x27;&lt;&#x2F;code&gt; says parse a label, then parse a &#x27;:&#x27; but discard it, so it&#x27;s
+not part of the &lt;code&gt;Label&lt;&#x2F;code&gt; which &lt;code&gt;labelAssign&lt;&#x2F;code&gt; builds.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;&#x2F;h1&gt;
+&lt;p&gt;Now we have ~80% of our parser completed, properties for each of the parsers,
+and some understanding (I hope) of one way to test &lt;em&gt;megaparsec&lt;&#x2F;em&gt; parsers.
+In the next post I&#x27;ll dive deeper into &lt;em&gt;megaparsec&lt;&#x2F;em&gt; and  implement the remaining parsers.
+You can view the code up to this point at
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;emu-mos6502-asm-blog&#x2F;tree&#x2F;hasm-blog02&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;emu-mos6502-asm-blog&#x2F;tree&#x2F;hasm-blog02&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>Building An Assembler In Haskell</title>
+		<published>2017-03-03T00:00:00+00:00</published>
+		<updated>2017-03-03T00:00:00+00:00</updated>
+		<link href="https://wayofthepie.github.io/building-an-assembler-in-haskell/" type="text/html"/>
+		<id>https://wayofthepie.github.io/building-an-assembler-in-haskell/</id>
+		<content type="html">&lt;p&gt;Recently I started building an emulator for the MosTech 6502 Cpu, this post is
+about the initial stages of building an assembler for a simple assembly language
+that compiles to runnable 6502 machine code. I&#x27;ve created a repo and updated it as I wrote
+this post, so at the end of most sections that introduce new code I&#x27;ll link to a commit
+which has the code up to that point.&lt;&#x2F;p&gt;
+&lt;span id=&quot;continue-reading&quot;&gt;&lt;&#x2F;span&gt;
+&lt;p&gt;You can see the repo here:
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;emu-mos6502-asm-blog&#x2F;tree&#x2F;hasm-blog01&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;emu-mos6502-asm-blog&#x2F;tree&#x2F;hasm-blog01&lt;&#x2F;a&gt;. The only pre-requisite is installing
+&lt;a href=&quot;https:&#x2F;&#x2F;docs.haskellstack.org&#x2F;en&#x2F;stable&#x2F;README&#x2F;#how-to-install&quot;&gt;stack&lt;&#x2F;a&gt;, once the project is
+cloned you can use &lt;code&gt;stack install&lt;&#x2F;code&gt; to install dependencies and build the project.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;the-language&quot;&gt;The Language&lt;&#x2F;h1&gt;
+&lt;p&gt;First, let&#x27;s define what we want our assembly language to be able to do. To keep it simple,
+we only want to allow assignment and the definition of instructions for now:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;We should be able to define instructions and their operands, e.g. &lt;code&gt;LDA #$20&lt;&#x2F;code&gt;. This says
+load the value $20 into the accumulator.
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;LDA&lt;&#x2F;code&gt; means load date into the accumulator&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;#&lt;&#x2F;code&gt; means this is immediate addressing so use the operand as a &lt;em&gt;value&lt;&#x2F;em&gt; not as an address.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;$20&lt;&#x2F;code&gt; stands for &lt;code&gt;20&lt;&#x2F;code&gt; in hexadecimal&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;We should be able to assign values to variables, e.g. &lt;code&gt;LOCATION = $2020&lt;&#x2F;code&gt;.
+&lt;ul&gt;
+&lt;li&gt;Now anywhere we see &lt;code&gt;LOCATION&lt;&#x2F;code&gt; we can replace with &lt;code&gt;$2020&lt;&#x2F;code&gt;.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;Now for a quick and dirty grammar for our simple language:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;lt;expr&amp;gt;        := &amp;lt;instruction&amp;gt; | &amp;lt;assignment&amp;gt;
+&amp;lt;assignment&amp;gt;  := &amp;lt;label&amp;gt; &amp;quot;=&amp;quot; &amp;lt;bytes&amp;gt;
+&amp;lt;instruction&amp;gt; := [&amp;lt;label&amp;gt; &amp;quot;:&amp;quot;] &amp;lt;menmonic&amp;gt; [&amp;lt;label&amp;gt; | &amp;lt;operand&amp;gt;]
+&amp;lt;operand&amp;gt;     := [&amp;quot;#&amp;quot;] &amp;lt;bytes&amp;gt;
+&amp;lt;bytes&amp;gt;       := &amp;quot;$&amp;quot; &amp;lt;byte&amp;gt; [&amp;lt;byte&amp;gt;]
+&amp;lt;label&amp;gt;       := ([A-Za-z]*[A-Za-z0-9]*)
+&amp;lt;mnemonic&amp;gt;    := 3 * ([A-Z])
+&amp;lt;byte&amp;gt;        := 2 * ([A-Fa-f0-9])
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The above is a variation of EBNF (Extended Backus Naur Form) notation, we allow regular
+expressions (denoted by brackets &lt;code&gt;()&lt;&#x2F;code&gt; e.g. &lt;code&gt;([A-Z])&lt;&#x2F;code&gt; denotes a single upper case letter)
+for simplicity.&lt;&#x2F;p&gt;
+&lt;p&gt;Here&#x27;s a breakdown, from the bottom up:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;byte&amp;gt;&lt;&#x2F;code&gt; is defined as &lt;code&gt;2 * ([A-Fa-f0-9])&lt;&#x2F;code&gt;, this means two consecutive characters that
+are upper or lower case letters betwen &lt;code&gt;A&lt;&#x2F;code&gt; and &lt;code&gt;F&lt;&#x2F;code&gt; or digits, i.e. a two digit hexadecimal value.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;e.g. &lt;code&gt;2F&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;mnemonic&amp;gt;&lt;&#x2F;code&gt; is a three letter string - all upper case.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;e.g. &lt;code&gt;LDA&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;label&amp;gt;&lt;&#x2F;code&gt; is an alphanumeric string of any size, which must start with a letter.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;e.g. &lt;code&gt;Stor3&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Note that we &lt;em&gt;should&lt;&#x2F;em&gt; limit it&#x27;s size, but lets leave it infinite for now!&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;bytes&amp;gt;&lt;&#x2F;code&gt; is a string which starts with a &lt;code&gt;$&lt;&#x2F;code&gt; and must contain at least one &lt;code&gt;&amp;lt;byte&amp;gt;&lt;&#x2F;code&gt;, at
+most two.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;e.g. &lt;code&gt;$2F&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;operand&amp;gt;&lt;&#x2F;code&gt; starts with an optional &lt;code&gt;#&lt;&#x2F;code&gt; followed by &lt;code&gt;&amp;lt;bytes&amp;gt;&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;e.g. &lt;code&gt;#$2f&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;instruction&amp;gt;&lt;&#x2F;code&gt; starts with an optional &lt;code&gt;&amp;lt;label&amp;gt;&lt;&#x2F;code&gt; which &lt;em&gt;must&lt;&#x2F;em&gt; be followed by a &lt;code&gt;:&lt;&#x2F;code&gt; if
+it exists, this is followed by a &lt;code&gt;&amp;lt;mnemonic&amp;gt;&lt;&#x2F;code&gt; and finally an optional &lt;code&gt;&amp;lt;label&amp;gt;&lt;&#x2F;code&gt; &lt;em&gt;xor&lt;&#x2F;em&gt; an &lt;code&gt;&amp;lt;operand&amp;gt;&lt;&#x2F;code&gt;.
+Some instructions use implicit addressing and require no operand or label, hence why this is
+optional.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;e.g. &lt;code&gt;LABEL LDA #$20&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;Note that the possible label at the end is only for certain instructions, for example
+&lt;code&gt;BNE LABEL&lt;&#x2F;code&gt; will jump to the address corresponding to &lt;code&gt;LABEL&lt;&#x2F;code&gt; if the zero flag is not
+set.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;assignment&amp;gt;&lt;&#x2F;code&gt; simply an &lt;code&gt;=&lt;&#x2F;code&gt; with a &lt;code&gt;&amp;lt;label&amp;gt;&lt;&#x2F;code&gt; on the left hand side and a &lt;code&gt;&amp;lt;bytes&amp;gt;&lt;&#x2F;code&gt; on
+the right.&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;e.g. &lt;code&gt;STORE = $2020&lt;&#x2F;code&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;Finally an &lt;code&gt;&amp;lt;expr&amp;gt;&lt;&#x2F;code&gt; can be either an &lt;code&gt;&amp;lt;instruction&amp;gt;&lt;&#x2F;code&gt; or an &lt;code&gt;&amp;lt;assignment&amp;gt;&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;An example program would look as follows.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-{.no-highlight}&quot; data-lang=&quot;{.no-highlight}&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;LDA #$01
+CMP #$02
+BNE notequal
+STA $22
+notequal: BRK
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;And the machine code this compiles to &lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#1&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-{.no-highlight}&quot; data-lang=&quot;{.no-highlight}&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;a9 01 c9 02 d0 02 85 22 00
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now that the language is somewhat spec&#x27;d out, we have an nice overview of how we can start
+building a parser for it. There are a lot of rules not defined in the above spec, for example a
+&lt;code&gt;&amp;lt;label&amp;gt;&lt;&#x2F;code&gt; cannot match a mnemonic - e.g. &lt;code&gt;LDA&lt;&#x2F;code&gt; cannot be a &lt;code&gt;&amp;lt;label&amp;gt;&lt;&#x2F;code&gt; - let&#x27;s not worry about
+these for now.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;building-our-parser&quot;&gt;Building Our Parser&lt;&#x2F;h1&gt;
+&lt;p&gt;Now that we have our grammar, we can start thinking about how we want to build our
+parser. Normally I would work out some types first along with some top-level functions
+and go from there, so lets do that.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;module &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Assembler &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;where
+
+import qualified &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Data.Text &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;T &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- from the &amp;quot;text&amp;quot; package
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;import Text.Megaparsec  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- from the &amp;quot;megaparsec&amp;quot; package
+
+-- | Create a custom parser type. This is megaparsec specific, we will gloss over this in
+-- this post.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;type &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Parser &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Parsec Dec T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Text
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- | A Label is just a Text value.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;newtype &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Label &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Label T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Text &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;deriving &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Show
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- | Indicates whether an address&#x2F; value is preceeded by a &amp;quot;#&amp;quot;.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;newtype &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;IsImmediate &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;IsImmediate Bool &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;deriving &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Show
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- | An address&#x2F;value of one or two bytes which may have a &amp;quot;#&amp;quot;, meaning
+-- immediate, before it.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;data &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Operand &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Operand IsImmediate T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Text &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;deriving &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Show
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- | A three letter upper case string.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;newtype &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Mnemonic &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Mnemonic T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Text &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;deriving &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Show
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- | A label, which should be assigned a value.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;newtype &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Var &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Var Label  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;deriving &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Show
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- | A value, which should be assigned to a Var.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;newtype &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Val &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Val T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Text &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;deriving &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Show
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- | Either a label or an operand.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;data &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;LabelOrOperand &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Lbl Label &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Op Operand &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;deriving &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Show
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- | Either an instruction or an assignment.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;data &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Expr
+  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Instruction&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Maybe Label&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Mnemonic&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Maybe LabelOrOperand&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;)
+  | &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Assignment Var Val
+  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;deriving &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Show
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Most of the values will just be strings (&lt;code&gt;Text&lt;&#x2F;code&gt; types) so to distinguish between them we
+wrap &lt;code&gt;Text&lt;&#x2F;code&gt; in a &lt;code&gt;newtype&lt;&#x2F;code&gt; wrapper for each type we care about.
+For now we&#x27;re not going to worry about constructing anything other than strings (I&#x27;ll be using the
+type &lt;code&gt;Text&lt;&#x2F;code&gt; to denote strings instead of the built-in &lt;code&gt;String&lt;&#x2F;code&gt; in this post &lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#2&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;).
+Looking back at our grammar we have eight symbols, each one can be represented as a
+function which is itself a parser for some subset of the grammar. So the &lt;em&gt;top-level&lt;&#x2F;em&gt;
+functions in this case would be the &lt;em&gt;symbols&lt;&#x2F;em&gt; in our grammar - &lt;code&gt;&amp;lt;expression&amp;gt;&lt;&#x2F;code&gt;, &lt;code&gt;&amp;lt;label&amp;gt;&lt;&#x2F;code&gt; etc...
+We&#x27;ll also add an extra function here for parsing label assignment - labels with a &amp;quot;:&amp;quot;
+after them as in the first part of &lt;code&gt;&amp;lt;instruction&amp;gt;&lt;&#x2F;code&gt; - let&#x27;s call it &lt;code&gt;labelAssign&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;expression &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser Expr
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;expression = undefined
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;assignment &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser Expr
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;assignment = undefined
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;instruction &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser Expr
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;instruction = undefined
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;operand &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser Operand
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;operand = undefined
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;bytes &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Text
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;bytes = undefined
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;labelAssign &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser Label
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;labelAssign = undefined
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;label &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser Label
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;label = undefined
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;mnemonic &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser Mnemonic
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;mnemonic = undefined
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;byte &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Text
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;byte = undefined
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;All functions are &lt;code&gt;undefined&lt;&#x2F;code&gt; so the type checker will pass before we
+begin to implement the logic. With our grammar, we know what each symbol corresponds
+to, so we can use &lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;QuickCheck&quot;&gt;QuickCheck&lt;&#x2F;a&gt;
+to write properties for each function that adhere to its specification in the
+grammar.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;property-driven-parser-development&quot;&gt;Property Driven Parser Development&lt;&#x2F;h2&gt;
+&lt;p&gt;To build the parser I&#x27;m going to use a parser combinator library called
+&lt;a href=&quot;https:&#x2F;&#x2F;mrkkrp.github.io&#x2F;megaparsec&#x2F;&quot;&gt;megaparsec&lt;&#x2F;a&gt;. I
+won&#x27;t go into much detail on megaparsec or parser combinators in this post, simply put,
+parser combinators are a way of building more complex parsers by combining parsers.&lt;&#x2F;p&gt;
+&lt;p&gt;The simplest parser above would be &lt;code&gt;byte&lt;&#x2F;code&gt;, from our grammar this is just a two character
+hexadecimal string. Before we start implementing it, let&#x27;s write a property which encodes
+what we expect it to do.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;generating-our-data-quickcheck-arbitrary&quot;&gt;Generating Our Data - QuickCheck Arbitrary&lt;&#x2F;h3&gt;
+&lt;p&gt;Using QuickCheck to test parsers is really simple and quite powerful. It involves writing
+properties which encode expectations about the ouput of a function given some input.&lt;&#x2F;p&gt;
+&lt;p&gt;To build a property for &lt;code&gt;byte&lt;&#x2F;code&gt; first we need to create  an
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;QuickCheck-2.9.2&#x2F;docs&#x2F;Test-QuickCheck-Arbitrary.html#t:Arbitrary&quot;&gt;Arbitrary&lt;&#x2F;a&gt;
+instance &lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#3&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; for
+the data it expects - two character hexadecimal strings. Creating an instance of &lt;code&gt;Arbitrary&lt;&#x2F;code&gt;
+for a type allows random values of that type to be generated, by default
+QuickCheck will generate 100 random values of the type each test run. For &lt;code&gt;byte&lt;&#x2F;code&gt; this might look
+as follows.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;-- | Wrapper for our two character hexadecimal strings.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;newtype &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;TwoCharHexString &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;= &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;TwoCharHexString T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Text &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;deriving &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;Show
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;instance Arbitrary TwoCharHexString where
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  arbitrary = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;    upper &amp;lt;- choose (&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;A&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;, &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;F&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;)
+    lower &amp;lt;- choose (&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;a&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;, &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;f&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;)
+    num   &amp;lt;- choose (&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;, &amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;9&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;)
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; vals = [upper, lower, num]
+    x &amp;lt;- elements vals
+    y &amp;lt;- elements vals
+    pure $ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;TwoCharHexString&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.pack (x:[y]))
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Here we define a &lt;code&gt;newtype&lt;&#x2F;code&gt; called &lt;code&gt;TwoCharHexString&lt;&#x2F;code&gt;, which is just a wrapper for &lt;code&gt;Text&lt;&#x2F;code&gt;.
+Then we create an &lt;code&gt;Arbitrary&lt;&#x2F;code&gt; instance for this type which builds two character hex string
+&lt;code&gt;Text&lt;&#x2F;code&gt; values. Let&#x27;s run through the instance:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;QuickCheck-2.9.2&#x2F;docs&#x2F;Test-QuickCheck-Gen.html#v:choose&quot;&gt;choose&lt;&#x2F;a&gt;
+generates a random element in the given range, &lt;code&gt;choose (1, 4)&lt;&#x2F;code&gt; generates integers between
+1 and 4 inclusive.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;QuickCheck-2.9.2&#x2F;docs&#x2F;Test-QuickCheck-Gen.html#v:elements&quot;&gt;elements&lt;&#x2F;a&gt;
+generates a single value from the given list.&lt;&#x2F;li&gt;
+&lt;li&gt;With these functions we can generate &lt;code&gt;x&lt;&#x2F;code&gt; and &lt;code&gt;y&lt;&#x2F;code&gt; and build our two character
+string by building a two element list of characters made up of &lt;code&gt;x&lt;&#x2F;code&gt; and &lt;code&gt;y&lt;&#x2F;code&gt; -
+see &lt;code&gt;x:[y]&lt;&#x2F;code&gt; above, this is just a &lt;code&gt;String&lt;&#x2F;code&gt; which is a list of &lt;code&gt;Char&lt;&#x2F;code&gt; - we then pack this
+with &lt;code&gt;T.pack&lt;&#x2F;code&gt; to get our &lt;code&gt;Text&lt;&#x2F;code&gt; value.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h3 id=&quot;building-our-property&quot;&gt;Building Our Property&lt;&#x2F;h3&gt;
+&lt;p&gt;Next we need to write a property that defines what should happen when &lt;code&gt;byte&lt;&#x2F;code&gt; parses these
+string values.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;prop_byte_parse (&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;TwoCharHexString&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; s) = parse byte &amp;quot;&amp;quot; s  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;shouldParse&lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; s
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This is simply a function called &lt;code&gt;prop_byte_parse&lt;&#x2F;code&gt; which takes a value of type
+&lt;code&gt;TwoCharHexString&lt;&#x2F;code&gt; runs the parser &lt;code&gt;byte&lt;&#x2F;code&gt; with the megaparsec &lt;code&gt;parse&lt;&#x2F;code&gt; function &lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#4&quot;&gt;4&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; and
+checks that the result is as expected, in this case parsing a string &lt;code&gt;s&lt;&#x2F;code&gt; should return that
+same string. &lt;code&gt;parse&lt;&#x2F;code&gt; is a function from the &lt;em&gt;megaparsec&lt;&#x2F;em&gt; package which runs our parser on the
+supplied string.&lt;&#x2F;p&gt;
+&lt;p&gt;Finally, &lt;code&gt;shouldParse&lt;&#x2F;code&gt; is a function from
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;hspec-megaparsec&quot;&gt;hspec-megaparsec&lt;&#x2F;a&gt; - a library
+containing utility functions for testing parsers built with megaparsec. Here we are using it to
+say &lt;code&gt;parse byte &amp;quot;&amp;quot; s&lt;&#x2F;code&gt; should parse to the string &lt;code&gt;s&lt;&#x2F;code&gt; - meaning the &lt;code&gt;byte&lt;&#x2F;code&gt; parser run on string &lt;code&gt;s&lt;&#x2F;code&gt; should
+just give us back &lt;code&gt;s&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s add this to our spec so the property check gets run when we launch &lt;code&gt;stack test&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;asmSpec = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  describe &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;byte&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot; $
+    it &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;should parse two consecutive characters in the hex range into a two character string&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot; $
+      property prop_byte_parse
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Running the tests with &lt;code&gt;stack test&lt;&#x2F;code&gt; will run this spec and check that the property &lt;code&gt;prop_byte_parse&lt;&#x2F;code&gt;
+holds when parsing the random values of &lt;code&gt;TwoCharHexString&lt;&#x2F;code&gt; that quickcheck produces - which we
+defined in our &lt;code&gt;Arbitrary&lt;&#x2F;code&gt; instance.&lt;&#x2F;p&gt;
+&lt;p&gt;But wait! The &lt;code&gt;byte&lt;&#x2F;code&gt; function was &lt;code&gt;undefined&lt;&#x2F;code&gt; so the test should fail! Yip, it should give
+output similar to the following.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;...
+Assembler
+  byte
+    should parse two consecutive characters in the hex range into a two character string FAILED [1]
+
+Failures:
+
+  test&#x2F;AssemblerSpec.hs:19:
+  1) Assembler.byte should parse two consecutive characters in the hex range into a two character string
+       uncaught exception: ErrorCall (Prelude.undefined
+       CallStack (from HasCallStack):
+         error, called at libraries&#x2F;base&#x2F;GHC&#x2F;Err.hs:79:14 in base:GHC.Err
+         undefined, called at src&#x2F;Assembler.hs:52:8 in emu-mos6502-asm-blog-0.1.0.0-J3FxRJn8XZkGwqJZfEo09O:Assembler) (after 1 test)
+       *** Failed! (after 1 test):
+       Exception:
+         Prelude.undefined
+         CallStack (from HasCallStack):
+           error, called at libraries&#x2F;base&#x2F;GHC&#x2F;Err.hs:79:14 in base:GHC.Err
+           undefined, called at src&#x2F;Assembler.hs:52:8 in emu-mos6502-asm-blog-0.1.0.0-J3FxRJn8XZkGwqJZfEo09O:Assembler
+       TwoCharHexString &amp;quot;fF&amp;quot;
+
+Randomized with seed 1913513661
+
+Finished in 0.0023 seconds
+1 example, 1 failure
+...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Good, now we can implement &lt;code&gt;byte&lt;&#x2F;code&gt;. I&#x27;ve deliberatly left out some boiler plate such as dependencies
+and test setup, but you can view the full code up to this point, see
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;emu-mos6502-asm-blog&#x2F;blob&#x2F;ff2c770ec79dc1b56446b80cff28c6bfc87ca57a&#x2F;src&#x2F;Assembler.hs&quot;&gt;Assembler.hs&lt;&#x2F;a&gt;
+for the types and functions and
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;emu-mos6502-asm-blog&#x2F;blob&#x2F;ff2c770ec79dc1b56446b80cff28c6bfc87ca57a&#x2F;test&#x2F;AssemblerSpec.hs&quot;&gt;AssemblerSpec.hs&lt;&#x2F;a&gt;
+for the the property and &lt;code&gt;Arbitrary&lt;&#x2F;code&gt; instance.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;implementation&quot;&gt;Implementation&lt;&#x2F;h3&gt;
+&lt;p&gt;So now that we have a property which defines what our &lt;code&gt;byte&lt;&#x2F;code&gt; function should do, we can
+implement it. &lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec.html#v:hexDigitChar&quot;&gt;hexDigitChar&lt;&#x2F;a&gt;
+is a parser from &lt;em&gt;megaparsec&lt;&#x2F;em&gt; which parses a a hexadecimal digit. A byte is made up of two
+such digits so &lt;code&gt;byte&lt;&#x2F;code&gt; is simply a parser which tries to parse two hexadecimal chars.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-haskell&quot; data-lang=&quot;haskell&quot;&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;byte &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;:: Parser T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Text
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;byte = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;do
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  high &amp;lt;- hexDigitChar
+  low &amp;lt;- hexDigitChar
+  pure $ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;T&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.pack [high,low]
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Nice! We read a hex char and call it &lt;code&gt;high&lt;&#x2F;code&gt; and another called &lt;code&gt;low&lt;&#x2F;code&gt; and build a &lt;code&gt;Text&lt;&#x2F;code&gt;
+value.&lt;&#x2F;p&gt;
+&lt;p&gt;The rest of the parsers can be implemented in a similar way - define &lt;code&gt;Arbitrary&lt;&#x2F;code&gt; instances
+for the data they should take, define properties for the expected output and implement!&lt;&#x2F;p&gt;
+&lt;p&gt;I&#x27;ll leave the rest of the implementation for another post. Running &lt;code&gt;stack test&lt;&#x2F;code&gt; now
+should give the following output.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;...
+Assembler
+  byte
+    should parse two consecutive characters in the hex range into a two character string
+
+Finished in 0.0016 seconds
+1 example, 0 failures
+...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Excellent, our implementation passed the property check! You can check out the code up to this point
+&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;emu-mos6502-asm-blog&#x2F;tree&#x2F;90ccef30de0aac6cc0f74df4e688d392c4607846&quot;&gt;here&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;&#x2F;h1&gt;
+&lt;p&gt;This is where I&#x27;ll leave this post. I think it&#x27;s long enough! In the next post we&#x27;ll create the rest
+of the parsers and their properties, and also run through &lt;em&gt;megaparsec&lt;&#x2F;em&gt; in some more detail.
+There are definitely quite a few improvements that can be added to the language,
+and plenty more features that would be useful to have which we can implement in the
+future.&lt;&#x2F;p&gt;
+&lt;p&gt;There are also some limitations in the grammar, for example it currently does not allow
+&lt;code&gt;X&lt;&#x2F;code&gt; or &lt;code&gt;Y&lt;&#x2F;code&gt; indexed addressing &lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#5&quot;&gt;5&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; - e.g. &lt;code&gt;LDA ($2020,X)&lt;&#x2F;code&gt; - we can address these too.&lt;&#x2F;p&gt;
+&lt;p&gt;This post outlines what I have done so far when building the assembler, and really just
+shows my own thought process around designing and implementing. Im actively working on the
+6502 emulator, so I hope to do a post every week. The main goal is to outline my development
+process in implementing the project, hopefully I&#x27;ll introduce some bugs or have some
+interesting issues along the way!&lt;&#x2F;p&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;The reference I&#x27;m using for the emulator is mainly
+&lt;a href=&quot;http:&#x2F;&#x2F;obelisk.me.uk&#x2F;6502&#x2F;reference.html&quot;&gt;http:&#x2F;&#x2F;obelisk.me.uk&#x2F;6502&#x2F;reference.html&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;2&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;2&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;a href=&quot;http:&#x2F;&#x2F;www.alexeyshmalko.com&#x2F;2015&#x2F;haskell-string-types&#x2F;&quot;&gt;Haskell String Types&lt;&#x2F;a&gt; is a
+good post detailing the different string types.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;3&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;3&lt;&#x2F;sup&gt;
+&lt;p&gt;See the documentation for
+&lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;QuickCheck-2.9.2&#x2F;docs&#x2F;Test-QuickCheck-Arbitrary.html&quot;&gt;Arbitrary&lt;&#x2F;a&gt;, this &lt;a href=&quot;https:&#x2F;&#x2F;stackoverflow.com&#x2F;questions&#x2F;16440208&#x2F;how-to-generate-arbitrary-instances-of-a-simple-type-for-quickcheck&quot;&gt;StackOverflow answer&lt;&#x2F;a&gt; is also good.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;4&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;4&lt;&#x2F;sup&gt;
+&lt;p&gt;See the documentation for &lt;a href=&quot;https:&#x2F;&#x2F;hackage.haskell.org&#x2F;package&#x2F;megaparsec-5.2.0&#x2F;docs&#x2F;Text-Megaparsec.html#v:parse&quot;&gt;parse&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;5&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;5&lt;&#x2F;sup&gt;
+&lt;p&gt;See Indexed Indirect, and Indirect Indexed addressing modes
+&lt;a href=&quot;http:&#x2F;&#x2F;www.obelisk.me.uk&#x2F;6502&#x2F;addressing.html&quot;&gt;here&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</content>
+	</entry>
+</feed>

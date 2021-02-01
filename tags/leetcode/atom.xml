@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+	<title> - leetcode</title>
+	<subtitle>Software Pie</subtitle>
+	<link href="https://wayofthepie.github.io/tags/leetcode/atom.xml" rel="self" type="application/atom+xml"/>
+  <link href="https://wayofthepie.github.io"/>
+	<generator uri="https://www.getzola.org/">Zola</generator>
+	<updated>2021-02-01T00:00:00+00:00</updated>
+	<id>https://wayofthepie.github.io/tags/leetcode/atom.xml</id>
+	<entry xml:lang="en">
+		<title>Leetcode: Check if N and its double exists</title>
+		<published>2021-02-01T00:00:00+00:00</published>
+		<updated>2021-02-01T00:00:00+00:00</updated>
+		<link href="https://wayofthepie.github.io/leetcode/leetcode-1346/" type="text/html"/>
+		<id>https://wayofthepie.github.io/leetcode/leetcode-1346/</id>
+		<content type="html">&lt;p&gt;Quick post about a solution to the leetcode problem &lt;a href=&quot;https:&#x2F;&#x2F;leetcode.com&#x2F;problems&#x2F;check-if-n-and-its-double-exist&#x2F;&quot;&gt;Check If N and Its Double Exist&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;span id=&quot;continue-reading&quot;&gt;&lt;&#x2F;span&gt;&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;check_if_exist&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;arr&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Vec&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt;) -&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;bool &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+    arr.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;iter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;enumerate&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;any&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(|(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;i&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;)| {
+        arr[..i]
+            .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;iter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()
+            .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;any&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(|&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;elem&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;| ((n % &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;== &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) &amp;amp;&amp;amp; (elem == n &#x2F; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;)) || elem == (n * &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;))
+    })
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This is looking at each element in the &lt;code&gt;Vec&lt;&#x2F;code&gt; of numbers. We iterate through the &lt;code&gt;Vec&lt;&#x2F;code&gt; getting both the value and index of the current number. Then, we compare all &lt;em&gt;previously seen&lt;&#x2F;em&gt; numbers before our current number by either multiplying or dividing the current number by 2. If &lt;code&gt;n&lt;&#x2F;code&gt; is the current number the rules are:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;if &lt;em&gt;n&lt;&#x2F;em&gt; is divisible by 2, compare the previously seen number (&lt;code&gt;elem&lt;&#x2F;code&gt; in the code above) with &lt;em&gt;n &#x2F; 2&lt;&#x2F;em&gt;&lt;&#x2F;li&gt;
+&lt;li&gt;if that is not true, or the number does not match, compare it to &lt;em&gt;n * 2&lt;&#x2F;em&gt;&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;If neither match, continue on to the next previously seen number until we reach the index of our current number. Then we know our current number has no doubles in the &lt;code&gt;Vec&lt;&#x2F;code&gt; and also that nothing doulbes to it. If we ever get a match, &lt;em&gt;any&lt;&#x2F;em&gt; is short-circuiting, so we return the first (if any) match in both iterations.&lt;&#x2F;p&gt;
+</content>
+	</entry>
+</feed>
