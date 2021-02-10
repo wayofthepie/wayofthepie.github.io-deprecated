@@ -1,63 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="description" content="blah" />
 
     <!-- Enable responsiveness on mobile devices-->
     <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
+    />
 
     <title></title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css" media="print">
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css">
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css">
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css"
+      media="print"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
 
+     
+     
     
+  </head>
 
-    
-    
-</head>
-
-<body class="">
+  <body class="">
     
     <div class="sidebar">
-        <div class="container sidebar-sticky">
-            <ul class="sidebar-nav">
-                <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
-                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
-                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
-            </ul>
-            <ul class="sidebar-nav-social">
-                <a href="https://github.com/wayofthepie" class="fa fa-github sidebar-nav-social-item"></a>
-                <a href="https://twitter.com/wayofthepie" class="fa fa-twitter sidebar-nav-social-item"></a>
-            </ul>
-        </div>
+      <div class="container sidebar-sticky">
+        <ul class="sidebar-nav">
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+        </ul>
+        <ul class="sidebar-nav-social">
+          <a
+            href="https://github.com/wayofthepie"
+            class="fab fa-github sidebar-nav-social-item"
+          ></a>
+          <a
+            href="https://twitter.com/wayofthepie"
+            class="fab fa-twitter sidebar-nav-social-item"
+          ></a>
+        </ul>
+      </div>
     </div>
     
-
     <div class="content container">
-        
+      
 <div class="post">
     <h1 class="post-title">Building An Assembler In Haskell</h1>
     <span class="post-metadata">
+        
+        
+        
+        
+            <div class="post-series">
+            
+                <div>Series <a href="https:&#x2F;&#x2F;wayofthepie.github.io/series/Haskell 6502 Assembler">Haskell 6502 Assembler</a></div>
+            
+            </div>
+        
+        
+
         <span class="post-date">2017-03-03</span>
-        <span class="post-tags">
+        
+        
+            <span class="post-tags">
             
+                <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/haskell">haskell</a></span>
             
-            
-            <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/haskell">haskell</a></span>
-            
-            
-            
-        </span>
+            </span>
+        
+        
+        
+        
     </span>
+    <ul class="table-of-content">
+    
+        <li>
+            <a href="https://wayofthepie.github.io/building-an-assembler-in-haskell/#the-language">The Language</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/building-an-assembler-in-haskell/#building-our-parser">Building Our Parser</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/building-an-assembler-in-haskell/#property-driven-parser-development">Property Driven Parser Development</a>
+                    
+                        <ul>
+                            
+                                <li>
+                                    <a href="https://wayofthepie.github.io/building-an-assembler-in-haskell/#generating-our-data-quickcheck-arbitrary">Generating Our Data - QuickCheck Arbitrary</a>
+                                </li>
+                            
+                                <li>
+                                    <a href="https://wayofthepie.github.io/building-an-assembler-in-haskell/#building-our-property">Building Our Property</a>
+                                </li>
+                            
+                                <li>
+                                    <a href="https://wayofthepie.github.io/building-an-assembler-in-haskell/#implementation">Implementation</a>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/building-an-assembler-in-haskell/#conclusion">Conclusion</a>
+            
+        </li>
+    
+    </ul>
     <p>Recently I started building an emulator for the MosTech 6502 Cpu, this post is
 about the initial stages of building an assembler for a simple assembly language
 that compiles to runnable 6502 machine code. I've created a repo and updated it as I wrote
@@ -429,10 +512,16 @@ good post detailing the different string types.</p>
 <a href="http://www.obelisk.me.uk/6502/addressing.html">here</a>.</p>
 </div>
 
+    <script src="https://utteranc.es/client.js"
+        repo="wayofthepie/wayofthepie.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+    </script>
 </div>
 
     </div>
-
-</body>
-
+  </body>
 </html>

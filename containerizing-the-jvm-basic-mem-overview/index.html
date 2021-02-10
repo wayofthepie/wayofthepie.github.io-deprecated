@@ -1,57 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="description" content="blah" />
 
     <!-- Enable responsiveness on mobile devices-->
     <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
+    />
 
     <title></title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css" media="print">
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css">
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css">
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css"
+      media="print"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
 
+     
+     
     
+  </head>
 
-    
-    
-</head>
-
-<body class="">
+  <body class="">
     
     <div class="sidebar">
-        <div class="container sidebar-sticky">
-            <ul class="sidebar-nav">
-                <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
-                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
-                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
-            </ul>
-            <ul class="sidebar-nav-social">
-                <a href="https://github.com/wayofthepie" class="fa fa-github sidebar-nav-social-item"></a>
-                <a href="https://twitter.com/wayofthepie" class="fa fa-twitter sidebar-nav-social-item"></a>
-            </ul>
-        </div>
+      <div class="container sidebar-sticky">
+        <ul class="sidebar-nav">
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+        </ul>
+        <ul class="sidebar-nav-social">
+          <a
+            href="https://github.com/wayofthepie"
+            class="fab fa-github sidebar-nav-social-item"
+          ></a>
+          <a
+            href="https://twitter.com/wayofthepie"
+            class="fab fa-twitter sidebar-nav-social-item"
+          ></a>
+        </ul>
+      </div>
     </div>
     
-
     <div class="content container">
-        
+      
 <div class="post">
     <h1 class="post-title">Containerizing The JVM: Basic Memory Overview</h1>
     <span class="post-metadata">
+        
+
         <span class="post-date">2018-02-18</span>
-        <span class="post-tags">
-            
-        </span>
+        
     </span>
+    <ul class="table-of-content">
+    
+        <li>
+            <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#what-is-this-post-about">What is this post about?</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#containerizing-a-java-app">Containerizing a java app</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#basic-jvm-analysis">Basic JVM analysis</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#what-are-all-these-classes">What are all these classes?</a>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#heap-and-non-heap-memory">Heap and Non-Heap memory</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#non-heap-memory">Non-Heap Memory</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#practical-memory-issues">Practical memory issues</a>
+                    
+                        <ul>
+                            
+                                <li>
+                                    <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#limiting-memory-with-docker">Limiting memory with docker</a>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#what-kills-the-container">What kills the container?</a>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#conclusion">Conclusion</a>
+            
+        </li>
+    
+    </ul>
     <p>For the past few years where I work has been running JVM applications on <a href="https://www.cloudfoundry.org/">Cloud Foundry</a>. 
 We have come across many issues in relation to memory when running JVM's within memory 
 bounded containers. </p>
@@ -494,10 +584,16 @@ pitfalls I've come across when running JVM's within containerized environments.<
 <p>See <a href="https://github.com/docker/docker-ce/blob/17.12/components/engine/pkg/sysinfo/sysinfo_linux.go#L90">docker memory swappiness</a>. <a href="https://wayofthepie.github.io/containerizing-the-jvm-basic-mem-overview/#docker-swap-ref">⮨</a></p>
 </div>
 
+    <script src="https://utteranc.es/client.js"
+        repo="wayofthepie/wayofthepie.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+    </script>
 </div>
 
     </div>
-
-</body>
-
+  </body>
 </html>

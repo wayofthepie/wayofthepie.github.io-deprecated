@@ -1,57 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="description" content="blah" />
 
     <!-- Enable responsiveness on mobile devices-->
     <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
+    />
 
     <title></title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css" media="print">
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css">
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css">
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css"
+      media="print"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
 
+     
+     
     
+  </head>
 
-    
-    
-</head>
-
-<body class="">
+  <body class="">
     
     <div class="sidebar">
-        <div class="container sidebar-sticky">
-            <ul class="sidebar-nav">
-                <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
-                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
-                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
-            </ul>
-            <ul class="sidebar-nav-social">
-                <a href="https://github.com/wayofthepie" class="fa fa-github sidebar-nav-social-item"></a>
-                <a href="https://twitter.com/wayofthepie" class="fa fa-twitter sidebar-nav-social-item"></a>
-            </ul>
-        </div>
+      <div class="container sidebar-sticky">
+        <ul class="sidebar-nav">
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+        </ul>
+        <ul class="sidebar-nav-social">
+          <a
+            href="https://github.com/wayofthepie"
+            class="fab fa-github sidebar-nav-social-item"
+          ></a>
+          <a
+            href="https://twitter.com/wayofthepie"
+            class="fab fa-twitter sidebar-nav-social-item"
+          ></a>
+        </ul>
+      </div>
     </div>
     
-
     <div class="content container">
-        
+      
 <div class="post">
     <h1 class="post-title">Terraform, Google Cloud And Kubernetes</h1>
     <span class="post-metadata">
+        
+
         <span class="post-date">2017-07-15</span>
-        <span class="post-tags">
-            
-        </span>
+        
     </span>
+    <ul class="table-of-content">
+    
+        <li>
+            <a href="https://wayofthepie.github.io/terraform-gcp/#setup">Setup</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/terraform-gcp/#terraform-google-cloud-provider">Terraform Google Cloud Provider</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/terraform-gcp/#cluster-definition">Cluster Definition</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/terraform-gcp/#variables">Variables</a>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/terraform-gcp/#launching-our-cluster">Launching Our Cluster</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/terraform-gcp/#list-the-nodes">List The Nodes</a>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/terraform-gcp/#conclusion">Conclusion</a>
+            
+        </li>
+    
+    </ul>
     <p>I've been hacking about with automated infrastructure setup a lot lately. The two tools
 I've focused on the most are NixOps and Terraform. This post is about the use of terraform
 on <a href="https://cloud.google.com/docs/">Google Cloud Platform</a> (GCP) to create and manage a
@@ -358,10 +430,16 @@ note that some resource values are different.</p>
 <p>See the overview at <a href="https://www.terraform.io/docs/configuration/variables.html">variables</a>.</p>
 </div>
 
+    <script src="https://utteranc.es/client.js"
+        repo="wayofthepie/wayofthepie.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+    </script>
 </div>
 
     </div>
-
-</body>
-
+  </body>
 </html>

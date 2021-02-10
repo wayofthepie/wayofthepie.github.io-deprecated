@@ -30,8 +30,10 @@
         <loc>https://wayofthepie.github.io/leetcode/</loc>
     </url>
     <url>
-        <loc>https://wayofthepie.github.io/leetcode/leetcode-1346/</loc>
-        <lastmod>2021-02-01</lastmod>
+        <loc>https://wayofthepie.github.io/series/</loc>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/series/haskell-6502-assembler/</loc>
     </url>
     <url>
         <loc>https://wayofthepie.github.io/tags/</loc>
@@ -40,10 +42,10 @@
         <loc>https://wayofthepie.github.io/tags/haskell/</loc>
     </url>
     <url>
-        <loc>https://wayofthepie.github.io/tags/leetcode/</loc>
-    </url>
-    <url>
         <loc>https://wayofthepie.github.io/terraform-gcp/</loc>
         <lastmod>2017-07-15</lastmod>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/trees-in-rust/</loc>
     </url>
 </urlset>

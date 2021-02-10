@@ -1,57 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="description" content="blah" />
 
     <!-- Enable responsiveness on mobile devices-->
     <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
+    />
 
     <title></title>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css" media="print">
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css">
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css">
-    <link rel="stylesheet" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css"
+      media="print"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
 
+     
+     
     
+  </head>
 
-    
-    
-</head>
-
-<body class="">
+  <body class="">
     
     <div class="sidebar">
-        <div class="container sidebar-sticky">
-            <ul class="sidebar-nav">
-                <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
-                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
-                <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
-            </ul>
-            <ul class="sidebar-nav-social">
-                <a href="https://github.com/wayofthepie" class="fa fa-github sidebar-nav-social-item"></a>
-                <a href="https://twitter.com/wayofthepie" class="fa fa-twitter sidebar-nav-social-item"></a>
-            </ul>
-        </div>
+      <div class="container sidebar-sticky">
+        <ul class="sidebar-nav">
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+        </ul>
+        <ul class="sidebar-nav-social">
+          <a
+            href="https://github.com/wayofthepie"
+            class="fab fa-github sidebar-nav-social-item"
+          ></a>
+          <a
+            href="https://twitter.com/wayofthepie"
+            class="fab fa-twitter sidebar-nav-social-item"
+          ></a>
+        </ul>
+      </div>
     </div>
     
-
     <div class="content container">
-        
+      
 <div class="post">
     <h1 class="post-title">Installing NixOs</h1>
     <span class="post-metadata">
+        
+
         <span class="post-date">2016-07-10</span>
-        <span class="post-tags">
-            
-        </span>
+        
     </span>
+    <ul class="table-of-content">
+    
+        <li>
+            <a href="https://wayofthepie.github.io/installing-nixos/#introduction">Introduction</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/installing-nixos/#partition">Partition</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/installing-nixos/#creating-partitions-with-gdisk">Creating Partitions With gdisk</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/installing-nixos/#notes-on-the-partitions">Notes On The Partitions</a>
+                    
+                        <ul>
+                            
+                                <li>
+                                    <a href="https://wayofthepie.github.io/installing-nixos/#grub-compatibility-dev-sda1">Grub Compatibility: &#x2F;dev&#x2F;sda1</a>
+                                </li>
+                            
+                                <li>
+                                    <a href="https://wayofthepie.github.io/installing-nixos/#efi-partition-dev-sda2">EFI Partition: &#x2F;dev&#x2F;sda2</a>
+                                </li>
+                            
+                                <li>
+                                    <a href="https://wayofthepie.github.io/installing-nixos/#main-data-partition-dev-sda3">Main Data Partition: &#x2F;dev&#x2F;sda3</a>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/installing-nixos/#linux-unified-key-setup-luks">Linux Unified Key Setup (LUKS)</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/installing-nixos/#encrypting-dev-sda3">Encrypting &#x2F;dev&#x2F;sda3</a>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/installing-nixos/#lvm-setup">LVM Setup</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/installing-nixos/#physical-volume">Physical Volume</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/installing-nixos/#volume-group">Volume Group</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/installing-nixos/#logical-volume">Logical Volume</a>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/installing-nixos/#install-nixos">Install NixOS</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/installing-nixos/#conclusion">Conclusion</a>
+            
+        </li>
+    
+    </ul>
     <h1 id="introduction">Introduction</h1>
 <p>I've recently started diving into <em><a href="https://nixos.org/nix/">Nix</a></em> and
 <em><a href="https://nixos.org/">NixOS</a></em>. <strong>Nix</strong> is a package manager for Linux/Unix systems, a
@@ -506,10 +623,16 @@ Install Manual</a>.
 this is the password you used to create the LUKS volume.</p>
 </div>
 
+    <script src="https://utteranc.es/client.js"
+        repo="wayofthepie/wayofthepie.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+    </script>
 </div>
 
     </div>
-
-</body>
-
+  </body>
 </html>
