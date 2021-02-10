@@ -1,0 +1,735 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+	<title> - rust</title>
+	<subtitle>Software Pie</subtitle>
+	<link href="https://wayofthepie.github.io/tags/rust/atom.xml" rel="self" type="application/atom+xml"/>
+  <link href="https://wayofthepie.github.io"/>
+	<generator uri="https://www.getzola.org/">Zola</generator>
+	<updated>2021-02-06T00:00:00+00:00</updated>
+	<id>https://wayofthepie.github.io/tags/rust/atom.xml</id>
+	<entry xml:lang="en">
+		<title>Binary Search Tree Trim</title>
+		<published>2021-02-06T00:00:00+00:00</published>
+		<updated>2021-02-06T00:00:00+00:00</updated>
+		<link href="https://wayofthepie.github.io/trees-in-rust/bst-trim-leetcode/" type="text/html"/>
+		<id>https://wayofthepie.github.io/trees-in-rust/bst-trim-leetcode/</id>
+		<content type="html">&lt;p&gt;This post came from a Leetcode problem in February&#x27;s daily challenges which I solved. It contained quite a few things which used to be major issues for me when learning Rust, especially around the use of &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;rc&#x2F;struct.Rc.html&quot;&gt;Rc&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;cell&#x2F;struct.RefCell.html&quot;&gt;RefCell&lt;&#x2F;a&gt;. So I thought I&#x27;d write about them. &lt;&#x2F;p&gt;
+&lt;p&gt;The problem is to &lt;a href=&quot;https:&#x2F;&#x2F;leetcode.com&#x2F;problems&#x2F;trim-a-binary-search-tree&#x2F;&quot;&gt;trim a binary search tree&lt;&#x2F;a&gt;. Not that long ago my initial reaction to seeing this problem would be 😱 oh no, a tree in Rust! Luckily I have a lot more experience dealing with referential structures now, and I also recently read &lt;a href=&quot;https:&#x2F;&#x2F;rust-unofficial.github.io&#x2F;too-many-lists&#x2F;index.html&quot;&gt;Learn Rust With Entirely Too Many Linked Lists&lt;&#x2F;a&gt; which is awesome and helped solidify the problems you can encounter with such structures.&lt;&#x2F;p&gt;
+&lt;span id=&quot;continue-reading&quot;&gt;&lt;&#x2F;span&gt;&lt;h2 id=&quot;the-algorithm&quot;&gt;The Algorithm&lt;&#x2F;h2&gt;
+&lt;p&gt;Here is the problem:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Given the root of a binary search tree and the lowest and highest boundaries as low and high, trim the tree so that all its elements lie in [low, high]. Trimming the tree should not change the relative structure of the elements that will remain in the tree (i.e., any node&#x27;s descendant should remain a descendant). It can be proven that there is a unique answer.&lt;&#x2F;p&gt;
+&lt;p&gt;Return the root of the trimmed binary search tree. Note that the root may change depending on the given bounds.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;The algorithm I came up with is as follows, in pseudocode:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;TreeNode {
+    val: String,
+    left: TreeNode,
+    right: TreeNode
+}
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(root: TreeNode, low: int, high: int) -&amp;gt; TreeNode:
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root is null
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; null;
+    
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root.val &amp;lt; low: 
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; We know this node and any node to the left of it can be discarded,
+        &#x2F;&#x2F; so just visit the right subtree, filtering its nodes, and return that.
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(root.right, low, high);
+    
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root.val &amp;gt; high: 
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Similarly, we know this node and any node to the right can be discarded.
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(root.left, low, high);
+    
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root.val &amp;gt; low:
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Here we know that &amp;quot;low &amp;lt; root.val &amp;lt; high&amp;quot;, the current node is valid. 
+        &#x2F;&#x2F; As it is greater than low, there may be more nodes to the left which are
+        &#x2F;&#x2F; valid so visit the left nodes and reassign that filtered subtree to this 
+        &#x2F;&#x2F; nodes left.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;        root.left = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(root.left, low, high);
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;else&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;:
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Here root.val == low, so just discard the left subtree.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;        root.left = null
+    
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root.val &amp;lt; high:
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Similar to the check &amp;quot;root.val &amp;gt; low&amp;quot;, except we visit the right nodes 
+        &#x2F;&#x2F; and reassign the filtered subtree to this nodes right.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;        root.right = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(root.right, low, high);
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;else&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;:
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Here root.val == high, so just discard the right subtree.
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;        root.right = null
+
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;So how does this algorithm translate into Rust, given the real definition of &lt;code&gt;TreeNode&lt;&#x2F;code&gt;?&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;pseudo-code-to-rust-code&quot;&gt;Pseudo-code to Rust Code&lt;&#x2F;h2&gt;
+&lt;p&gt;First the tree nodes. These were given by the problem statement.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Defined in the problem
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;derive&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(Debug, PartialEq, Eq)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub struct &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;TreeNode {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;val&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;left&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;right&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+}
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Defined in the problem
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;impl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;TreeNode {
+    #[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;inline&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;new&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;val&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) -&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        TreeNode {
+            val,
+            left: None,
+            right: None,
+        }
+    }
+}
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub struct &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Solution;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Let&#x27;s create two methods &lt;code&gt;trim_bst&lt;&#x2F;code&gt; and &lt;code&gt;visit&lt;&#x2F;code&gt; on &lt;code&gt;Solution&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;impl &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Solution {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;trim_bst&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;root&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;low&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;high&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    ) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(root, low, high)
+    }
+
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;low&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;high&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    ) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+        unimplemented!()
+    }
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;trim_bst&lt;&#x2F;code&gt; just calls &lt;code&gt;visit&lt;&#x2F;code&gt;. &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;sd&#x2F;macro.unimplemented.html&quot;&gt;unimplemented!()&lt;&#x2F;a&gt; is a macro that will cause a panic if we try to execute it. It allows the code to type check and compile as we add to it. The first step, if the node is &lt;code&gt;None&lt;&#x2F;code&gt; return &lt;code&gt;None&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;low&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;high&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree = subtree?;
+    unimplemented!()
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;subtree&lt;&#x2F;code&gt; is an &lt;code&gt;Option&lt;&#x2F;code&gt; so we can use the &lt;code&gt;?&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#question-mark&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;&lt;a name=&quot;question-mark-ref&quot;&gt;&lt;&#x2F;a&gt; operator on it. Here, &lt;code&gt;let subtree = subtree?;&lt;&#x2F;code&gt; is short for:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;match&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree {
+    Some(val) =&amp;gt; val,
+    None =&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;None,
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Which says - if &lt;code&gt;subtree&lt;&#x2F;code&gt; is &lt;code&gt;None&lt;&#x2F;code&gt; return &lt;code&gt;None&lt;&#x2F;code&gt;, otherwise create a new variable also called &lt;code&gt;subtree&lt;&#x2F;code&gt; and assign the value inside the &lt;code&gt;Option&lt;&#x2F;code&gt; to it. Does it compile? &lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;$ cargo build
+...
+warning: unused variable: `subtree`
+  --&amp;gt; src&#x2F;day2.rs:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;38&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;13
+   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;38 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree = subtree?;
+   |             ^^^^^^^ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;help&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: if this is intentional, prefix it with an &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;underscore&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: `_subtree`
+   |
+   = note: `#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;warn&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(unused_variables)]` on by default
+
+warning: unused variable: `low`
+  --&amp;gt; src&#x2F;day2.rs:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;35&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;9
+   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;35 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|         low: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+   |         ^^^ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;help&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: if this is intentional, prefix it with an &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;underscore&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: `_low`
+
+warning: unused variable: `high`
+  --&amp;gt; src&#x2F;day2.rs:36:9
+   |
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;36 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|         high: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+   |         ^^^^ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;help&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: if this is intentional, prefix it with an &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;underscore&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: `_high`
+
+warning: 3 warnings emitted
+
+    Finished dev [unoptimized + debuginfo] target(s) in 0.35s
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It does! Great. There are few warnings for unused variables, we can ignore these for now, we will eventually use them. &lt;&#x2F;p&gt;
+&lt;div class=&quot;alert alert-info&quot;&gt;
+&lt;span&gt;&lt;i class=&quot;icon fas fa-info-circle&quot;&gt;&lt;&#x2F;i&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;alert-text&quot;&gt;
+  &lt;p&gt;
+    It would also be a good idea to have some tests here as we build this. You can see the tests I had at &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;3b80b8346818184b046fd1adea32fb1dcbd15875&#x2F;src&#x2F;rc_tree.rs#L60&quot;&gt;wayofthepie&#x2F;bst-trim-post@3b80b&lt;&#x2F;a&gt;, there is a bit to them. I&#x27;ll go into more detail on this later.
+  &lt;&#x2F;p&gt;
+&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;Next we need to check if &lt;code&gt;node.val &amp;lt; low&lt;&#x2F;code&gt; and if it is, recursively visit the right subtree, discarding the current node and its left subtree. Not that long ago, trying to do this with &lt;code&gt;Rc&amp;lt;RefCell&amp;lt;T&amp;gt;&amp;gt;&lt;&#x2F;code&gt; would have sent me into a spiral of misery. But that was past me, now I am future me (present me?), and I&#x27;ve learned a lot since then. So here is the next step:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;low&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;high&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree = subtree?;
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref = subtree.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;borrow_mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; right = subtree_ref.right.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;lt; low {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(right, low, high);
+    }
+    unimplemented!()
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Does it build?&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;$ cargo build
+...
+    Finished dev [unoptimized + debuginfo] target(s) in 0.23s
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It does, great! A lot is happening here, even though it&#x27;s just a few lines of code. Let&#x27;s start by breaking down what exactly &lt;code&gt;let mut subtree_ref = subtree.borrow_mut();&lt;&#x2F;code&gt; is doing.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;auto-deref-on-method-calls&quot;&gt;Auto-deref on Method Calls&lt;&#x2F;h3&gt;
+&lt;p&gt;The type of &lt;code&gt;subtree&lt;&#x2F;code&gt; after &lt;code&gt;let subtree = subtree?;&lt;&#x2F;code&gt; is &lt;code&gt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&lt;&#x2F;code&gt;. Calling &lt;code&gt;borrow_mut&lt;&#x2F;code&gt; will first get a reference to the inner value of &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;rc&#x2F;struct.Rc.html&quot;&gt;Rc&lt;&#x2F;a&gt;, this is a &lt;code&gt;RefCell&amp;lt;TreeNode&amp;gt;&lt;&#x2F;code&gt; here. Then it will borrow the inner value of the &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;cell&#x2F;struct.RefCell.html&quot;&gt;RefCell&lt;&#x2F;a&gt;, wrapped in a &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;cell&#x2F;struct.RefMut.html&quot;&gt;RefMut&lt;&#x2F;a&gt;, giving us a &lt;code&gt;RefMut&amp;lt;TreeNode&amp;gt;&lt;&#x2F;code&gt;. This all happens because of the &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;ops&#x2F;trait.Deref.html&quot;&gt;Deref&lt;&#x2F;a&gt; impl for &lt;code&gt;Rc&lt;&#x2F;code&gt; and the &lt;code&gt;borrow_mut&lt;&#x2F;code&gt; method on &lt;code&gt;RefCell&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Deref impl for Rc
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;stable&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(feature = &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;rust1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;, since = &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;1.0.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;impl&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;lt;T: &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;?&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Sized&amp;gt; Deref for Rc&amp;lt;T&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;type &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Target = T;
+
+    #[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;inline&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(always)]
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;deref&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) -&amp;gt; &amp;amp;T {
+        &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;inner&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().value
+    }
+}
+...
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; borrow_mut on RefCell
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;stable&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(feature = &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;rust1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;, since = &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;1.0.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;)]
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;inline&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;track_caller&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;borrow_mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) -&amp;gt; RefMut&amp;lt;&amp;#39;_, T&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;try_borrow_mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;expect&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;already borrowed&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;)
+}
+
+[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;stable&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(feature = &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;try_borrow&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;, since = &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;1.13.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;)]
+#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;inline&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;try_borrow_mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) -&amp;gt; Result&amp;lt;RefMut&amp;lt;&amp;#39;_, T&amp;gt;, BorrowMutError&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;match &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;BorrowRefMut::new(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.borrow) {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; SAFETY: `BorrowRef` guarantees unique access.
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Some(b) =&amp;gt; Ok(RefMut { value: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;unsafe &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{ &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;*&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.value.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;get&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() }, borrow: b }),
+        None =&amp;gt; Err(BorrowMutError { _private: () }),
+    }
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Because of these, when we call &lt;code&gt;borrow_mut&lt;&#x2F;code&gt; on &lt;code&gt;subtree&lt;&#x2F;code&gt; with &lt;code&gt;subtree.borrow_mut()&lt;&#x2F;code&gt; the &lt;code&gt;Rc&lt;&#x2F;code&gt; will automatically be dereferenced&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#auto-deref&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;&lt;a name=&quot;auto-deref-ref&quot;&gt;&lt;&#x2F;a&gt; by a call to its &lt;code&gt;Deref&lt;&#x2F;code&gt; impl, and give us the inner &lt;code&gt;RefCell&lt;&#x2F;code&gt;. The call to &lt;code&gt;borrow_mut&lt;&#x2F;code&gt; happens on that &lt;code&gt;RefCell&lt;&#x2F;code&gt;, which will return a &lt;code&gt;RefMut&amp;lt;TreeNode&amp;gt;&lt;&#x2F;code&gt;. Now &lt;code&gt;subtree_ref&lt;&#x2F;code&gt; is a &lt;code&gt;RefMut&amp;lt;TreeNode&amp;gt;&lt;&#x2F;code&gt; and any method calls on it will deref to calls on a &lt;code&gt;TreeNode&lt;&#x2F;code&gt; because of &lt;code&gt;RefMut&lt;&#x2F;code&gt;&#x27;s &lt;code&gt;Deref&lt;&#x2F;code&gt; impl. So we can just call &lt;code&gt;subtree_ref.val&lt;&#x2F;code&gt; to get the &lt;code&gt;val&lt;&#x2F;code&gt; field of the node. That&#x27;s a lot going on for a single line of code!&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;why-do-we-clone-the-subtree-thinking&quot;&gt;Why Do We Clone the Subtree 🤔?&lt;&#x2F;h3&gt;
+&lt;p&gt;Let&#x27;s see what happens if we leave out the call to clone when we get the right subtree:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;low&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;high&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree = subtree?;
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref = subtree.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;borrow_mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; right = subtree_ref.right; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; clone() is gone
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;lt; low {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(right, low, high);
+    }
+    unimplemented!()
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;What does the compiler say?&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;$ cargo build
+...
+error[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;E0507&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]: cannot &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;move&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; out of dereference of `RefMut&amp;lt;&amp;#39;_, TreeNode&amp;gt;`
+  --&amp;gt; src&#x2F;lib.rs:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;39&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;21
+   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;39 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; right = subtree_ref.right;
+   |                     ^^^^^^^^^^^^^^^^^ move occurs because value has type `Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;`, which does not implement the `Copy` &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;trait
+   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|
+help: consider borrowing the `Option`&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;&amp;#39;s&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; content
+   |
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;39 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; right = subtree_ref.right.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;as_ref&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+   |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider borrowing here
+   |
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;39 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; right = &amp;amp;subtree_ref.right;
+   |                     ^^^^^^^^^^^^^^^^^^
+
+error: aborting due to previous error
+
+For more information about this error, try `rustc --explain &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;E0507&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;`.
+error: could not compile `rust-trees-post`
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;What! Thinking about it a bit more it makes sense. We are trying to &lt;em&gt;move&lt;&#x2F;em&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#move&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;&lt;a name=&quot;move-ref&quot;&gt;&lt;&#x2F;a&gt; the value of &lt;code&gt;subtree_ref.right&lt;&#x2F;code&gt; into &lt;code&gt;right&lt;&#x2F;code&gt;, if we did that, what would the value of &lt;code&gt;subtree_ref.right&lt;&#x2F;code&gt; be? Let&#x27;s apply the suggestion from the compiler to add &lt;code&gt;as_ref&lt;&#x2F;code&gt; and see what happens:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;$ cargo build
+...
+error[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;E0308&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]: mismatched types
+  --&amp;gt; src&#x2F;lib.rs:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;41&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;32
+   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;41 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|             &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(right, low, high);
+   |                                ^^^^^ expected struct `Rc`, found &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;reference
+   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|
+   = note: expected &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;enum&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; `Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;`
+              found &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;enum&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; `Option&amp;lt;&amp;amp;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;`
+
+error: aborting due to previous error
+
+For more information about this error, try `rustc --explain &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;E0308&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;`.
+error: could not compile `rust-trees-post`
+
+To learn more, run the command again with --verbose.
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;What!? Oh, the types don&#x27;t match now. &lt;code&gt;as_ref&lt;&#x2F;code&gt; will give us an &lt;code&gt;Option&amp;lt;&amp;amp;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;&lt;&#x2F;code&gt;, but we want an &lt;code&gt;Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;&lt;&#x2F;code&gt;. It is possible to update the type of the &lt;code&gt;subtree&lt;&#x2F;code&gt; arg in the &lt;code&gt;visit&lt;&#x2F;code&gt; method to be &lt;code&gt;Option&amp;lt;&amp;amp;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;&lt;&#x2F;code&gt;, but it would complicate things.&lt;&#x2F;p&gt;
+&lt;p&gt;Let&#x27;s not try that now, and instead put clone back - &lt;code&gt;let right = subtree_ref.right.clone();&lt;&#x2F;code&gt;. So what&#x27;s happening here?&lt;&#x2F;p&gt;
+&lt;h4 id=&quot;what-the-clone-actually-does&quot;&gt;What the Clone Actually Does&lt;&#x2F;h4&gt;
+&lt;p&gt;&lt;code&gt;subtree_ref.right&lt;&#x2F;code&gt; is a value of type &lt;code&gt;Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;&lt;&#x2F;code&gt;. When we call &lt;code&gt;subtree_ref.right.clone()&lt;&#x2F;code&gt;, we are first calling &lt;code&gt;clone&lt;&#x2F;code&gt; on the &lt;code&gt;Option&lt;&#x2F;code&gt;. The definition of the &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;clone&#x2F;trait.Clone.html&quot;&gt;Clone&lt;&#x2F;a&gt; trait for &lt;code&gt;Option&lt;&#x2F;code&gt; is as follows:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;impl&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;lt;T: Clone&amp;gt; Clone &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Option&amp;lt;T&amp;gt; {
+    #[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;inline&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) -&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;match &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; If the Option is Some, just call clone on the value contained within
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Some(x) =&amp;gt; Some(x.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()),
+            None =&amp;gt; None,
+        }
+    }
+    ...
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;So it just calls &lt;code&gt;clone&lt;&#x2F;code&gt; on the value inside the &lt;code&gt;Option&lt;&#x2F;code&gt;, if there is one. The value in our &lt;code&gt;Option&lt;&#x2F;code&gt; is of type &lt;code&gt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&lt;&#x2F;code&gt;. So what does &lt;code&gt;clone&lt;&#x2F;code&gt; for &lt;code&gt;Rc&lt;&#x2F;code&gt; look like?&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;stable&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(feature = &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;rust1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;, since = &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;1.0.0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;)]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;impl&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;lt;T: &lt;&#x2F;span&gt;&lt;span style=&quot;background-color:#bf616a;color:#2b303b;&quot;&gt;?&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Sized&amp;gt; Clone for Rc&amp;lt;T&amp;gt; {
+    #[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;inline&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) -&amp;gt; Rc&amp;lt;T&amp;gt; {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;inner&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;inc_strong&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::from_inner(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;.ptr)
+    }
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It increments the strong reference count&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#strong-refs&quot;&gt;4&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;&lt;a name=&quot;strong-refs-ref&quot;&gt;&lt;&#x2F;a&gt; and calls &lt;code&gt;from_inner&lt;&#x2F;code&gt;. It doesn&#x27;t really matter here how &lt;code&gt;from_inner&lt;&#x2F;code&gt; works, we just care about what it returns, which is &lt;em&gt;itself&lt;&#x2F;em&gt; (the &lt;code&gt;Rc&lt;&#x2F;code&gt; we called &lt;code&gt;clone&lt;&#x2F;code&gt; on). &lt;&#x2F;p&gt;
+&lt;p&gt;So, to sum it up, calling &lt;code&gt;clone&lt;&#x2F;code&gt; on &lt;code&gt;subtree_ref.right&lt;&#x2F;code&gt; will increment the &lt;code&gt;Rc&lt;&#x2F;code&gt;&#x27;s (strong) reference count and give us back the &lt;code&gt;Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;&lt;&#x2F;code&gt; if &lt;code&gt;subtree_ref.right&lt;&#x2F;code&gt; is not &lt;code&gt;None&lt;&#x2F;code&gt;. Or it will just give us &lt;code&gt;None&lt;&#x2F;code&gt; if &lt;code&gt;subtree_ref.right&lt;&#x2F;code&gt; is &lt;code&gt;None&lt;&#x2F;code&gt;. &lt;&#x2F;p&gt;
+&lt;h3 id=&quot;a-borrow-which-lives-longer-than-expected&quot;&gt;A Borrow Which Lives Longer Than Expected&lt;&#x2F;h3&gt;
+&lt;p&gt;Let&#x27;s add the rest of the algorithm:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;low&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;high&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree = subtree?;
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref = subtree.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;borrow_mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; right = subtree_ref.right.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;lt; low {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(right, low, high);
+    }
+
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; After here is new 
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; left = subtree_ref.left.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;gt; high {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(left, low, high);
+    }
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;gt; low {
+        subtree_ref.left = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(left, low, high);
+    }
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;lt; high {
+        subtree_ref.right = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(right, low, high);
+    }
+    Some(subtree)
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Nothing special here that wasn&#x27;t covered in the previous section, it matches pretty closely with our pseudocode algorithm. We are now returning the subtree instead of using the &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;macro.unimplemented.html&quot;&gt;unimplemented&lt;&#x2F;a&gt; macro. This should build fine:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;$ cargo build
+...
+error[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;E0505&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]: cannot &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;move&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; out of `subtree` because it is borrowed
+  --&amp;gt; src&#x2F;lib.rs:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;53&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;14
+   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;38 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref = subtree.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;borrow_mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+   |                               ------- borrow of `subtree` occurs here
+...
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;53 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|         Some(subtree)
+   |              ^^^^^^^ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;move&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; out of `subtree` occurs here
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;54 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;|     }
+   |     - borrow might be used here, when `subtree_ref` is dropped and runs the destructor &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for type&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; `RefMut&amp;lt;&amp;#39;_, TreeNode&amp;gt;`
+
+error: aborting due to previous error
+
+For more information about this error, try `rustc --explain &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;E0505&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;`.
+error: could not compile `rust-trees-post`
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Crap, It doesn&#x27;t build fine! What&#x27;s it saying? We are mutably borrowing the subtree with &lt;code&gt;let mut subtree_ref = subtree.borrow_mut();&lt;&#x2F;code&gt; but this borrow is still active when we try to return the &lt;code&gt;subtree&lt;&#x2F;code&gt; from &lt;code&gt;visit&lt;&#x2F;code&gt;. This confused me for a long time when I was learning Rust. &lt;code&gt;RefMut&lt;&#x2F;code&gt; internally holds a type of &lt;code&gt;BorrowRefMut&lt;&#x2F;code&gt;, in a field called &lt;code&gt;borrow&lt;&#x2F;code&gt;. This type has a custom &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;ops&#x2F;trait.Drop.html&quot;&gt;Drop&lt;&#x2F;a&gt; implementation, a destructor, so when &lt;code&gt;RefMut&lt;&#x2F;code&gt; is dropped this &lt;code&gt;Drop&lt;&#x2F;code&gt; impl will be run. &lt;&#x2F;p&gt;
+&lt;p&gt;This custom drop impl counts as a use of &lt;code&gt;RefMut&lt;&#x2F;code&gt;, so the borrow checker is rightly saying it will be used &lt;em&gt;after&lt;&#x2F;em&gt; we return from the function, as &lt;code&gt;RefMut&lt;&#x2F;code&gt; is only dropped once that happens&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#destructors&quot;&gt;5&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;&lt;a name=&quot;destructors-ref&quot;&gt;&lt;&#x2F;a&gt;. So we either need to scope the borrow, or explicitly call &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;mem&#x2F;fn.drop.html&quot;&gt;drop&lt;&#x2F;a&gt; on &lt;code&gt;subtree_ref&lt;&#x2F;code&gt;. Let&#x27;s just scope the borrow (just put it in a new &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;reference&#x2F;expressions&#x2F;block-expr.html&quot;&gt;block&lt;&#x2F;a&gt;):&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;low&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;high&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree = subtree?;
+    {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref = subtree.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;borrow_mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; right = subtree_ref.right.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;lt; low {
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(right, low, high);
+        }
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; left = subtree_ref.left.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;gt; high {
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(left, low, high);
+        }
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;gt; low {
+            subtree_ref.left = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(left, low, high);
+        }
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;lt; high {
+            subtree_ref.right = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(right, low, high);
+        }
+    }
+    Some(subtree)
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It should compile now ... 🤞&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;$ cargo build
+...
+    Finished dev [unoptimized + debuginfo] &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;target&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(s) in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0.21&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;s
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Awesome! However, we missed a step. If we run the tests it will fail. We will go through the tests in-depth in a moment, you can see them &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;3b80b8346818184b046fd1adea32fb1dcbd15875&#x2F;src&#x2F;rc_tree.rs#L60&quot;&gt;here&lt;&#x2F;a&gt;. The issue is that we never take into account the cases where &lt;code&gt;root.val == low&lt;&#x2F;code&gt; or &lt;code&gt;root.val == high&lt;&#x2F;code&gt;. We do &lt;em&gt;nothing&lt;&#x2F;em&gt; in both those cases. &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;3b80b8346818184b046fd1adea32fb1dcbd15875&#x2F;src&#x2F;rc_tree.rs#L105&quot;&gt;This test&lt;&#x2F;a&gt; builds a tree which looks as follows:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;bst-trim-leetcode&#x2F;example1-tree.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;We want to &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;39789be92f2cbac52eb50182053b980c0bd9e7d8&#x2F;src&#x2F;rc_tree.rs#L115&quot;&gt;filter out all nodes less than 8 and greater than 12&lt;&#x2F;a&gt;, so the resulting tree should be:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;bst-trim-leetcode&#x2F;example1-expected-result.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;However, the tree we end up with is:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;bst-trim-leetcode&#x2F;example1-actual-result.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Which is not right at all! &lt;code&gt;7&lt;&#x2F;code&gt; shouldn&#x27;t be there, unless &lt;code&gt;8 &amp;lt;= 7 &amp;lt;= 12&lt;&#x2F;code&gt; which I don&#x27;t believe is true in this universe. Admittedly, it took me a few minutes to realize the actual problem even though I had tests that were failing &lt;em&gt;and&lt;&#x2F;em&gt; the pseudocode algorithm I had outlined had an explicit case handling this 😄. Let&#x27;s fix it!&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;fix-that-issue&quot;&gt;Fix That Issue&lt;&#x2F;h1&gt;
+&lt;p&gt;Ok, so we never deal with the case where the current node is &lt;em&gt;equal&lt;&#x2F;em&gt; to either the &lt;code&gt;low&lt;&#x2F;code&gt; or &lt;code&gt;high&lt;&#x2F;code&gt; bound. What we should do is set the left subtree to &lt;code&gt;None&lt;&#x2F;code&gt; when it&#x27;s equal to &lt;code&gt;low&lt;&#x2F;code&gt; and the right subtree to &lt;code&gt;None&lt;&#x2F;code&gt; when equal to high. There are a few ways we can fix this, here is one:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;low&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;high&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree = subtree?;
+    {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref = subtree.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;borrow_mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; right = subtree_ref.right.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;lt; low {
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(right, low, high);
+        }
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; left = subtree_ref.left.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;gt; high {
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(left, low, high);
+        }
+        subtree_ref.left = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;gt; low {
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(left, low, high)
+        } &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;else &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+            None
+        };
+        subtree_ref.right = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;lt; high {
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(right, low, high)
+        } &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;else &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+            None
+        };
+    }
+    Some(subtree)
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;That seems a little wordy. Quick side note, with Rust 1.50 (which should be released Feb 11th 2021) we will be able to replace the if&#x2F;else&#x27;s in this code with the method &lt;code&gt;then&lt;&#x2F;code&gt; on &lt;code&gt;bool&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;low&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;high&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree = subtree?;
+    {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref = subtree.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;borrow_mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; right = subtree_ref.right.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;lt; low {
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(right, low, high);
+        }
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; left = subtree_ref.left.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;gt; high {
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(left, low, high);
+        }
+        subtree_ref.left = (subtree_ref.val &amp;gt; low)
+            .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;then&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(|| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(left, low, high))
+            .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;flatten&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        subtree_ref.right = (subtree_ref.val &amp;lt; high)
+            .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;then&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(|| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(right, low, high))
+            .&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;flatten&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    }
+    Some(subtree)
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This is not available on stable yet, and it&#x27;s possibly less clear what it&#x27;s doing as well. The cleanest solution is to use &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;option&#x2F;enum.Option.html#method.take&quot;&gt;take&lt;&#x2F;a&gt; instead of &lt;code&gt;clone&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;low&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;high&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;,
+) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree = subtree?;
+    {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref = subtree.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;borrow_mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; right = subtree_ref.right.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;take&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; take instead of clone 
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;lt; low {
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(right, low, high);
+        }
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; left = subtree_ref.left.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;take&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; same here
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;gt; high {
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(left, low, high);
+        }
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;gt; low {
+            subtree_ref.left = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(left, low, high);
+        }
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; subtree_ref.val &amp;lt; high {
+            subtree_ref.right = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;Self&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::visit(right, low, high);
+        }
+    }
+    Some(subtree)
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Remember the reason we used &lt;code&gt;clone&lt;&#x2F;code&gt; in the first place? It was because we could not move a given subtree out of the current node. &lt;code&gt;take&lt;&#x2F;code&gt; will give us ownership of the subtree and set &lt;code&gt;None&lt;&#x2F;code&gt; in its place. So in the above code when we assign to &lt;code&gt;right&lt;&#x2F;code&gt; - the line &lt;code&gt;let right = subtree_ref.right.take();&lt;&#x2F;code&gt; - &lt;code&gt;right&lt;&#x2F;code&gt; now owns the right subtree, and &lt;code&gt;subtree_ref.right&lt;&#x2F;code&gt; is set to &lt;code&gt;None&lt;&#x2F;code&gt;. Later on we re-assign to &lt;code&gt;subtree_ref&lt;&#x2F;code&gt; with the filtered nodes in &lt;code&gt;right&lt;&#x2F;code&gt; if we hit the condition &lt;code&gt;subtree_ref.val &amp;lt; high&lt;&#x2F;code&gt;. Because we use &lt;code&gt;take&lt;&#x2F;code&gt; now if we don&#x27;t hit that condition it means the value of the current node is equal to &lt;code&gt;high&lt;&#x2F;code&gt; and &lt;code&gt;subtree_ref.right&lt;&#x2F;code&gt; will be &lt;code&gt;None&lt;&#x2F;code&gt;, exactly what we want! The same also happens with &lt;code&gt;left&lt;&#x2F;code&gt; when we take the left subtree.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;how-do-we-test-this&quot;&gt;How Do We Test This?&lt;&#x2F;h1&gt;
+&lt;p&gt;I had the tests written before the code in this case, so I could validate the implementation was correct. I glossed over them until now because they are more complex than implementing the algorithm itself! First, we need to build a tree given its definition as a list of nodes. Leetcode defines a tree in level order in a list, for example &lt;code&gt;[3, 0, 4, null, 2, null, null, 1]&lt;&#x2F;code&gt; is the tree:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;bst-trim-leetcode&#x2F;first-tree.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;Right, we need a function, say &lt;code&gt;build_tree&lt;&#x2F;code&gt;, which takes a list of nodes specified in level order and gives us a tree. How can we turn a list into a tree? &lt;&#x2F;p&gt;
+&lt;h2 id=&quot;planting-our-tree&quot;&gt;Planting Our Tree&lt;&#x2F;h2&gt;
+&lt;p&gt;The first step is to compute the number of levels. With that, we can build the nodes for each level and use a queue to track the nodes for a previous level. The nodes we create at each iteration will then get put into the subtrees of the nodes we have in our queue from the previous iteration. This seems hard to explain in English! Let&#x27;s just start implementing.&lt;&#x2F;p&gt;
+&lt;p&gt;We can get the height of the tree by first taking the length of the node definition list, call it &lt;code&gt;n&lt;&#x2F;code&gt;. Where &lt;code&gt;n &amp;gt; 1&lt;&#x2F;code&gt; the height is &lt;code&gt;ceil(lg n)&lt;&#x2F;code&gt; (&lt;code&gt;lg&lt;&#x2F;code&gt; being &lt;code&gt;log&lt;&#x2F;code&gt; to the base &lt;code&gt;2&lt;&#x2F;code&gt;). &lt;code&gt;ceil&lt;&#x2F;code&gt; being the mathematical &lt;a href=&quot;https:&#x2F;&#x2F;en.wikipedia.org&#x2F;wiki&#x2F;Floor_and_ceiling_functions&quot;&gt;ceiling function&lt;&#x2F;a&gt;. If &lt;code&gt;n&lt;&#x2F;code&gt; is &lt;code&gt;1&lt;&#x2F;code&gt; then there is only one level. Each level has at most &lt;code&gt;2 ^ level&lt;&#x2F;code&gt; nodes. Level 0 can have &lt;code&gt;2 ^ 0 = 1&lt;&#x2F;code&gt;, level 1 can have &lt;code&gt;2 ^ 1 = 2&lt;&#x2F;code&gt; nodes and so on. &lt;&#x2F;p&gt;
+&lt;p&gt;So, if our list has &lt;code&gt;6&lt;&#x2F;code&gt; items, including &lt;code&gt;null&lt;&#x2F;code&gt; items, we get &lt;code&gt;ceil(lg 6) == 3&lt;&#x2F;code&gt;. We must have a tree with &lt;code&gt;3&lt;&#x2F;code&gt; levels. Let&#x27;s start with the shell of a &lt;code&gt;build_tree&lt;&#x2F;code&gt; function.&lt;&#x2F;p&gt;
+&lt;div class=&quot;alert alert-info&quot;&gt;
+&lt;span&gt;&lt;i class=&quot;icon fas fa-info-circle&quot;&gt;&lt;&#x2F;i&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;alert-text&quot;&gt;
+  &lt;p&gt;
+  It would be good to have tests for this function also, but I ran out of time so just implemented it 😆.
+  &lt;&#x2F;p&gt;
+&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;build_tree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;values&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Vec&amp;lt;Option&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt;&amp;gt;) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    unimplemented!()
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;There is no tree if &lt;code&gt;values&lt;&#x2F;code&gt; is empty, and we need to compute the height, lets start there.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;build_tree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;values&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Vec&amp;lt;Option&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt;&amp;gt;) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;is_empty&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;None;
+    }
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length = values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;len&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; height = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length &amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        (length as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;log2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;ceil&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;usize
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;} &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;else &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;};
+    unimplemented!()
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We need to cast &lt;code&gt;length&lt;&#x2F;code&gt; to a floating point value to get the &lt;code&gt;lg&lt;&#x2F;code&gt; of the length, Rust doesn&#x27;t currently have &lt;code&gt;log&lt;&#x2F;code&gt; methods for integer types&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#integer-log&quot;&gt;6&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;&lt;a name=&quot;integer-log-ref&quot;&gt;&lt;&#x2F;a&gt;. Ok, next up, plant the &lt;code&gt;root&lt;&#x2F;code&gt; of our tree. Thinking ahead a little bit, we&#x27;re going to want to read the items in the &lt;code&gt;Vec&lt;&#x2F;code&gt; in reverse, so let&#x27;s also just reverse it.&lt;&#x2F;p&gt;
+&lt;div class=&quot;alert alert-info&quot;&gt;
+&lt;span&gt;&lt;i class=&quot;icon fas fa-info-circle&quot;&gt;&lt;&#x2F;i&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;alert-text&quot;&gt;
+  &lt;p&gt;
+  Why are we going to read them in reverse? We&#x27;re going to &lt;b&gt;pop&lt;&#x2F;b&gt; them off the &lt;b&gt;Vec&lt;&#x2F;b&gt; - treating 
+  the &lt;b&gt;Vec&lt;&#x2F;b&gt; like a stack - and &lt;b&gt;pop&lt;&#x2F;b&gt; will remove the last element in the &lt;b&gt;Vec&lt;&#x2F;b&gt;. 
+  There are other ways to do this, but this seems the most straightforward here.
+  &lt;&#x2F;p&gt;
+&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;build_tree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;values&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Vec&amp;lt;Option&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt;&amp;gt;) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;is_empty&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;None;
+    }
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length = values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;len&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; height = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length &amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        (length as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;log2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;ceil&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;usize 
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;} &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;else &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;};
+    values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;reverse&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; We know values is not empty so unwrapping is ok
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; initial = values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;pop&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()?;
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root = Rc::new(RefCell::new(TreeNode::new(initial)));
+    unimplemented!()
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Ok, now we have the &lt;code&gt;root&lt;&#x2F;code&gt;. We need queue to track nodes:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;build_tree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;values&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Vec&amp;lt;Option&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt;&amp;gt;) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;is_empty&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;None;
+    }
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Create a queue as a VecDeque
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; queue = VecDeque::new();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length = values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;len&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; height = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length &amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        (length as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;log2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;ceil&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;usize
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;} &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;else &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;};
+    values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;reverse&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; initial = values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;pop&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()?;
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root = Rc::new(RefCell::new(TreeNode::new(initial)));
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Add root to the queue, cloning so we increase the ref count and the 
+    &#x2F;&#x2F; queue becomes another owner of root
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;    queue.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;push_back&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(root.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;());
+    unimplemented!()
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Great! We use a &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;collections&#x2F;struct.VecDeque.html&quot;&gt;VecDeque&lt;&#x2F;a&gt; for our queue. Pushing the &lt;code&gt;root&lt;&#x2F;code&gt; on the queue means we start creating the nodes at the next level:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;build_tree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;values&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Vec&amp;lt;Option&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt;&amp;gt;) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;is_empty&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;None;
+    }
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; queue = VecDeque::new();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length = values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;len&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; height = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length &amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        (length as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;log2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;ceil&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;usize
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;} &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;else &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;};
+    values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;reverse&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; initial = values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;pop&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()?;
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root = Rc::new(RefCell::new(TreeNode::new(initial)));
+    queue.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;push_back&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(root.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;());
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; For 1 to height - 1. For example, if the height is 3 we loop twice as we 
+    &#x2F;&#x2F; already took care of the first level which is just root.
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;_ in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;..height {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Do something...
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;unimplemented!()
+    }
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h2 id=&quot;growing-our-tree&quot;&gt;Growing Our Tree&lt;&#x2F;h2&gt;
+&lt;p&gt;So what do we do in the loop 🤔? We need to do &lt;em&gt;something&lt;&#x2F;em&gt; for all of the nodes we saw in the last level:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;build_tree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;values&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Vec&amp;lt;Option&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt;&amp;gt;) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;is_empty&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;None;
+    }
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; queue = VecDeque::new();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length = values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;len&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; height = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length &amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        (length as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;log2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;ceil&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;usize &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;+ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;} &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;else &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;};
+    values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;reverse&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; initial = values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;pop&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()?;
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root = Rc::new(RefCell::new(TreeNode::new(initial)));
+    queue.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;push_back&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(root.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;());
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;_ in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;..height {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; For all the nodes in the previous level
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;while let &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Some(node) = queue.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;pop_back&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() {
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Do something...
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;}
+    }
+    Some(root)
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The &lt;em&gt;something&lt;&#x2F;em&gt; we need to do is create two nodes at this level and add them to the node we popped off the queue. Lets create a function for node creation, it needs to do a couple of things that are common to both nodes we need to create:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;construct_subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;values&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Vec&amp;lt;Option&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt;&amp;gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree_ref&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;queue&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;VecDeque&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
+) {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if let &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Some(Some(value)) = values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;pop&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; node = Rc::new(RefCell::new(TreeNode::new(value)));
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; node_ref = node.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+        *subtree_ref = Some(node);
+        queue.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;push_front&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(node_ref);
+    }
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It creates the new node, adds it to the node we popped off the queue (&lt;code&gt;subtree_ref&lt;&#x2F;code&gt; is this node in the function args), and adds the new node to the queue. &lt;&#x2F;p&gt;
+&lt;p&gt;&lt;code&gt;if let Some(Some(value)) = values.pop()&lt;&#x2F;code&gt; might look odd. &lt;code&gt;pop&lt;&#x2F;code&gt; will return &lt;code&gt;None&lt;&#x2F;code&gt; if &lt;code&gt;values&lt;&#x2F;code&gt; is empty, and we model &lt;code&gt;null&lt;&#x2F;code&gt; nodes in &lt;code&gt;values&lt;&#x2F;code&gt; as &lt;code&gt;None&lt;&#x2F;code&gt; as well, so we have two levels of &lt;code&gt;Option&lt;&#x2F;code&gt; values. This says we only want to do something if &lt;code&gt;values&lt;&#x2F;code&gt; has a value and that value is not &lt;code&gt;None&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Inside the &lt;code&gt;if let&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; node = Rc::new(RefCell::new(TreeNode::new(value)));
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; node_ref = node.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+*subtree_ref = Some(node);
+queue.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;push_front&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(node_ref);
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We construct the new &lt;code&gt;node&lt;&#x2F;code&gt;, clone it to make &lt;code&gt;node_ref&lt;&#x2F;code&gt; another owner, and increment its reference count. Then we assign the value &lt;code&gt;Some(node)&lt;&#x2F;code&gt;, our new node, to &lt;code&gt;subtree_ref&lt;&#x2F;code&gt;. We need to dereference it with &lt;code&gt;*&lt;&#x2F;code&gt; to assign to it. &lt;code&gt;subtree_ref&lt;&#x2F;code&gt; is a mutable reference to either the left or right subtree of a node.&lt;&#x2F;p&gt;
+&lt;p&gt;Now we can fill out &lt;code&gt;build_tree&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;pub fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;build_tree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;values&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Vec&amp;lt;Option&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;i32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt;&amp;gt;) -&amp;gt; Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt; {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;is_empty&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;None;
+    }
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; queue = VecDeque::new();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length = values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;len&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; height = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length &amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        (length as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;f32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;).&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;log2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;ceil&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;usize
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;} &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;else &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;};
+    values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;reverse&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; initial = values.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;pop&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;()?;
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root = Rc::new(RefCell::new(TreeNode::new(initial)));
+    queue.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;push_front&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(root.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;clone&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;());
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;_ in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;..height {
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;while let &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Some(node) = queue.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;pop_back&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() {
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Borrow the node as mutable
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; node_ref = node.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;borrow_mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Pass mutable references to values, our queue, and to the left subtree 
+            &#x2F;&#x2F; to construct_subtree.
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;construct_subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; values, &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; node_ref.left, &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; queue);
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; Similar, but for the right subtree.
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;construct_subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; values, &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; node_ref.right, &amp;amp;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; queue);
+        }
+    }
+    Some(root)
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Awesome! You can see the full code at &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;3b80b8346818184b046fd1adea32fb1dcbd15875&#x2F;src&#x2F;rc_tree.rs#L65&quot;&gt;wayofthepie&#x2F;bst-trim-post@3b80b&lt;&#x2F;a&gt;. There is a bit here, but now we can build trees from a &lt;code&gt;Vec&lt;&#x2F;code&gt;. For example, if the tree is defined as &lt;code&gt;[3, 0, 4, null, 2, null, null, 1]&lt;&#x2F;code&gt; we would pass the &lt;code&gt;Vec&lt;&#x2F;code&gt; &lt;code&gt;vec![Some(3), Some(0), Some(4), None, Some(2), None, None, Some(1)]&lt;&#x2F;code&gt; to &lt;code&gt;build_tree&lt;&#x2F;code&gt;. &lt;&#x2F;p&gt;
+&lt;p&gt;And with that, we can &lt;em&gt;finally&lt;&#x2F;em&gt; write a test 🎉.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;test&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;example1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;() {
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;build_tree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(vec![
+        Some(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;10&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;),
+        Some(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;8&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;),
+        Some(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;11&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;),
+        Some(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;7&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;),
+        Some(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;9&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;),
+        None,
+        Some(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;13&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;),
+    ]);
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; answer = Solution::trim_bst(root, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;8&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;12&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; expected = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;build_tree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(vec![Some(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;10&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;), Some(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;8&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;), Some(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;11&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;), None, Some(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;9&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;), None, None]);
+    assert_eq!(
+        answer, expected,
+        &amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;expected tree &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;{:#?}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt; got &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;\n&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;{:#?}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;quot;,
+        expected, answer
+    );
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;&#x2F;h1&gt;
+&lt;p&gt;That covers a lot of the issues I used to have with &lt;code&gt;Rc&amp;lt;RefCell&amp;lt;T&amp;gt;&amp;gt;&lt;&#x2F;code&gt; based types when initially learning Rust. I think the only place I&#x27;ve ever seen them used in trees is on Leetcode, but they appear in many other places, and the info in this post is still useful outside of their use in trees. I do find it odd that the trees are defined this way, however. If the &lt;code&gt;TreeNode&lt;&#x2F;code&gt; definition used &lt;code&gt;Box&amp;lt;TreeNode&amp;gt;&lt;&#x2F;code&gt; as the &lt;code&gt;left&lt;&#x2F;code&gt; and &lt;code&gt;right&lt;&#x2F;code&gt; subtrees the problem would be much easier to solve. It seems needlessly complicated for a problem like this. In the next post I&#x27;ll change the &lt;code&gt;TreeNode&lt;&#x2F;code&gt; definition to use boxed subtrees, instead of &lt;code&gt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&lt;&#x2F;code&gt; and we&#x27;ll go through how that changes things.&lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;question-mark&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;See &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;edition-guide&#x2F;rust-2018&#x2F;error-handling-and-panics&#x2F;the-question-mark-operator-for-easier-error-handling.html&quot;&gt;The ? operator for easier error handling&lt;&#x2F;a&gt; in the &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;book&#x2F;&quot;&gt;The Rust Programming Language Book&lt;&#x2F;a&gt;. for more info. &lt;a href=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;bst-trim-leetcode&#x2F;#question-mark-ref&quot;&gt;⮨&lt;&#x2F;a&gt; &lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;auto-deref&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;2&lt;&#x2F;sup&gt;
+&lt;p&gt;See &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;reference&#x2F;expressions&#x2F;method-call-expr.html&quot;&gt;Method-call Expressions&lt;&#x2F;a&gt; for more on how automatic dereferencing works. &lt;a href=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;bst-trim-leetcode&#x2F;#auto-deref-ref&quot;&gt;⮨&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;move&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;3&lt;&#x2F;sup&gt;
+&lt;p&gt;If you don&#x27;t understand what I mean by &lt;em&gt;move&lt;&#x2F;em&gt; here, have a read of &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;book&#x2F;ch04-01-what-is-ownership.html#ways-variables-and-data-interact-move&quot;&gt;this section&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;book&#x2F;&quot;&gt;The Rust Programming Language Book&lt;&#x2F;a&gt;. &lt;a href=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;bst-trim-leetcode&#x2F;#move-ref&quot;&gt;⮨&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;strong-refs&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;4&lt;&#x2F;sup&gt;
+&lt;p&gt;If it&#x27;s not clear what a &lt;em&gt;strong reference&lt;&#x2F;em&gt; is, have a read of the &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;rc&#x2F;index.html&quot;&gt;std::rd module docs&lt;&#x2F;a&gt;. &lt;a href=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;bst-trim-leetcode&#x2F;#strong-refs-ref&quot;&gt;⮨&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;destructors&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;5&lt;&#x2F;sup&gt;
+&lt;p&gt;The best explanation I&#x27;ve found of why a custom &lt;code&gt;Drop&lt;&#x2F;code&gt; impl extends the lifetime is &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;nomicon&#x2F;lifetimes.html#the-area-covered-by-a-lifetime&quot;&gt;The area covered by a lifetime&lt;&#x2F;a&gt; in the &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;nomicon&quot;&gt;nomicon&lt;&#x2F;a&gt;. It may also be mentioned elsewhere, like the &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;book&#x2F;&quot;&gt;The Rust Programming language&lt;&#x2F;a&gt; but I can&#x27;t remember seeing it there. It&#x27;s something that seems obvious now but was very very confusing when I started with Rust.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;integer-log&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;6&lt;&#x2F;sup&gt;
+&lt;p&gt;There is a PR discussing adding these to the standard library, see &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;rust-lang&#x2F;rust&#x2F;pull&#x2F;80918&quot;&gt;rust-lang&#x2F;rust#80918&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</content>
+	</entry>
+</feed>

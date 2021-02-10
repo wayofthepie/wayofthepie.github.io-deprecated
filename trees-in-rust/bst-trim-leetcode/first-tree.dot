@@ -1,0 +1,13 @@
+// [3,0,4,null,2,null,null,1]
+graph "Tree"
+{
+   3 -- 0;
+   3 -- 4;
+   null0 [style=invis];
+   0 -- null0 [style=invis];
+   0 -- 2;
+   2 -- 1;
+   null2 [style=invis] ;
+   2 -- null2 [style=invis];
+}
+
