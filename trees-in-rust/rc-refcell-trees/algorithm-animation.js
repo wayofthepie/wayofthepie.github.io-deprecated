@@ -7,6 +7,13 @@ var graphviz = d3
   })
   .on("initEnd", renderFrameOne);
 
+if (window.screen.width < 700) {
+  graphviz.scale(0.75);
+  console.log("detected mobile");
+}
+
+graphviz.zoom(false);
+
 function renderFrameOne() {
   var dotLines = dots[dotIndex];
   var dot = dotLines.join("");
@@ -18,7 +25,6 @@ function renderFrameOne() {
 function render() {
   var dotLines = dots[dotIndex];
   var dot = dotLines.join("");
-  graphviz.zoom(false);
   graphviz.renderDot(dot).on("end", function () {
     if (dotIndex === dots.length) {
       dotIndex = 0;
