@@ -75,8 +75,6 @@
     <span class="post-metadata">
         
         
-        
-        
             
             
 <div class="post-series">
@@ -85,8 +83,12 @@
 
         
         
+        
+        
 
         <span class="post-date">2021-02-06</span>
+        
+        
         
         
             <span class="post-tags">
@@ -94,8 +96,6 @@
                 <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/rust">rust</a></span>
             
             </span>
-        
-        
         
         
     </span>
@@ -207,6 +207,14 @@
 
     </span><span style="color:#b48ead;">return</span><span style="color:#c0c5ce;"> root
 </span></code></pre>
+<p>Here is a quick animation of how it visits each node and modifies the tree. This tree is created from the list <code>[10, 8, 11, 7, 9, null, 13]</code>, <code>low = 8</code>, and <code>high = 12</code>. <a id="start">Click here</a> to start it.</p>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
+<script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
+<div id="graph" style="text-align: center; height: 16rem; width: 100%;">
+    <noscript>You need javascript enabled to run this animation.</noscript> 
+</div>
+<script src="algorithm-animation.js"></script>
 <p>So how does this algorithm translate into Rust, given the real definition of <code>TreeNode</code>?</p>
 <h2 id="pseudo-code-to-rust-code">Pseudo-code to Rust Code</h2>
 <p>First the tree nodes. These were given by the problem statement.</p>

@@ -3,25 +3,177 @@ var graphviz = d3
   .select("#graph")
   .graphviz()
   .transition(function () {
-    return d3.transition("main").ease(d3.easeLinear).delay(500).duration(1500);
+    return d3.transition("main").ease(d3.easeLinear).delay(700).duration(2000);
   })
-  .logEvents(true)
-  .on("initEnd", render);
+  .on("initEnd", renderFrameOne);
+
+function renderFrameOne() {
+  var dotLines = dots[dotIndex];
+  var dot = dotLines.join("");
+  dotIndex += 1;
+  graphviz.zoom(false);
+  graphviz.renderDot(dot);
+}
 
 function render() {
   var dotLines = dots[dotIndex];
   var dot = dotLines.join("");
+  graphviz.zoom(false);
   graphviz.renderDot(dot).on("end", function () {
-    dotIndex = (dotIndex + 1) % dots.length;
+    if (dotIndex === dots.length) {
+      dotIndex = 0;
+      return;
+    }
     render();
+    dotIndex += 1;
   });
 }
 
+var start = document.getElementById("start");
+start.style.cursor = "pointer";
+start.onclick = render;
+
 var dots = [
   [
-    "graph { 10 -- 8; 10 -- 11; 8 -- 7; 8 -- 9; null11 [style=invis]; 11 -- null11 [style=invis]; 11 -- 13; }",
+    `graph {
+        node [style="filled"];
+        10 [fillcolor="red", xlabel="Start at the root node..."];
+        10 -- 8 ;
+        10 -- 11;
+        8 -- 7;
+        8 -- 9;
+        null11 [style=invis];
+        11 -- null11 [style=invis];
+        11 -- 13;
+    }`,
   ],
   [
-    'graph { 10 -- 8[fillcolor="#1f77b4"]; 10 -- 11; 8 -- 7; 8 -- 9; null11 [style=invis]; 11 -- null11 [style=invis]; }',
+    `graph {
+        node [style="filled"];
+        8 [fillcolor="red", ];
+        10 -- 8 ;
+        10 -- 11;
+        8 -- 7;
+        8 -- 9;
+        null11 [style=invis];
+        11 -- null11 [style=invis];
+        11 -- 13;
+    }`,
+  ],
+  [
+    `graph {
+        node [style="filled"];
+        8 [fillcolor="red", ];
+        10 -- 8 ;
+        10 -- 11;
+        8 -- 9;
+        null11 [style=invis];
+        11 -- null11 [style=invis];
+        11 -- 13;
+    }`,
+  ],
+  [
+    `graph {
+        node [style="filled"];
+        10 -- 8 ;
+        10 -- 11;
+        9 [fillcolor="red", ];
+        8 -- 9;
+        null11 [style=invis];
+        11 -- null11 [style=invis];
+        11 -- 13;
+    }`,
+  ],
+  [
+    `graph {
+        node [style="filled"];
+        10 -- 8 ;
+        10 -- 11;
+        8 [fillcolor="red", ];
+        8 -- 9;
+        null11 [style=invis];
+        11 -- null11 [style=invis];
+        11 -- 13;
+    }`,
+  ],
+  [
+    `graph {
+        node [style="filled"];
+        10 -- 8 ;
+        10 -- 11;
+        10 [fillcolor="red", ];
+        8 -- 9;
+        null11 [style=invis];
+        11 -- null11 [style=invis];
+        11 -- 13;
+    }`,
+  ],
+  [
+    `graph {
+        node [style="filled"];
+        10 -- 8 ;
+        10 -- 11;
+        8 -- 9;
+        null11 [style=invis];
+        11 [fillcolor="red", ];
+        11 -- null11 [style=invis];
+        11 -- 13;
+    }`,
+  ],
+  [
+    `graph {
+        node [style="filled"];
+        10 -- 8 ;
+        10 -- 11;
+        8 -- 9;
+        null11 [style=invis];
+        11 -- null11 [style=invis];
+        13 [fillcolor="red", ];
+        11 -- 13;
+    }`,
+  ],
+  [
+    `graph {
+        node [style="filled"];
+        10 -- 8 ;
+        10 -- 11;
+        8 -- 9;
+        null11 [style=invis];
+        11 [fillcolor="red", ];
+        11 -- null11 [style=invis];
+    }`,
+  ],
+  [
+    `graph {
+        node [style="filled"];
+        10 [fillcolor="red", ];
+        10 -- 8 ;
+        10 -- 11;
+        8 -- 9;
+        null11 [style=invis];
+        11 -- null11 [style=invis];
+    }`,
+  ],
+  [
+    `graph {
+        node [style="filled"];
+        10 [fillcolor="red", xlabel="And we are done!" ];
+        10 -- 8 ;
+        10 -- 11;
+        8 -- 9;
+        null11 [style=invis];
+        11 -- null11 [style=invis];
+    }`,
+  ],
+  [
+    `graph {
+        node [style="filled"];
+        10 [fillcolor="red", xlabel="And we are done!"];
+        10 -- 8 ;
+        10 -- 11;
+        8 -- 9;
+        null11 [style=invis];
+        11 -- null11 [style=invis];
+    }`,
   ],
 ];
