@@ -9,7 +9,6 @@ var graphviz = d3
 
 if (window.screen.width < 700) {
   graphviz.scale(0.75);
-  console.log("detected mobile");
 }
 
 graphviz.zoom(false);

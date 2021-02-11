@@ -56,7 +56,7 @@
 &lt;script src=&quot;https:&#x2F;&#x2F;d3js.org&#x2F;d3.v5.min.js&quot;&gt;&lt;&#x2F;script&gt;
 &lt;script src=&quot;https:&#x2F;&#x2F;unpkg.com&#x2F;@hpcc-js&#x2F;wasm@0.3.11&#x2F;dist&#x2F;index.min.js&quot;&gt;&lt;&#x2F;script&gt;
 &lt;script src=&quot;https:&#x2F;&#x2F;unpkg.com&#x2F;d3-graphviz@3.0.5&#x2F;build&#x2F;d3-graphviz.js&quot;&gt;&lt;&#x2F;script&gt;
-&lt;div id=&quot;graph&quot; style=&quot;text-align: center; height: 16rem; width: 100%;&quot;&gt;
+&lt;div id=&quot;graph&quot; style=&quot;text-align: center; height: 16rem; width: 100%; padding-left: 1rem;&quot;&gt;
     &lt;noscript&gt;You need javascript enabled to run this animation.&lt;&#x2F;noscript&gt; 
 &lt;&#x2F;div&gt;
 &lt;script src=&quot;algorithm-animation.js&quot;&gt;&lt;&#x2F;script&gt;
