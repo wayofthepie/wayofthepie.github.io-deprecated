@@ -434,7 +434,7 @@ error: could not compile `rust-trees-post`
     Some(subtree)
 }
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;That seems a little wordy. Quick side note, with Rust 1.50 (which should be released Feb 11th 2021) we will be able to replace the if&#x2F;else&#x27;s in this code with the method &lt;code&gt;then&lt;&#x2F;code&gt; on &lt;code&gt;bool&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;p&gt;That seems a little wordy. Quick side note, with Rust 1.50 we are able to replace the if&#x2F;else&#x27;s in this code with the method &lt;code&gt;then&lt;&#x2F;code&gt; on &lt;code&gt;bool&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
 &lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
@@ -462,7 +462,7 @@ error: could not compile `rust-trees-post`
     Some(subtree)
 }
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;This is not available on stable yet, and it&#x27;s possibly less clear what it&#x27;s doing as well. The cleanest solution is to use &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;option&#x2F;enum.Option.html#method.take&quot;&gt;take&lt;&#x2F;a&gt; instead of &lt;code&gt;clone&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;However, I think the cleanest solution here is to use &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;option&#x2F;enum.Option.html#method.take&quot;&gt;take&lt;&#x2F;a&gt; instead of &lt;code&gt;clone&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
 &lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
