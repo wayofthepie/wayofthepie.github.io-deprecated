@@ -5,12 +5,12 @@
 	<link href="https://wayofthepie.github.io/series/trees-in-rust/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://wayofthepie.github.io"/>
 	<generator uri="https://www.getzola.org/">Zola</generator>
-	<updated>2021-02-06T00:00:00+00:00</updated>
+	<updated>2021-02-11T00:00:00+00:00</updated>
 	<id>https://wayofthepie.github.io/series/trees-in-rust/atom.xml</id>
 	<entry xml:lang="en">
 		<title>Binary Search Tree Trim</title>
-		<published>2021-02-06T00:00:00+00:00</published>
-		<updated>2021-02-06T00:00:00+00:00</updated>
+		<published>2021-02-11T00:00:00+00:00</published>
+		<updated>2021-02-11T00:00:00+00:00</updated>
 		<link href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/" type="text/html"/>
 		<id>https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/</id>
 		<content type="html">&lt;p&gt;This post came from a Leetcode problem in February&#x27;s daily challenges which I solved. It contains a few things that were issues for me when initially learning Rust, namely, how to properly use &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;rc&#x2F;struct.Rc.html&quot;&gt;Rc&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;cell&#x2F;struct.RefCell.html&quot;&gt;RefCell&lt;&#x2F;a&gt;. Now that I understand them a lot more, I thought I&#x27;d write about them. &lt;&#x2F;p&gt;
