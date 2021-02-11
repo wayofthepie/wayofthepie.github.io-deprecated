@@ -1,0 +1,10 @@
+// [10,8,11,null,9]
+graph ""
+{
+   10 -- 8;
+   10 -- 11;
+   null8 [style=invis];
+   8 -- null8[style=invis];
+   8 -- 9;
+}
+

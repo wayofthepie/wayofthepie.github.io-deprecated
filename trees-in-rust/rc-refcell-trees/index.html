@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="description" content="blah" />
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
+    />
+
+    <title></title>
+
+    <!-- CSS -->
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css"
+      media="print"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
+
+     
+     
+    
+  </head>
+
+  <body class="">
+    
+    <div class="sidebar">
+      <div class="container sidebar-sticky">
+        <ul class="sidebar-nav">
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+        </ul>
+        <ul class="sidebar-nav-social">
+          <a
+            href="https://github.com/wayofthepie"
+            class="fab fa-github sidebar-nav-social-item"
+          ></a>
+          <a
+            href="https://twitter.com/wayofthepie"
+            class="fab fa-twitter sidebar-nav-social-item"
+          ></a>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="content container">
+      
+<div class="post">
+    <h1 class="post-title">Binary Search Tree Trim</h1>
+    <span class="post-metadata">
+        
+        
+        
+        
+            
+            
+<div>
+    Part of the 
+<a class="post-series-button" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;series&#x2F;trees-in-rust&#x2F;">
+    Trees In Rust
+</a> series.
+</div>
+
+        
+        
+
+        <span class="post-date">2021-02-06</span>
+        
+        
+            <span class="post-tags">
+            
+                <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/rust">rust</a></span>
+            
+            </span>
+        
+        
+        
+        
+    </span>
+    <ul class="table-of-content">
+    
+        <li>
+            <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#the-algorithm">The Algorithm</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#pseudo-code-to-rust-code">Pseudo-code to Rust Code</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#auto-deref-on-method-calls">Auto-deref on Method Calls</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#why-do-we-clone-the-subtree-thinking">Why Do We Clone the Subtree 🤔?</a>
+                    
+                        <ul>
+                            
+                                <li>
+                                    <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#what-the-clone-actually-does">What the Clone Actually Does</a>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#a-borrow-which-lives-longer-than-expected">A Borrow Which Lives Longer Than Expected</a>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#fix-that-issue">Fix That Issue</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#how-do-we-test-this">How Do We Test This?</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#planting-our-tree">Planting Our Tree</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#growing-our-tree">Growing Our Tree</a>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#conclusion">Conclusion</a>
+            
+        </li>
+    
+    </ul>
+    <p>This post came from a Leetcode problem in February's daily challenges which I solved. It contained quite a few things which used to be major issues for me when learning Rust, especially around the use of <a href="https://doc.rust-lang.org/std/rc/struct.Rc.html">Rc</a> and <a href="https://doc.rust-lang.org/std/cell/struct.RefCell.html">RefCell</a>. So I thought I'd write about them. </p>
+<p>The problem is to <a href="https://leetcode.com/problems/trim-a-binary-search-tree/">trim a binary search tree</a>. Not that long ago my initial reaction to seeing this problem would be 😱 oh no, a tree in Rust! Luckily I have a lot more experience dealing with referential structures now, and I also recently read <a href="https://rust-unofficial.github.io/too-many-lists/index.html">Learn Rust With Entirely Too Many Linked Lists</a> which is awesome and helped solidify the problems you can encounter with such structures.</p>
+<span id="continue-reading"></span><h2 id="the-algorithm">The Algorithm</h2>
+<p>Here is the problem:</p>
+<blockquote>
+<p>Given the root of a binary search tree and the lowest and highest boundaries as low and high, trim the tree so that all its elements lie in [low, high]. Trimming the tree should not change the relative structure of the elements that will remain in the tree (i.e., any node's descendant should remain a descendant). It can be proven that there is a unique answer.</p>
+<p>Return the root of the trimmed binary search tree. Note that the root may change depending on the given bounds.</p>
+</blockquote>
+<p>The algorithm I came up with is as follows, in pseudocode:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">TreeNode {
+    val: String,
+    left: TreeNode,
+    right: TreeNode
+}
+
+</span><span style="color:#96b5b4;">visit</span><span style="color:#c0c5ce;">(root: TreeNode, low: int, high: int) -&gt; TreeNode:
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> root is null
+        </span><span style="color:#b48ead;">return</span><span style="color:#c0c5ce;"> null;
+    
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> root.val &lt; low: 
+        </span><span style="color:#b48ead;">return </span><span style="color:#96b5b4;">visit</span><span style="color:#c0c5ce;">(root.right, low, high);
+    
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> root.val &gt; high: 
+        </span><span style="color:#b48ead;">return </span><span style="color:#96b5b4;">visit</span><span style="color:#c0c5ce;">(root.left, low, high);
+    
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> root.val &gt; low:
+        root.left = </span><span style="color:#96b5b4;">visit</span><span style="color:#c0c5ce;">(root.left, low, high);
+    </span><span style="color:#b48ead;">else</span><span style="color:#c0c5ce;">:
+        root.left = null
+    
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> root.val &lt; high:
+        root.right = </span><span style="color:#96b5b4;">visit</span><span style="color:#c0c5ce;">(root.right, low, high);
+    </span><span style="color:#b48ead;">else</span><span style="color:#c0c5ce;">:
+        root.right = null
+
+    </span><span style="color:#b48ead;">return</span><span style="color:#c0c5ce;"> root
+</span></code></pre>
+<p>Here is a quick animation of how it visits each node and modified the tree. This tree is created from the list <code>[10, 8, 11, 7, 9, null, 13]</code>, <code>low = 8</code>, and <code>high = 12</code>.</p>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
+<script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
+<div id="graph" style="text-align: center; height: 16rem; width: 100%;"></div>
+<script src="algorithm-animation.js"></script>
+<p>So how does this algorithm translate into Rust, given the real definition of <code>TreeNode</code>?</p>
+<h2 id="pseudo-code-to-rust-code">Pseudo-code to Rust Code</h2>
+<p>First the tree nodes. These were given by the problem statement.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#65737e;">// Defined in the problem
+</span><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">derive</span><span style="color:#c0c5ce;">(Debug, PartialEq, Eq)]
+</span><span style="color:#b48ead;">pub struct </span><span style="color:#c0c5ce;">TreeNode {
+    </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">val</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+    </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">left</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+    </span><span style="color:#b48ead;">pub </span><span style="color:#bf616a;">right</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+}
+
+</span><span style="color:#65737e;">// Defined in the problem
+</span><span style="color:#b48ead;">impl </span><span style="color:#c0c5ce;">TreeNode {
+    #[</span><span style="color:#bf616a;">inline</span><span style="color:#c0c5ce;">]
+    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">new</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">val</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">Self </span><span style="color:#c0c5ce;">{
+        TreeNode {
+            val,
+            left: None,
+            right: None,
+        }
+    }
+}
+
+</span><span style="color:#b48ead;">pub struct </span><span style="color:#c0c5ce;">Solution;
+</span></code></pre>
+<p>Let's create two methods <code>trim_bst</code> and <code>visit</code> on <code>Solution</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl </span><span style="color:#c0c5ce;">Solution {
+    </span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">trim_bst</span><span style="color:#c0c5ce;">(
+        </span><span style="color:#bf616a;">root</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+        </span><span style="color:#bf616a;">low</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+        </span><span style="color:#bf616a;">high</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+    ) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+        </span><span style="color:#b48ead;">Self</span><span style="color:#c0c5ce;">::visit(root, low, high)
+    }
+
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">visit</span><span style="color:#c0c5ce;">(
+        </span><span style="color:#bf616a;">subtree</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+        </span><span style="color:#bf616a;">low</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+        </span><span style="color:#bf616a;">high</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+    ) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+        unimplemented!()
+    }
+}
+</span></code></pre>
+<p><code>trim_bst</code> just calls <code>visit</code>. <a href="https://doc.rust-lang.org/sd/macro.unimplemented.html">unimplemented!()</a> is a macro that will cause a panic if we try to execute it. It allows the code to type check and compile as we add to it. The first step, if the node is <code>None</code> return <code>None</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">visit</span><span style="color:#c0c5ce;">(
+    </span><span style="color:#bf616a;">subtree</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+    </span><span style="color:#bf616a;">low</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+    </span><span style="color:#bf616a;">high</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> subtree = subtree?;
+    unimplemented!()
+}
+</span></code></pre>
+<p><code>subtree</code> is an <code>Option</code> so we can use the <code>?</code><sup class="footnote-reference"><a href="#question-mark">1</a></sup><a name="question-mark-ref"></a> operator on it. Here, <code>let subtree = subtree?;</code> is short for:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> subtree = </span><span style="color:#b48ead;">match</span><span style="color:#c0c5ce;"> subtree {
+    Some(val) =&gt; val,
+    None =&gt; </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">None,
+}
+</span></code></pre>
+<p>Which says - if <code>subtree</code> is <code>None</code> return <code>None</code>, otherwise create a new variable also called <code>subtree</code> and assign the value inside the <code>Option</code> to it. Does it compile? </p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">$ cargo build
+...
+warning: unused variable: `subtree`
+  --&gt; src/day2.rs:</span><span style="color:#d08770;">38</span><span style="color:#c0c5ce;">:</span><span style="color:#d08770;">13
+   </span><span style="color:#c0c5ce;">|
+</span><span style="color:#d08770;">38 </span><span style="color:#c0c5ce;">|         </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> subtree = subtree?;
+   |             ^^^^^^^ </span><span style="color:#bf616a;">help</span><span style="color:#c0c5ce;">: if this is intentional, prefix it with an </span><span style="color:#bf616a;">underscore</span><span style="color:#c0c5ce;">: `_subtree`
+   |
+   = note: `#[</span><span style="color:#bf616a;">warn</span><span style="color:#c0c5ce;">(unused_variables)]` on by default
+
+warning: unused variable: `low`
+  --&gt; src/day2.rs:</span><span style="color:#d08770;">35</span><span style="color:#c0c5ce;">:</span><span style="color:#d08770;">9
+   </span><span style="color:#c0c5ce;">|
+</span><span style="color:#d08770;">35 </span><span style="color:#c0c5ce;">|         low: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+   |         ^^^ </span><span style="color:#bf616a;">help</span><span style="color:#c0c5ce;">: if this is intentional, prefix it with an </span><span style="color:#bf616a;">underscore</span><span style="color:#c0c5ce;">: `_low`
+
+warning: unused variable: `high`
+  --&gt; src/day2.rs:36:9
+   |
+</span><span style="color:#d08770;">36 </span><span style="color:#c0c5ce;">|         high: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+   |         ^^^^ </span><span style="color:#bf616a;">help</span><span style="color:#c0c5ce;">: if this is intentional, prefix it with an </span><span style="color:#bf616a;">underscore</span><span style="color:#c0c5ce;">: `_high`
+
+warning: 3 warnings emitted
+
+    Finished dev [unoptimized + debuginfo] target(s) in 0.35s
+</span></code></pre>
+<p>It does! Great. There are few warnings for unused variables, we can ignore these for now, we will eventually use them. </p>
+<div class="alert alert-info">
+<span><i class="icon fas fa-info-circle"></i></span>
+<span class="alert-text">
+  <p>
+    It would also be a good idea to have some tests here as we build this. You can see the tests I had at <a href="https://github.com/wayofthepie/bst-trim-post/blob/9dab7c9ec541a35517a6a6a613be3288d1eefd34/src/rc_tree.rs#L60">wayofthepie/bst-trim-post@9dab7c</a>, there is a bit to them. I'll go into more detail on this later.
+  </p>
+</span>
+</div>
+<p>Next, we need to check if <code>node.val &lt; low</code> and if it is, recursively visit the right subtree, discarding the current node and its left subtree. Not that long ago, trying to do this with <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> would have sent me into a spiral of misery. But that was past me, now I am future me (present me?), and I've learned a lot since then. So here is the next step:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">visit</span><span style="color:#c0c5ce;">(
+    </span><span style="color:#bf616a;">subtree</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+    </span><span style="color:#bf616a;">low</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+    </span><span style="color:#bf616a;">high</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> subtree = subtree?;
+    </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> subtree_ref = subtree.</span><span style="color:#96b5b4;">borrow_mut</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> right = subtree_ref.right.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &lt; low {
+        </span><span style="color:#b48ead;">return Self</span><span style="color:#c0c5ce;">::visit(right, low, high);
+    }
+    unimplemented!()
+}
+</span></code></pre>
+<p>Does it build?</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">$ cargo build
+...
+    Finished dev [unoptimized + debuginfo] target(s) in 0.23s
+</span></code></pre>
+<p>It does, great! A lot is happening here, even though it's just a few lines of code. Let's start by breaking down what exactly <code>let mut subtree_ref = subtree.borrow_mut();</code> is doing.</p>
+<h3 id="auto-deref-on-method-calls">Auto-deref on Method Calls</h3>
+<p>The type of <code>subtree</code> after <code>let subtree = subtree?;</code> is <code>Rc&lt;RefCell&lt;TreeNode&gt;&gt;</code>. Calling <code>borrow_mut</code> will first get a reference to the inner value of <a href="https://doc.rust-lang.org/std/rc/struct.Rc.html">Rc</a>, this is a <code>RefCell&lt;TreeNode&gt;</code> here. Then it will borrow the inner value of the <a href="https://doc.rust-lang.org/std/cell/struct.RefCell.html">RefCell</a>, wrapped in a <a href="https://doc.rust-lang.org/std/cell/struct.RefMut.html">RefMut</a>, giving us a <code>RefMut&lt;TreeNode&gt;</code>. This all happens because of the <a href="https://doc.rust-lang.org/std/ops/trait.Deref.html">Deref</a> impl for <code>Rc</code> and the <code>borrow_mut</code> method on <code>RefCell</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#65737e;">// Deref impl for Rc
+</span><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">stable</span><span style="color:#c0c5ce;">(feature = &quot;</span><span style="color:#a3be8c;">rust1</span><span style="color:#c0c5ce;">&quot;, since = &quot;</span><span style="color:#a3be8c;">1.0.0</span><span style="color:#c0c5ce;">&quot;)]
+</span><span style="color:#b48ead;">impl</span><span style="color:#c0c5ce;">&lt;T: </span><span style="background-color:#bf616a;color:#2b303b;">?</span><span style="color:#c0c5ce;">Sized&gt; Deref for Rc&lt;T&gt; {
+    </span><span style="color:#b48ead;">type </span><span style="color:#c0c5ce;">Target = T;
+
+    #[</span><span style="color:#bf616a;">inline</span><span style="color:#c0c5ce;">(always)]
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">deref</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">) -&gt; &amp;T {
+        &amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.</span><span style="color:#96b5b4;">inner</span><span style="color:#c0c5ce;">().value
+    }
+}
+...
+
+</span><span style="color:#65737e;">// borrow_mut on RefCell
+</span><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">stable</span><span style="color:#c0c5ce;">(feature = &quot;</span><span style="color:#a3be8c;">rust1</span><span style="color:#c0c5ce;">&quot;, since = &quot;</span><span style="color:#a3be8c;">1.0.0</span><span style="color:#c0c5ce;">&quot;)]
+#[</span><span style="color:#bf616a;">inline</span><span style="color:#c0c5ce;">]
+#[</span><span style="color:#bf616a;">track_caller</span><span style="color:#c0c5ce;">]
+</span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">borrow_mut</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">) -&gt; RefMut&lt;&#39;_, T&gt; {
+    </span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.</span><span style="color:#96b5b4;">try_borrow_mut</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">expect</span><span style="color:#c0c5ce;">(&quot;</span><span style="color:#a3be8c;">already borrowed</span><span style="color:#c0c5ce;">&quot;)
+}
+
+[</span><span style="color:#96b5b4;">stable</span><span style="color:#c0c5ce;">(feature = &quot;</span><span style="color:#a3be8c;">try_borrow</span><span style="color:#c0c5ce;">&quot;, since = &quot;</span><span style="color:#a3be8c;">1.13.0</span><span style="color:#c0c5ce;">&quot;)]
+#[</span><span style="color:#bf616a;">inline</span><span style="color:#c0c5ce;">]
+</span><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">try_borrow_mut</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">) -&gt; Result&lt;RefMut&lt;&#39;_, T&gt;, BorrowMutError&gt; {
+    </span><span style="color:#b48ead;">match </span><span style="color:#c0c5ce;">BorrowRefMut::new(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.borrow) {
+        </span><span style="color:#65737e;">// SAFETY: `BorrowRef` guarantees unique access.
+        </span><span style="color:#c0c5ce;">Some(b) =&gt; Ok(RefMut { value: </span><span style="color:#b48ead;">unsafe </span><span style="color:#c0c5ce;">{ &amp;</span><span style="color:#b48ead;">mut </span><span style="color:#c0c5ce;">*</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.value.</span><span style="color:#96b5b4;">get</span><span style="color:#c0c5ce;">() }, borrow: b }),
+        None =&gt; Err(BorrowMutError { _private: () }),
+    }
+}
+</span></code></pre>
+<p>Because of these, when we call <code>borrow_mut</code> on <code>subtree</code> with <code>subtree.borrow_mut()</code> the <code>Rc</code> will automatically be dereferenced<sup class="footnote-reference"><a href="#auto-deref">2</a></sup><a name="auto-deref-ref"></a> by a call to its <code>Deref</code> impl, and give us the inner <code>RefCell</code>. The call to <code>borrow_mut</code> happens on that <code>RefCell</code>, which will return a <code>RefMut&lt;TreeNode&gt;</code>. Now <code>subtree_ref</code> is a <code>RefMut&lt;TreeNode&gt;</code> and any method calls on it will deref to calls on a <code>TreeNode</code> because of <code>RefMut</code>'s <code>Deref</code> impl. So we can just call <code>subtree_ref.val</code> to get the <code>val</code> field of the node. That's a lot going on for a single line of code!</p>
+<h3 id="why-do-we-clone-the-subtree-thinking">Why Do We Clone the Subtree 🤔?</h3>
+<p>Let's see what happens if we leave out the call to clone when we get the right subtree:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">visit</span><span style="color:#c0c5ce;">(
+    </span><span style="color:#bf616a;">subtree</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+    </span><span style="color:#bf616a;">low</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+    </span><span style="color:#bf616a;">high</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> subtree = subtree?;
+    </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> subtree_ref = subtree.</span><span style="color:#96b5b4;">borrow_mut</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> right = subtree_ref.right; </span><span style="color:#65737e;">// clone() is gone
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &lt; low {
+        </span><span style="color:#b48ead;">return Self</span><span style="color:#c0c5ce;">::visit(right, low, high);
+    }
+    unimplemented!()
+}
+</span></code></pre>
+<p>What does the compiler say?</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">$ cargo build
+...
+error[</span><span style="color:#d08770;">E0507</span><span style="color:#c0c5ce;">]: cannot </span><span style="color:#b48ead;">move</span><span style="color:#c0c5ce;"> out of dereference of `RefMut&lt;&#39;_, TreeNode&gt;`
+  --&gt; src/lib.rs:</span><span style="color:#d08770;">39</span><span style="color:#c0c5ce;">:</span><span style="color:#d08770;">21
+   </span><span style="color:#c0c5ce;">|
+</span><span style="color:#d08770;">39 </span><span style="color:#c0c5ce;">|         </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> right = subtree_ref.right;
+   |                     ^^^^^^^^^^^^^^^^^ move occurs because value has type `Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;`, which does not implement the `Copy` </span><span style="color:#bf616a;">trait
+   </span><span style="color:#c0c5ce;">|
+help: consider borrowing the `Option`</span><span style="color:#b48ead;">&#39;s</span><span style="color:#c0c5ce;"> content
+   |
+</span><span style="color:#d08770;">39 </span><span style="color:#c0c5ce;">|         </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> right = subtree_ref.right.</span><span style="color:#96b5b4;">as_ref</span><span style="color:#c0c5ce;">();
+   |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+help: consider borrowing here
+   |
+</span><span style="color:#d08770;">39 </span><span style="color:#c0c5ce;">|         </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> right = &amp;subtree_ref.right;
+   |                     ^^^^^^^^^^^^^^^^^^
+
+error: aborting due to previous error
+
+For more information about this error, try `rustc --explain </span><span style="color:#d08770;">E0507</span><span style="color:#c0c5ce;">`.
+error: could not compile `rust-trees-post`
+</span></code></pre>
+<p>What! Thinking about it a bit more it makes sense. We are trying to <em>move</em><sup class="footnote-reference"><a href="#move">3</a></sup><a name="move-ref"></a> the value of <code>subtree_ref.right</code> into <code>right</code>, if we did that, what would the value of <code>subtree_ref.right</code> be? Let's apply the suggestion from the compiler to add <code>as_ref</code> and see what happens:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">$ cargo build
+...
+error[</span><span style="color:#d08770;">E0308</span><span style="color:#c0c5ce;">]: mismatched types
+  --&gt; src/lib.rs:</span><span style="color:#d08770;">41</span><span style="color:#c0c5ce;">:</span><span style="color:#d08770;">32
+   </span><span style="color:#c0c5ce;">|
+</span><span style="color:#d08770;">41 </span><span style="color:#c0c5ce;">|             </span><span style="color:#b48ead;">return Self</span><span style="color:#c0c5ce;">::visit(right, low, high);
+   |                                ^^^^^ expected struct `Rc`, found </span><span style="color:#bf616a;">reference
+   </span><span style="color:#c0c5ce;">|
+   = note: expected </span><span style="color:#b48ead;">enum</span><span style="color:#c0c5ce;"> `Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;`
+              found </span><span style="color:#b48ead;">enum</span><span style="color:#c0c5ce;"> `Option&lt;&amp;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;`
+
+error: aborting due to previous error
+
+For more information about this error, try `rustc --explain </span><span style="color:#d08770;">E0308</span><span style="color:#c0c5ce;">`.
+error: could not compile `rust-trees-post`
+
+To learn more, run the command again with --verbose.
+</span></code></pre>
+<p>What!? Oh, the types don't match now. <code>as_ref</code> will give us an <code>Option&lt;&amp;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;</code>, but we want an <code>Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;</code>. It is possible to update the type of the <code>subtree</code> arg in the <code>visit</code> method to be <code>Option&lt;&amp;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;</code>, but it would complicate things.</p>
+<p>Let's not try that now, and instead put clone back - <code>let right = subtree_ref.right.clone();</code>. So what's happening here?</p>
+<h4 id="what-the-clone-actually-does">What the Clone Actually Does</h4>
+<p><code>subtree_ref.right</code> is a value of type <code>Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;</code>. When we call <code>subtree_ref.right.clone()</code>, we are first calling <code>clone</code> on the <code>Option</code>. The definition of the <a href="https://doc.rust-lang.org/std/clone/trait.Clone.html">Clone</a> trait for <code>Option</code> is as follows:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">impl</span><span style="color:#c0c5ce;">&lt;T: Clone&gt; Clone </span><span style="color:#b48ead;">for </span><span style="color:#c0c5ce;">Option&lt;T&gt; {
+    #[</span><span style="color:#bf616a;">inline</span><span style="color:#c0c5ce;">]
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">clone</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">Self </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#b48ead;">match </span><span style="color:#bf616a;">self </span><span style="color:#c0c5ce;">{
+            </span><span style="color:#65737e;">// If the Option is Some, just call clone on the value contained within
+            </span><span style="color:#c0c5ce;">Some(x) =&gt; Some(x.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">()),
+            None =&gt; None,
+        }
+    }
+    ...
+}
+</span></code></pre>
+<p>So it just calls <code>clone</code> on the value inside the <code>Option</code>, if there is one. The value in our <code>Option</code> is of type <code>Rc&lt;RefCell&lt;TreeNode&gt;&gt;</code>. So what does <code>clone</code> for <code>Rc</code> look like?</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">stable</span><span style="color:#c0c5ce;">(feature = &quot;</span><span style="color:#a3be8c;">rust1</span><span style="color:#c0c5ce;">&quot;, since = &quot;</span><span style="color:#a3be8c;">1.0.0</span><span style="color:#c0c5ce;">&quot;)]
+</span><span style="color:#b48ead;">impl</span><span style="color:#c0c5ce;">&lt;T: </span><span style="background-color:#bf616a;color:#2b303b;">?</span><span style="color:#c0c5ce;">Sized&gt; Clone for Rc&lt;T&gt; {
+    #[</span><span style="color:#bf616a;">inline</span><span style="color:#c0c5ce;">]
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">clone</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">) -&gt; Rc&lt;T&gt; {
+        </span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.</span><span style="color:#96b5b4;">inner</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">inc_strong</span><span style="color:#c0c5ce;">();
+        </span><span style="color:#b48ead;">Self</span><span style="color:#c0c5ce;">::from_inner(</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.ptr)
+    }
+}
+</span></code></pre>
+<p>It increments the strong reference count<sup class="footnote-reference"><a href="#strong-refs">4</a></sup><a name="strong-refs-ref"></a> and calls <code>from_inner</code>. It doesn't really matter here how <code>from_inner</code> works, we just care about what it returns, which is <em>itself</em> (the <code>Rc</code> we called <code>clone</code> on). </p>
+<p>So, to sum it up, calling <code>clone</code> on <code>subtree_ref.right</code> will increment the <code>Rc</code>'s (strong) reference count and give us back the <code>Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;</code> if <code>subtree_ref.right</code> is not <code>None</code>. Or it will just give us <code>None</code> if <code>subtree_ref.right</code> is <code>None</code>. </p>
+<h3 id="a-borrow-which-lives-longer-than-expected">A Borrow Which Lives Longer Than Expected</h3>
+<p>Let's add the rest of the algorithm:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">visit</span><span style="color:#c0c5ce;">(
+    </span><span style="color:#bf616a;">subtree</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+    </span><span style="color:#bf616a;">low</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+    </span><span style="color:#bf616a;">high</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> subtree = subtree?;
+    </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> subtree_ref = subtree.</span><span style="color:#96b5b4;">borrow_mut</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> right = subtree_ref.right.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &lt; low {
+        </span><span style="color:#b48ead;">return Self</span><span style="color:#c0c5ce;">::visit(right, low, high);
+    }
+
+    </span><span style="color:#65737e;">// After here is new 
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> left = subtree_ref.left.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &gt; high {
+        </span><span style="color:#b48ead;">return Self</span><span style="color:#c0c5ce;">::visit(left, low, high);
+    }
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &gt; low {
+        subtree_ref.left = </span><span style="color:#b48ead;">Self</span><span style="color:#c0c5ce;">::visit(left, low, high);
+    }
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &lt; high {
+        subtree_ref.right = </span><span style="color:#b48ead;">Self</span><span style="color:#c0c5ce;">::visit(right, low, high);
+    }
+    Some(subtree)
+}
+</span></code></pre>
+<p>Nothing special here that wasn't covered in the previous section, it matches pretty closely with our pseudocode algorithm. We are now returning the subtree instead of using the <a href="https://doc.rust-lang.org/std/macro.unimplemented.html">unimplemented</a> macro. This should build fine:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">$ cargo build
+...
+error[</span><span style="color:#d08770;">E0505</span><span style="color:#c0c5ce;">]: cannot </span><span style="color:#b48ead;">move</span><span style="color:#c0c5ce;"> out of `subtree` because it is borrowed
+  --&gt; src/lib.rs:</span><span style="color:#d08770;">53</span><span style="color:#c0c5ce;">:</span><span style="color:#d08770;">14
+   </span><span style="color:#c0c5ce;">|
+</span><span style="color:#d08770;">38 </span><span style="color:#c0c5ce;">|         </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> subtree_ref = subtree.</span><span style="color:#96b5b4;">borrow_mut</span><span style="color:#c0c5ce;">();
+   |                               ------- borrow of `subtree` occurs here
+...
+</span><span style="color:#d08770;">53 </span><span style="color:#c0c5ce;">|         Some(subtree)
+   |              ^^^^^^^ </span><span style="color:#b48ead;">move</span><span style="color:#c0c5ce;"> out of `subtree` occurs here
+</span><span style="color:#d08770;">54 </span><span style="color:#c0c5ce;">|     }
+   |     - borrow might be used here, when `subtree_ref` is dropped and runs the destructor </span><span style="color:#b48ead;">for type</span><span style="color:#c0c5ce;"> `RefMut&lt;&#39;_, TreeNode&gt;`
+
+error: aborting due to previous error
+
+For more information about this error, try `rustc --explain </span><span style="color:#d08770;">E0505</span><span style="color:#c0c5ce;">`.
+error: could not compile `rust-trees-post`
+</span></code></pre>
+<p>Crap, It doesn't build fine! What's it saying? We are mutably borrowing the subtree with <code>let mut subtree_ref = subtree.borrow_mut();</code> but this borrow is still active when we try to return the <code>subtree</code> from <code>visit</code>. This confused me for a long time when I was learning Rust. <code>RefMut</code> internally holds a type of <code>BorrowRefMut</code>, in a field called <code>borrow</code>. This type has a custom <a href="https://doc.rust-lang.org/std/ops/trait.Drop.html">Drop</a> implementation, a destructor, so when <code>RefMut</code> is dropped this <code>Drop</code> impl will be run. </p>
+<p>This custom drop impl counts as a use of <code>RefMut</code>, so the borrow checker is rightly saying it will be used <em>after</em> we return from the function, as <code>RefMut</code> is only dropped once that happens<sup class="footnote-reference"><a href="#destructors">5</a></sup><a name="destructors-ref"></a>. So we either need to scope the borrow, or explicitly call <a href="https://doc.rust-lang.org/std/mem/fn.drop.html">drop</a> on <code>subtree_ref</code>. Let's just scope the borrow (just put it in a new <a href="https://doc.rust-lang.org/reference/expressions/block-expr.html">block</a>):</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">visit</span><span style="color:#c0c5ce;">(
+    </span><span style="color:#bf616a;">subtree</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+    </span><span style="color:#bf616a;">low</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+    </span><span style="color:#bf616a;">high</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> subtree = subtree?;
+    {
+        </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> subtree_ref = subtree.</span><span style="color:#96b5b4;">borrow_mut</span><span style="color:#c0c5ce;">();
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> right = subtree_ref.right.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">();
+        </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &lt; low {
+            </span><span style="color:#b48ead;">return Self</span><span style="color:#c0c5ce;">::visit(right, low, high);
+        }
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> left = subtree_ref.left.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">();
+        </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &gt; high {
+            </span><span style="color:#b48ead;">return Self</span><span style="color:#c0c5ce;">::visit(left, low, high);
+        }
+        </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &gt; low {
+            subtree_ref.left = </span><span style="color:#b48ead;">Self</span><span style="color:#c0c5ce;">::visit(left, low, high);
+        }
+        </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &lt; high {
+            subtree_ref.right = </span><span style="color:#b48ead;">Self</span><span style="color:#c0c5ce;">::visit(right, low, high);
+        }
+    }
+    Some(subtree)
+}
+</span></code></pre>
+<p>It should compile now ... 🤞</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">$ cargo build
+...
+    Finished dev [unoptimized + debuginfo] </span><span style="color:#96b5b4;">target</span><span style="color:#c0c5ce;">(s) in </span><span style="color:#d08770;">0.21</span><span style="color:#c0c5ce;">s
+</span></code></pre>
+<p>Awesome! However, we missed a step. If we run the tests it will fail. We will go through the tests in-depth in a moment, you can see them <a href="https://github.com/wayofthepie/bst-trim-post/blob/9dab7c9ec541a35517a6a6a613be3288d1eefd34/src/rc_tree.rs#L60">here</a>. The issue is that we never take into account the cases where <code>root.val == low</code> or <code>root.val == high</code>. We do <em>nothing</em> in both those cases. <a href="https://github.com/wayofthepie/bst-trim-post/blob/9dab7c9ec541a35517a6a6a613be3288d1eefd34/src/rc_tree.rs#L105">This test</a> builds a tree which looks as follows:</p>
+<p><img src="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/example1-tree.png" alt="" /></p>
+<p>We want to <a href="https://github.com/wayofthepie/bst-trim-post/blob/9dab7c9ec541a35517a6a6a613be3288d1eefd34/src/rc_tree.rs#L115">filter out all nodes less than 8 and greater than 12</a>, so the resulting tree should be:</p>
+<p><img src="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/example1-expected-result.png" alt="" /></p>
+<p>However, the tree we end up with is:</p>
+<p><img src="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/example1-actual-result.png" alt="" /></p>
+<p>Which is not right at all! <code>7</code> shouldn't be there, unless <code>8 &lt;= 7 &lt;= 12</code> which I don't believe is true in this universe. Admittedly, it took me a few minutes to realize the actual problem even though I had tests that were failing <em>and</em> the pseudocode algorithm I had outlined had an explicit case handling this 😄. Let's fix it!</p>
+<h1 id="fix-that-issue">Fix That Issue</h1>
+<p>Ok, so we never deal with the case where the current node is <em>equal</em> to either the <code>low</code> or <code>high</code> bound. What we should do is set the left subtree to <code>None</code> when it's equal to <code>low</code> and the right subtree to <code>None</code> when equal to high. There are a few ways we can fix this, here is one:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">visit</span><span style="color:#c0c5ce;">(
+    </span><span style="color:#bf616a;">subtree</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+    </span><span style="color:#bf616a;">low</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+    </span><span style="color:#bf616a;">high</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> subtree = subtree?;
+    {
+        </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> subtree_ref = subtree.</span><span style="color:#96b5b4;">borrow_mut</span><span style="color:#c0c5ce;">();
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> right = subtree_ref.right.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">();
+        </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &lt; low {
+            </span><span style="color:#b48ead;">return Self</span><span style="color:#c0c5ce;">::visit(right, low, high);
+        }
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> left = subtree_ref.left.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">();
+        </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &gt; high {
+            </span><span style="color:#b48ead;">return Self</span><span style="color:#c0c5ce;">::visit(left, low, high);
+        }
+        subtree_ref.left = </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &gt; low {
+            </span><span style="color:#b48ead;">Self</span><span style="color:#c0c5ce;">::visit(left, low, high)
+        } </span><span style="color:#b48ead;">else </span><span style="color:#c0c5ce;">{
+            None
+        };
+        subtree_ref.right = </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &lt; high {
+            </span><span style="color:#b48ead;">Self</span><span style="color:#c0c5ce;">::visit(right, low, high)
+        } </span><span style="color:#b48ead;">else </span><span style="color:#c0c5ce;">{
+            None
+        };
+    }
+    Some(subtree)
+}
+</span></code></pre>
+<p>That seems a little wordy. Quick side note, since Rust 1.50 we are able to replace the if/else's in this code with the method <code>then</code> on <code>bool</code>:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">visit</span><span style="color:#c0c5ce;">(
+    </span><span style="color:#bf616a;">subtree</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+    </span><span style="color:#bf616a;">low</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+    </span><span style="color:#bf616a;">high</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> subtree = subtree?;
+    {
+        </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> subtree_ref = subtree.</span><span style="color:#96b5b4;">borrow_mut</span><span style="color:#c0c5ce;">();
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> right = subtree_ref.right.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">();
+        </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &lt; low {
+            </span><span style="color:#b48ead;">return Self</span><span style="color:#c0c5ce;">::visit(right, low, high);
+        }
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> left = subtree_ref.left.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">();
+        </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &gt; high {
+            </span><span style="color:#b48ead;">return Self</span><span style="color:#c0c5ce;">::visit(left, low, high);
+        }
+        subtree_ref.left = (subtree_ref.val &gt; low)
+            .</span><span style="color:#96b5b4;">then</span><span style="color:#c0c5ce;">(|| </span><span style="color:#b48ead;">Self</span><span style="color:#c0c5ce;">::visit(left, low, high))
+            .</span><span style="color:#96b5b4;">flatten</span><span style="color:#c0c5ce;">();
+        subtree_ref.right = (subtree_ref.val &lt; high)
+            .</span><span style="color:#96b5b4;">then</span><span style="color:#c0c5ce;">(|| </span><span style="color:#b48ead;">Self</span><span style="color:#c0c5ce;">::visit(right, low, high))
+            .</span><span style="color:#96b5b4;">flatten</span><span style="color:#c0c5ce;">();
+    }
+    Some(subtree)
+}
+</span></code></pre>
+<p>However, I think the cleanest solution here is to use <a href="https://doc.rust-lang.org/std/option/enum.Option.html#method.take">take</a> instead of <code>clone</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">visit</span><span style="color:#c0c5ce;">(
+    </span><span style="color:#bf616a;">subtree</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+    </span><span style="color:#bf616a;">low</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+    </span><span style="color:#bf616a;">high</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">,
+) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> subtree = subtree?;
+    {
+        </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> subtree_ref = subtree.</span><span style="color:#96b5b4;">borrow_mut</span><span style="color:#c0c5ce;">();
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> right = subtree_ref.right.</span><span style="color:#96b5b4;">take</span><span style="color:#c0c5ce;">();   </span><span style="color:#65737e;">// take instead of clone 
+        </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &lt; low {
+            </span><span style="color:#b48ead;">return Self</span><span style="color:#c0c5ce;">::visit(right, low, high);
+        }
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> left = subtree_ref.left.</span><span style="color:#96b5b4;">take</span><span style="color:#c0c5ce;">();     </span><span style="color:#65737e;">// same here
+        </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &gt; high {
+            </span><span style="color:#b48ead;">return Self</span><span style="color:#c0c5ce;">::visit(left, low, high);
+        }
+        </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &gt; low {
+            subtree_ref.left = </span><span style="color:#b48ead;">Self</span><span style="color:#c0c5ce;">::visit(left, low, high);
+        }
+        </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> subtree_ref.val &lt; high {
+            subtree_ref.right = </span><span style="color:#b48ead;">Self</span><span style="color:#c0c5ce;">::visit(right, low, high);
+        }
+    }
+    Some(subtree)
+}
+</span></code></pre>
+<p>Remember the reason we used <code>clone</code> in the first place? It was because we could not move a given subtree out of the current node. <code>take</code> will give us ownership of the subtree and set <code>None</code> in its place. So in the above code when we assign to <code>right</code> - the line <code>let right = subtree_ref.right.take();</code> - <code>right</code> now owns the right subtree, and <code>subtree_ref.right</code> is set to <code>None</code>. Later on we re-assign to <code>subtree_ref</code> with the filtered nodes in <code>right</code> if we hit the condition <code>subtree_ref.val &lt; high</code>. Because we use <code>take</code> now if we don't hit that condition it means the value of the current node is equal to <code>high</code> and <code>subtree_ref.right</code> will be <code>None</code>, exactly what we want! The same also happens with <code>left</code> when we take the left subtree.</p>
+<h1 id="how-do-we-test-this">How Do We Test This?</h1>
+<p>I had the tests written before the code in this case, so I could validate the implementation was correct. I glossed over them until now because they are more complex than implementing the algorithm itself! First, we need to build a tree given its definition as a list of nodes. Leetcode defines a tree in level order in a list, for example <code>[3, 0, 4, null, 2, null, null, 1]</code> is the tree:</p>
+<p><img src="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/first-tree.png" alt="" /></p>
+<p>Right, we need a function, say <code>build_tree</code>, which takes a list of nodes specified in level order and gives us a tree. How can we turn a list into a tree? </p>
+<h2 id="planting-our-tree">Planting Our Tree</h2>
+<p>The first step is to compute the number of levels. With that, we can build the nodes for each level and use a queue to track the nodes for a previous level. The nodes we create at each iteration will then get put into the subtrees of the nodes we have in our queue from the previous iteration. This seems hard to explain in English! Let's just start implementing.</p>
+<p>We can get the height of the tree by first taking the length of the node definition list, call it <code>n</code>. Where <code>n &gt; 1</code> the height is <code>ceil(lg n)</code> (<code>lg</code> being <code>log</code> to the base <code>2</code>). <code>ceil</code> being the mathematical <a href="https://en.wikipedia.org/wiki/Floor_and_ceiling_functions">ceiling function</a>. If <code>n</code> is <code>1</code> then there is only one level. Each level has at most <code>2 ^ level</code> nodes. Level 0 can have <code>2 ^ 0 = 1</code>, level 1 can have <code>2 ^ 1 = 2</code> nodes and so on. </p>
+<p>So, if our list has <code>6</code> items, including <code>null</code> items, we get <code>ceil(lg 6) == 3</code>. We must have a tree with <code>3</code> levels. Let's start with the shell of a <code>build_tree</code> function.</p>
+<div class="alert alert-info">
+<span><i class="icon fas fa-info-circle"></i></span>
+<span class="alert-text">
+  <p>
+  It would be good to have tests for this function also, but I ran out of time so just implemented it 😆.
+  </p>
+</span>
+</div>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">build_tree</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">values</span><span style="color:#c0c5ce;">: Vec&lt;Option&lt;</span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">&gt;&gt;) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    unimplemented!()
+}
+</span></code></pre>
+<p>There is no tree if <code>values</code> is empty, and we need to compute the height, lets start there.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">build_tree</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">values</span><span style="color:#c0c5ce;">: Vec&lt;Option&lt;</span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">&gt;&gt;) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> values.</span><span style="color:#96b5b4;">is_empty</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">None;
+    }
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> length = values.</span><span style="color:#96b5b4;">len</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> height = </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> length &gt; </span><span style="color:#d08770;">1 </span><span style="color:#c0c5ce;">{
+        (length as </span><span style="color:#b48ead;">f32</span><span style="color:#c0c5ce;">).</span><span style="color:#96b5b4;">log2</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">ceil</span><span style="color:#c0c5ce;">() as </span><span style="color:#b48ead;">usize
+    </span><span style="color:#c0c5ce;">} </span><span style="color:#b48ead;">else </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#d08770;">1
+    </span><span style="color:#c0c5ce;">};
+    unimplemented!()
+}
+</span></code></pre>
+<p>We need to cast <code>length</code> to a floating point value to get the <code>lg</code> of the length, Rust doesn't currently have <code>log</code> methods for integer types<sup class="footnote-reference"><a href="#integer-log">6</a></sup><a name="integer-log-ref"></a>. Ok, next up, plant the <code>root</code> of our tree. Thinking ahead a little bit, we're going to want to read the items in the <code>Vec</code> in reverse, so let's also just reverse it.</p>
+<div class="alert alert-info">
+<span><i class="icon fas fa-info-circle"></i></span>
+<span class="alert-text">
+  <p>
+  Why are we going to read them in reverse? We're going to <b>pop</b> them off the <b>Vec</b> - treating 
+  the <b>Vec</b> like a stack - and <b>pop</b> will remove the last element in the <b>Vec</b>. 
+  There are other ways to do this, but this seems the most straightforward here.
+  </p>
+</span>
+</div>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">build_tree</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">values</span><span style="color:#c0c5ce;">: Vec&lt;Option&lt;</span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">&gt;&gt;) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> values.</span><span style="color:#96b5b4;">is_empty</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">None;
+    }
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> length = values.</span><span style="color:#96b5b4;">len</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> height = </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> length &gt; </span><span style="color:#d08770;">1 </span><span style="color:#c0c5ce;">{
+        (length as </span><span style="color:#b48ead;">f32</span><span style="color:#c0c5ce;">).</span><span style="color:#96b5b4;">log2</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">ceil</span><span style="color:#c0c5ce;">() as </span><span style="color:#b48ead;">usize 
+    </span><span style="color:#c0c5ce;">} </span><span style="color:#b48ead;">else </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#d08770;">1
+    </span><span style="color:#c0c5ce;">};
+    values.</span><span style="color:#96b5b4;">reverse</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#65737e;">// We know values is not empty so unwrapping is ok
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> initial = values.</span><span style="color:#96b5b4;">pop</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">unwrap</span><span style="color:#c0c5ce;">()?;
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> root = Rc::new(RefCell::new(TreeNode::new(initial)));
+    unimplemented!()
+}
+</span></code></pre>
+<p>Ok, now we have the <code>root</code>. We need queue to track nodes:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">build_tree</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">values</span><span style="color:#c0c5ce;">: Vec&lt;Option&lt;</span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">&gt;&gt;) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> values.</span><span style="color:#96b5b4;">is_empty</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">None;
+    }
+    </span><span style="color:#65737e;">// Create a queue as a VecDeque
+    </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> queue = VecDeque::new();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> length = values.</span><span style="color:#96b5b4;">len</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> height = </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> length &gt; </span><span style="color:#d08770;">1 </span><span style="color:#c0c5ce;">{
+        (length as </span><span style="color:#b48ead;">f32</span><span style="color:#c0c5ce;">).</span><span style="color:#96b5b4;">log2</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">ceil</span><span style="color:#c0c5ce;">() as </span><span style="color:#b48ead;">usize
+    </span><span style="color:#c0c5ce;">} </span><span style="color:#b48ead;">else </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#d08770;">1
+    </span><span style="color:#c0c5ce;">};
+    values.</span><span style="color:#96b5b4;">reverse</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> initial = values.</span><span style="color:#96b5b4;">pop</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">unwrap</span><span style="color:#c0c5ce;">()?;
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> root = Rc::new(RefCell::new(TreeNode::new(initial)));
+    </span><span style="color:#65737e;">// Add root to the queue, cloning so we increase the ref count and the 
+    // queue becomes another owner of root
+</span><span style="color:#c0c5ce;">    queue.</span><span style="color:#96b5b4;">push_back</span><span style="color:#c0c5ce;">(root.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">());
+    unimplemented!()
+}
+</span></code></pre>
+<p>Great! We use a <a href="https://doc.rust-lang.org/std/collections/struct.VecDeque.html">VecDeque</a> for our queue. Pushing the <code>root</code> on the queue means we start creating the nodes at the next level:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">build_tree</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">values</span><span style="color:#c0c5ce;">: Vec&lt;Option&lt;</span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">&gt;&gt;) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> values.</span><span style="color:#96b5b4;">is_empty</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">None;
+    }
+    </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> queue = VecDeque::new();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> length = values.</span><span style="color:#96b5b4;">len</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> height = </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> length &gt; </span><span style="color:#d08770;">1 </span><span style="color:#c0c5ce;">{
+        (length as </span><span style="color:#b48ead;">f32</span><span style="color:#c0c5ce;">).</span><span style="color:#96b5b4;">log2</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">ceil</span><span style="color:#c0c5ce;">() as </span><span style="color:#b48ead;">usize
+    </span><span style="color:#c0c5ce;">} </span><span style="color:#b48ead;">else </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#d08770;">1
+    </span><span style="color:#c0c5ce;">};
+    values.</span><span style="color:#96b5b4;">reverse</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> initial = values.</span><span style="color:#96b5b4;">pop</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">unwrap</span><span style="color:#c0c5ce;">()?;
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> root = Rc::new(RefCell::new(TreeNode::new(initial)));
+    queue.</span><span style="color:#96b5b4;">push_back</span><span style="color:#c0c5ce;">(root.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">());
+    </span><span style="color:#65737e;">// For 1 to height - 1. For example, if the height is 3 we loop twice as we 
+    // already took care of the first level which is just root.
+    </span><span style="color:#b48ead;">for </span><span style="color:#c0c5ce;">_ in </span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">..height {
+        </span><span style="color:#65737e;">// Do something...
+        </span><span style="color:#c0c5ce;">unimplemented!()
+    }
+}
+</span></code></pre><h2 id="growing-our-tree">Growing Our Tree</h2>
+<p>So what do we do in the loop 🤔? We need to do <em>something</em> for all of the nodes we saw in the last level:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">build_tree</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">values</span><span style="color:#c0c5ce;">: Vec&lt;Option&lt;</span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">&gt;&gt;) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> values.</span><span style="color:#96b5b4;">is_empty</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">None;
+    }
+    </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> queue = VecDeque::new();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> length = values.</span><span style="color:#96b5b4;">len</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> height = </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> length &gt; </span><span style="color:#d08770;">1 </span><span style="color:#c0c5ce;">{
+        (length as </span><span style="color:#b48ead;">f32</span><span style="color:#c0c5ce;">).</span><span style="color:#96b5b4;">log2</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">ceil</span><span style="color:#c0c5ce;">() as </span><span style="color:#b48ead;">usize </span><span style="color:#c0c5ce;">+ </span><span style="color:#d08770;">1
+    </span><span style="color:#c0c5ce;">} </span><span style="color:#b48ead;">else </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#d08770;">1
+    </span><span style="color:#c0c5ce;">};
+    values.</span><span style="color:#96b5b4;">reverse</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> initial = values.</span><span style="color:#96b5b4;">pop</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">unwrap</span><span style="color:#c0c5ce;">()?;
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> root = Rc::new(RefCell::new(TreeNode::new(initial)));
+    queue.</span><span style="color:#96b5b4;">push_back</span><span style="color:#c0c5ce;">(root.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">());
+    </span><span style="color:#b48ead;">for </span><span style="color:#c0c5ce;">_ in </span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">..height {
+        </span><span style="color:#65737e;">// For all the nodes in the previous level
+        </span><span style="color:#b48ead;">while let </span><span style="color:#c0c5ce;">Some(node) = queue.</span><span style="color:#96b5b4;">pop_back</span><span style="color:#c0c5ce;">() {
+            </span><span style="color:#65737e;">// Do something...
+        </span><span style="color:#c0c5ce;">}
+    }
+    Some(root)
+}
+</span></code></pre>
+<p>The <em>something</em> we need to do is create two nodes at this level and add them to the node we popped off the queue. Lets create a function for node creation, it needs to do a couple of things that are common to both nodes we need to create:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">construct_subtree</span><span style="color:#c0c5ce;">(
+    </span><span style="color:#bf616a;">values</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">mut </span><span style="color:#c0c5ce;">Vec&lt;Option&lt;</span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">&gt;&gt;,
+    </span><span style="color:#bf616a;">subtree_ref</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">mut </span><span style="color:#c0c5ce;">Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+    </span><span style="color:#bf616a;">queue</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">mut </span><span style="color:#c0c5ce;">VecDeque&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
+) {
+    </span><span style="color:#b48ead;">if let </span><span style="color:#c0c5ce;">Some(Some(value)) = values.</span><span style="color:#96b5b4;">pop</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> node = Rc::new(RefCell::new(TreeNode::new(value)));
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> node_ref = node.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">();
+        *subtree_ref = Some(node);
+        queue.</span><span style="color:#96b5b4;">push_front</span><span style="color:#c0c5ce;">(node_ref);
+    }
+}
+</span></code></pre>
+<p>It creates the new node, adds it to the node we popped off the queue (<code>subtree_ref</code> is this node in the function args), and adds the new node to the queue. </p>
+<p><code>if let Some(Some(value)) = values.pop()</code> might look odd. <code>pop</code> will return <code>None</code> if <code>values</code> is empty, and we model <code>null</code> nodes in <code>values</code> as <code>None</code> as well, so we have two levels of <code>Option</code> values. This says we only want to do something if <code>values</code> has a value and that value is not <code>None</code>.</p>
+<p>Inside the <code>if let</code>:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> node = Rc::new(RefCell::new(TreeNode::new(value)));
+</span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> node_ref = node.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">();
+*subtree_ref = Some(node);
+queue.</span><span style="color:#96b5b4;">push_front</span><span style="color:#c0c5ce;">(node_ref);
+</span></code></pre>
+<p>We construct the new <code>node</code>, clone it to make <code>node_ref</code> another owner, and increment its reference count. Then we assign the value <code>Some(node)</code>, our new node, to <code>subtree_ref</code>. We need to dereference it with <code>*</code> to assign to it. <code>subtree_ref</code> is a mutable reference to either the left or right subtree of a node.</p>
+<p>Now we can fill out <code>build_tree</code>:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">build_tree</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">values</span><span style="color:#c0c5ce;">: Vec&lt;Option&lt;</span><span style="color:#b48ead;">i32</span><span style="color:#c0c5ce;">&gt;&gt;) -&gt; Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt; {
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> values.</span><span style="color:#96b5b4;">is_empty</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">None;
+    }
+    </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> queue = VecDeque::new();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> length = values.</span><span style="color:#96b5b4;">len</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> height = </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> length &gt; </span><span style="color:#d08770;">1 </span><span style="color:#c0c5ce;">{
+        (length as </span><span style="color:#b48ead;">f32</span><span style="color:#c0c5ce;">).</span><span style="color:#96b5b4;">log2</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">ceil</span><span style="color:#c0c5ce;">() as </span><span style="color:#b48ead;">usize
+    </span><span style="color:#c0c5ce;">} </span><span style="color:#b48ead;">else </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#d08770;">1
+    </span><span style="color:#c0c5ce;">};
+    values.</span><span style="color:#96b5b4;">reverse</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> initial = values.</span><span style="color:#96b5b4;">pop</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">unwrap</span><span style="color:#c0c5ce;">()?;
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> root = Rc::new(RefCell::new(TreeNode::new(initial)));
+    queue.</span><span style="color:#96b5b4;">push_front</span><span style="color:#c0c5ce;">(root.</span><span style="color:#96b5b4;">clone</span><span style="color:#c0c5ce;">());
+    </span><span style="color:#b48ead;">for </span><span style="color:#c0c5ce;">_ in </span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">..height {
+        </span><span style="color:#b48ead;">while let </span><span style="color:#c0c5ce;">Some(node) = queue.</span><span style="color:#96b5b4;">pop_back</span><span style="color:#c0c5ce;">() {
+            </span><span style="color:#65737e;">// Borrow the node as mutable
+            </span><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> node_ref = node.</span><span style="color:#96b5b4;">borrow_mut</span><span style="color:#c0c5ce;">();
+            </span><span style="color:#65737e;">// Pass mutable references to values, our queue, and to the left subtree 
+            // to construct_subtree.
+            </span><span style="color:#96b5b4;">construct_subtree</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#b48ead;">mut</span><span style="color:#c0c5ce;"> values, &amp;</span><span style="color:#b48ead;">mut</span><span style="color:#c0c5ce;"> node_ref.left, &amp;</span><span style="color:#b48ead;">mut</span><span style="color:#c0c5ce;"> queue);
+            </span><span style="color:#65737e;">// Similar, but for the right subtree.
+            </span><span style="color:#96b5b4;">construct_subtree</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#b48ead;">mut</span><span style="color:#c0c5ce;"> values, &amp;</span><span style="color:#b48ead;">mut</span><span style="color:#c0c5ce;"> node_ref.right, &amp;</span><span style="color:#b48ead;">mut</span><span style="color:#c0c5ce;"> queue);
+        }
+    }
+    Some(root)
+}
+</span></code></pre>
+<p>Awesome! You can see the full code at <a href="https://github.com/wayofthepie/bst-trim-post/blob/9dab7c9ec541a35517a6a6a613be3288d1eefd34/src/rc_tree.rs#L65">wayofthepie/bst-trim-post@9dab7c</a>. There is a bit here, but now we can build trees from a <code>Vec</code>. For example, if the tree is defined as <code>[3, 0, 4, null, 2, null, null, 1]</code> we would pass the <code>Vec</code> <code>vec![Some(3), Some(0), Some(4), None, Some(2), None, None, Some(1)]</code> to <code>build_tree</code>. </p>
+<p>And with that, we can <em>finally</em> write a test 🎉.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">example1</span><span style="color:#c0c5ce;">() {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> root = </span><span style="color:#96b5b4;">build_tree</span><span style="color:#c0c5ce;">(vec![
+        Some(</span><span style="color:#d08770;">10</span><span style="color:#c0c5ce;">),
+        Some(</span><span style="color:#d08770;">8</span><span style="color:#c0c5ce;">),
+        Some(</span><span style="color:#d08770;">11</span><span style="color:#c0c5ce;">),
+        Some(</span><span style="color:#d08770;">7</span><span style="color:#c0c5ce;">),
+        Some(</span><span style="color:#d08770;">9</span><span style="color:#c0c5ce;">),
+        None,
+        Some(</span><span style="color:#d08770;">13</span><span style="color:#c0c5ce;">),
+    ]);
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> answer = Solution::trim_bst(root, </span><span style="color:#d08770;">8</span><span style="color:#c0c5ce;">, </span><span style="color:#d08770;">12</span><span style="color:#c0c5ce;">);
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> expected = </span><span style="color:#96b5b4;">build_tree</span><span style="color:#c0c5ce;">(vec![Some(</span><span style="color:#d08770;">10</span><span style="color:#c0c5ce;">), Some(</span><span style="color:#d08770;">8</span><span style="color:#c0c5ce;">), Some(</span><span style="color:#d08770;">11</span><span style="color:#c0c5ce;">), None, Some(</span><span style="color:#d08770;">9</span><span style="color:#c0c5ce;">), None, None]);
+    assert_eq!(
+        answer, expected,
+        &quot;</span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;">expected tree </span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;">{:#?}</span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;"> got </span><span style="color:#96b5b4;">\n</span><span style="color:#a3be8c;">{:#?}</span><span style="color:#c0c5ce;">&quot;,
+        expected, answer
+    );
+}
+</span></code></pre><h1 id="conclusion">Conclusion</h1>
+<p>That covers a lot of the issues I used to have with <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> based types when initially learning Rust. I think the only place I've ever seen them used in trees is on Leetcode, but they appear in many other places, and the info in this post is still useful outside of their use in trees. I do find it odd that the trees are defined this way, however. If the <code>TreeNode</code> definition used <code>Box&lt;TreeNode&gt;</code> as the <code>left</code> and <code>right</code> subtrees the problem would be much easier to solve. It seems needlessly complicated for a problem like this. In the next post, I'll change the <code>TreeNode</code> definition to use boxed subtrees, instead of <code>Rc&lt;RefCell&lt;TreeNode&gt;&gt;</code> and we'll go through how that changes things.</p>
+<hr />
+<div class="footnote-definition" id="question-mark"><sup class="footnote-definition-label">1</sup>
+<p>See <a href="https://doc.rust-lang.org/edition-guide/rust-2018/error-handling-and-panics/the-question-mark-operator-for-easier-error-handling.html">The ? operator for easier error handling</a> in the <a href="https://doc.rust-lang.org/book/">The Rust Programming Language Book</a>. for more info. <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#question-mark-ref">⮨</a> </p>
+</div>
+<div class="footnote-definition" id="auto-deref"><sup class="footnote-definition-label">2</sup>
+<p>See <a href="https://doc.rust-lang.org/reference/expressions/method-call-expr.html">Method-call Expressions</a> for more on how automatic dereferencing works. <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#auto-deref-ref">⮨</a></p>
+</div>
+<div class="footnote-definition" id="move"><sup class="footnote-definition-label">3</sup>
+<p>If you don't understand what I mean by <em>move</em> here, have a read of <a href="https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html#ways-variables-and-data-interact-move">this section</a> of <a href="https://doc.rust-lang.org/book/">The Rust Programming Language Book</a>. <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#move-ref">⮨</a></p>
+</div>
+<div class="footnote-definition" id="strong-refs"><sup class="footnote-definition-label">4</sup>
+<p>If it's not clear what a <em>strong reference</em> is, have a read of the <a href="https://doc.rust-lang.org/std/rc/index.html">std::rd module docs</a>. <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#strong-refs-ref">⮨</a></p>
+</div>
+<div class="footnote-definition" id="destructors"><sup class="footnote-definition-label">5</sup>
+<p>The best explanation I've found of why a custom <code>Drop</code> impl extends the lifetime is <a href="https://doc.rust-lang.org/nomicon/lifetimes.html#the-area-covered-by-a-lifetime">The area covered by a lifetime</a> in the <a href="https://doc.rust-lang.org/nomicon">nomicon</a>. It may also be mentioned elsewhere, like the <a href="https://doc.rust-lang.org/book/">The Rust Programming language</a> but I can't remember seeing it there. It's something that seems obvious now but was very very confusing when I started with Rust.</p>
+</div>
+<div class="footnote-definition" id="integer-log"><sup class="footnote-definition-label">6</sup>
+<p>There is a PR discussing adding these to the standard library, see <a href="https://github.com/rust-lang/rust/pull/80918">rust-lang/rust#80918</a>.</p>
+</div>
+
+    <script src="https://utteranc.es/client.js"
+        repo="wayofthepie/wayofthepie.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+    </script>
+</div>
+
+    </div>
+  </body>
+</html>

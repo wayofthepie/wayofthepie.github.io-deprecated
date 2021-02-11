@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
-	<title> - rust</title>
+	<title> - Trees In Rust</title>
 	<subtitle>Software Pie</subtitle>
-	<link href="https://wayofthepie.github.io/tags/rust/atom.xml" rel="self" type="application/atom+xml"/>
+	<link href="https://wayofthepie.github.io/series/trees-in-rust/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://wayofthepie.github.io"/>
 	<generator uri="https://www.getzola.org/">Zola</generator>
 	<updated>2021-02-06T00:00:00+00:00</updated>
-	<id>https://wayofthepie.github.io/tags/rust/atom.xml</id>
+	<id>https://wayofthepie.github.io/series/trees-in-rust/atom.xml</id>
 	<entry xml:lang="en">
 		<title>Binary Search Tree Trim</title>
 		<published>2021-02-06T00:00:00+00:00</published>
