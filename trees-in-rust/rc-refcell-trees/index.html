@@ -75,8 +75,6 @@
     <span class="post-metadata">
         
         
-        
-        
             
             
 <div class="post-series">
@@ -85,8 +83,12 @@
 
         
         
+        
+        
 
         <span class="post-date">2021-02-06</span>
+        
+        
         
         
             <span class="post-tags">
@@ -94,8 +96,6 @@
                 <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/rust">rust</a></span>
             
             </span>
-        
-        
         
         
     </span>
@@ -372,7 +372,8 @@ warning: 3 warnings emitted
     }
 }
 </span></code></pre>
-<p>Because of these, when we call <code>borrow_mut</code> on <code>subtree</code> with <code>subtree.borrow_mut()</code> the <code>Rc</code> will automatically be dereferenced<sup class="footnote-reference"><a href="#auto-deref">2</a></sup><a name="auto-deref-ref"></a> by a call to its <code>Deref</code> impl, and give us the inner <code>RefCell</code>. The call to <code>borrow_mut</code> happens on that <code>RefCell</code>, which will return a <code>RefMut&lt;TreeNode&gt;</code>. Now <code>subtree_ref</code> is a <code>RefMut&lt;TreeNode&gt;</code> and any method calls on it will deref to calls on a <code>TreeNode</code> because of <code>RefMut</code>'s <code>Deref</code> impl. So we can just call <code>subtree_ref.val</code> to get the <code>val</code> field of the node. That's a lot going on for a single line of code!</p>
+<p>Because of these, when we call <code>borrow_mut</code> on <code>subtree</code> with <code>subtree.borrow_mut()</code> the <code>Rc</code> will automatically be dereferenced<sup class="footnote-reference"><a href="#auto-deref">2</a></sup><a name="auto-deref-ref"></a> by a call to its <code>Deref</code> impl, and give us the inner <code>RefCell</code>. The call to <code>borrow_mut</code> happens on that <code>RefCell</code>, which will return a <code>RefMut&lt;TreeNode&gt;</code>. </p>
+<p>Now <code>subtree_ref</code> is a <code>RefMut&lt;TreeNode&gt;</code> and any method calls on it will deref to calls on a <code>TreeNode</code> because of <code>RefMut</code>'s <code>Deref</code> impl. So we can just call <code>subtree_ref.val</code> to get the <code>val</code> field of the node, and given that <code>subtree_ref</code> is a mutable reference, we can mutate it also. That's a lot going on for a single line of code!</p>
 <h3 id="why-do-we-clone-the-subtree-thinking">Why Do We Clone the Subtree 🤔?</h3>
 <p>Let's see what happens if we leave out the call to clone when we get the right subtree:</p>
 <pre style="background-color:#2b303b;">
