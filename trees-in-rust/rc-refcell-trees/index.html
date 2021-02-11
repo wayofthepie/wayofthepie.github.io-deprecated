@@ -75,20 +75,18 @@
     <span class="post-metadata">
         
         
+        
+        
             
             
-<div>
-Part of the <a class="post-series-button" href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;series&#x2F;trees-in-rust&#x2F;">Trees In Rust</a> series.
+<div class="post-series">
+    <div>Series <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;series&#x2F;trees-in-rust&#x2F;">Trees In Rust</a></div>
 </div>
 
         
         
-        
-        
 
-        <span class="post-date">2021-02-11</span>
-        
-        
+        <span class="post-date">2021-02-06</span>
         
         
             <span class="post-tags">
@@ -96,6 +94,8 @@ Part of the <a class="post-series-button" href="https:&#x2F;&#x2F;wayofthepie.gi
                 <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/rust">rust</a></span>
             
             </span>
+        
+        
         
         
     </span>
@@ -169,8 +169,9 @@ Part of the <a class="post-series-button" href="https:&#x2F;&#x2F;wayofthepie.gi
     
     </ul>
     <p>This post came from a Leetcode problem in February's daily challenges which I solved. It contained quite a few things which used to be major issues for me when learning Rust, especially around the use of <a href="https://doc.rust-lang.org/std/rc/struct.Rc.html">Rc</a> and <a href="https://doc.rust-lang.org/std/cell/struct.RefCell.html">RefCell</a>. So I thought I'd write about them. </p>
+<span id="continue-reading"></span>
 <p>The problem is to <a href="https://leetcode.com/problems/trim-a-binary-search-tree/">trim a binary search tree</a>. Not that long ago my initial reaction to seeing this problem would be 😱 oh no, a tree in Rust! Luckily I have a lot more experience dealing with referential structures now, and I also recently read <a href="https://rust-unofficial.github.io/too-many-lists/index.html">Learn Rust With Entirely Too Many Linked Lists</a> which is awesome and helped solidify the problems you can encounter with such structures.</p>
-<span id="continue-reading"></span><h2 id="the-algorithm">The Algorithm</h2>
+<h2 id="the-algorithm">The Algorithm</h2>
 <p>Here is the problem:</p>
 <blockquote>
 <p>Given the root of a binary search tree and the lowest and highest boundaries as low and high, trim the tree so that all its elements lie in [low, high]. Trimming the tree should not change the relative structure of the elements that will remain in the tree (i.e., any node's descendant should remain a descendant). It can be proven that there is a unique answer.</p>
@@ -206,14 +207,6 @@ Part of the <a class="post-series-button" href="https:&#x2F;&#x2F;wayofthepie.gi
 
     </span><span style="color:#b48ead;">return</span><span style="color:#c0c5ce;"> root
 </span></code></pre>
-<p>Here is a quick animation of how it visits each node and modifies the tree. This tree is created from the list <code>[10, 8, 11, 7, 9, null, 13]</code>, <code>low = 8</code>, and <code>high = 12</code>. <a id="start">Click here</a> to start it.</p>
-<script src="https://d3js.org/d3.v5.min.js"></script>
-<script src="https://unpkg.com/@hpcc-js/wasm@0.3.11/dist/index.min.js"></script>
-<script src="https://unpkg.com/d3-graphviz@3.0.5/build/d3-graphviz.js"></script>
-<div id="graph" style="text-align: center; height: 16rem; width: 100%;">
-    <noscript>You need javascript enabled to run this animation.</noscript> 
-</div>
-<script src="algorithm-animation.js"></script>
 <p>So how does this algorithm translate into Rust, given the real definition of <code>TreeNode</code>?</p>
 <h2 id="pseudo-code-to-rust-code">Pseudo-code to Rust Code</h2>
 <p>First the tree nodes. These were given by the problem statement.</p>
@@ -311,11 +304,11 @@ warning: 3 warnings emitted
 <span><i class="icon fas fa-info-circle"></i></span>
 <span class="alert-text">
   <p>
-    It would also be a good idea to have some tests here as we build this. You can see the tests I had at <a href="https://github.com/wayofthepie/bst-trim-post/blob/9dab7c9ec541a35517a6a6a613be3288d1eefd34/src/rc_tree.rs#L60">wayofthepie/bst-trim-post@9dab7c</a>, there is a bit to them. I'll go into more detail on this later.
+    It would also be a good idea to have some tests here as we build this. You can see the tests I had at <a href="https://github.com/wayofthepie/bst-trim-post/blob/3b80b8346818184b046fd1adea32fb1dcbd15875/src/rc_tree.rs#L60">wayofthepie/bst-trim-post@3b80b</a>, there is a bit to them. I'll go into more detail on this later.
   </p>
 </span>
 </div>
-<p>Next, we need to check if <code>node.val &lt; low</code> and if it is, recursively visit the right subtree, discarding the current node and its left subtree. Not that long ago, trying to do this with <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> would have sent me into a spiral of misery. But that was past me, now I am future me (present me?), and I've learned a lot since then. So here is the next step:</p>
+<p>Next we need to check if <code>node.val &lt; low</code> and if it is, recursively visit the right subtree, discarding the current node and its left subtree. Not that long ago, trying to do this with <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> would have sent me into a spiral of misery. But that was past me, now I am future me (present me?), and I've learned a lot since then. So here is the next step:</p>
 <pre style="background-color:#2b303b;">
 <code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">visit</span><span style="color:#c0c5ce;">(
     </span><span style="color:#bf616a;">subtree</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
@@ -547,9 +540,9 @@ error: could not compile `rust-trees-post`
 ...
     Finished dev [unoptimized + debuginfo] </span><span style="color:#96b5b4;">target</span><span style="color:#c0c5ce;">(s) in </span><span style="color:#d08770;">0.21</span><span style="color:#c0c5ce;">s
 </span></code></pre>
-<p>Awesome! However, we missed a step. If we run the tests it will fail. We will go through the tests in-depth in a moment, you can see them <a href="https://github.com/wayofthepie/bst-trim-post/blob/9dab7c9ec541a35517a6a6a613be3288d1eefd34/src/rc_tree.rs#L60">here</a>. The issue is that we never take into account the cases where <code>root.val == low</code> or <code>root.val == high</code>. We do <em>nothing</em> in both those cases. <a href="https://github.com/wayofthepie/bst-trim-post/blob/9dab7c9ec541a35517a6a6a613be3288d1eefd34/src/rc_tree.rs#L105">This test</a> builds a tree which looks as follows:</p>
+<p>Awesome! However, we missed a step. If we run the tests it will fail. We will go through the tests in-depth in a moment, you can see them <a href="https://github.com/wayofthepie/bst-trim-post/blob/3b80b8346818184b046fd1adea32fb1dcbd15875/src/rc_tree.rs#L60">here</a>. The issue is that we never take into account the cases where <code>root.val == low</code> or <code>root.val == high</code>. We do <em>nothing</em> in both those cases. <a href="https://github.com/wayofthepie/bst-trim-post/blob/3b80b8346818184b046fd1adea32fb1dcbd15875/src/rc_tree.rs#L105">This test</a> builds a tree which looks as follows:</p>
 <p><img src="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/example1-tree.png" alt="" /></p>
-<p>We want to <a href="https://github.com/wayofthepie/bst-trim-post/blob/9dab7c9ec541a35517a6a6a613be3288d1eefd34/src/rc_tree.rs#L115">filter out all nodes less than 8 and greater than 12</a>, so the resulting tree should be:</p>
+<p>We want to <a href="https://github.com/wayofthepie/bst-trim-post/blob/39789be92f2cbac52eb50182053b980c0bd9e7d8/src/rc_tree.rs#L115">filter out all nodes less than 8 and greater than 12</a>, so the resulting tree should be:</p>
 <p><img src="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/example1-expected-result.png" alt="" /></p>
 <p>However, the tree we end up with is:</p>
 <p><img src="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/example1-actual-result.png" alt="" /></p>
@@ -587,7 +580,7 @@ error: could not compile `rust-trees-post`
     Some(subtree)
 }
 </span></code></pre>
-<p>That seems a little wordy. Quick side note, since Rust 1.50 we are able to replace the if/else's in this code with the method <code>then</code> on <code>bool</code>:</p>
+<p>That seems a little wordy. Quick side note, with Rust 1.50 (which should be released Feb 11th 2021) we will be able to replace the if/else's in this code with the method <code>then</code> on <code>bool</code>:</p>
 <pre style="background-color:#2b303b;">
 <code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">visit</span><span style="color:#c0c5ce;">(
     </span><span style="color:#bf616a;">subtree</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
@@ -615,7 +608,7 @@ error: could not compile `rust-trees-post`
     Some(subtree)
 }
 </span></code></pre>
-<p>However, I think the cleanest solution here is to use <a href="https://doc.rust-lang.org/std/option/enum.Option.html#method.take">take</a> instead of <code>clone</code>.</p>
+<p>This is not available on stable yet, and it's possibly less clear what it's doing as well. The cleanest solution is to use <a href="https://doc.rust-lang.org/std/option/enum.Option.html#method.take">take</a> instead of <code>clone</code>.</p>
 <pre style="background-color:#2b303b;">
 <code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">visit</span><span style="color:#c0c5ce;">(
     </span><span style="color:#bf616a;">subtree</span><span style="color:#c0c5ce;">: Option&lt;Rc&lt;RefCell&lt;TreeNode&gt;&gt;&gt;,
@@ -839,7 +832,7 @@ queue.</span><span style="color:#96b5b4;">push_front</span><span style="color:#c
     Some(root)
 }
 </span></code></pre>
-<p>Awesome! You can see the full code at <a href="https://github.com/wayofthepie/bst-trim-post/blob/9dab7c9ec541a35517a6a6a613be3288d1eefd34/src/rc_tree.rs#L65">wayofthepie/bst-trim-post@9dab7c</a>. There is a bit here, but now we can build trees from a <code>Vec</code>. For example, if the tree is defined as <code>[3, 0, 4, null, 2, null, null, 1]</code> we would pass the <code>Vec</code> <code>vec![Some(3), Some(0), Some(4), None, Some(2), None, None, Some(1)]</code> to <code>build_tree</code>. </p>
+<p>Awesome! You can see the full code at <a href="https://github.com/wayofthepie/bst-trim-post/blob/3b80b8346818184b046fd1adea32fb1dcbd15875/src/rc_tree.rs#L65">wayofthepie/bst-trim-post@3b80b</a>. There is a bit here, but now we can build trees from a <code>Vec</code>. For example, if the tree is defined as <code>[3, 0, 4, null, 2, null, null, 1]</code> we would pass the <code>Vec</code> <code>vec![Some(3), Some(0), Some(4), None, Some(2), None, None, Some(1)]</code> to <code>build_tree</code>. </p>
 <p>And with that, we can <em>finally</em> write a test 🎉.</p>
 <pre style="background-color:#2b303b;">
 <code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
@@ -862,7 +855,7 @@ queue.</span><span style="color:#96b5b4;">push_front</span><span style="color:#c
     );
 }
 </span></code></pre><h1 id="conclusion">Conclusion</h1>
-<p>That covers a lot of the issues I used to have with <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> based types when initially learning Rust. I think the only place I've ever seen them used in trees is on Leetcode, but they appear in many other places, and the info in this post is still useful outside of their use in trees. I do find it odd that the trees are defined this way, however. If the <code>TreeNode</code> definition used <code>Box&lt;TreeNode&gt;</code> as the <code>left</code> and <code>right</code> subtrees the problem would be much easier to solve. It seems needlessly complicated for a problem like this. In the next post, I'll change the <code>TreeNode</code> definition to use boxed subtrees, instead of <code>Rc&lt;RefCell&lt;TreeNode&gt;&gt;</code> and we'll go through how that changes things.</p>
+<p>That covers a lot of the issues I used to have with <code>Rc&lt;RefCell&lt;T&gt;&gt;</code> based types when initially learning Rust. I think the only place I've ever seen them used in trees is on Leetcode, but they appear in many other places, and the info in this post is still useful outside of their use in trees. I do find it odd that the trees are defined this way, however. If the <code>TreeNode</code> definition used <code>Box&lt;TreeNode&gt;</code> as the <code>left</code> and <code>right</code> subtrees the problem would be much easier to solve. It seems needlessly complicated for a problem like this. In the next post I'll change the <code>TreeNode</code> definition to use boxed subtrees, instead of <code>Rc&lt;RefCell&lt;TreeNode&gt;&gt;</code> and we'll go through how that changes things.</p>
 <hr />
 <div class="footnote-definition" id="question-mark"><sup class="footnote-definition-label">1</sup>
 <p>See <a href="https://doc.rust-lang.org/edition-guide/rust-2018/error-handling-and-panics/the-question-mark-operator-for-easier-error-handling.html">The ? operator for easier error handling</a> in the <a href="https://doc.rust-lang.org/book/">The Rust Programming Language Book</a>. for more info. <a href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/#question-mark-ref">⮨</a> </p>

@@ -5,17 +5,18 @@
 	<link href="https://wayofthepie.github.io/tags/rust/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://wayofthepie.github.io"/>
 	<generator uri="https://www.getzola.org/">Zola</generator>
-	<updated>2021-02-11T00:00:00+00:00</updated>
+	<updated>2021-02-06T00:00:00+00:00</updated>
 	<id>https://wayofthepie.github.io/tags/rust/atom.xml</id>
 	<entry xml:lang="en">
 		<title>Binary Search Tree Trim</title>
-		<published>2021-02-11T00:00:00+00:00</published>
-		<updated>2021-02-11T00:00:00+00:00</updated>
+		<published>2021-02-06T00:00:00+00:00</published>
+		<updated>2021-02-06T00:00:00+00:00</updated>
 		<link href="https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/" type="text/html"/>
 		<id>https://wayofthepie.github.io/trees-in-rust/rc-refcell-trees/</id>
 		<content type="html">&lt;p&gt;This post came from a Leetcode problem in February&#x27;s daily challenges which I solved. It contained quite a few things which used to be major issues for me when learning Rust, especially around the use of &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;rc&#x2F;struct.Rc.html&quot;&gt;Rc&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;cell&#x2F;struct.RefCell.html&quot;&gt;RefCell&lt;&#x2F;a&gt;. So I thought I&#x27;d write about them. &lt;&#x2F;p&gt;
+&lt;span id=&quot;continue-reading&quot;&gt;&lt;&#x2F;span&gt;
 &lt;p&gt;The problem is to &lt;a href=&quot;https:&#x2F;&#x2F;leetcode.com&#x2F;problems&#x2F;trim-a-binary-search-tree&#x2F;&quot;&gt;trim a binary search tree&lt;&#x2F;a&gt;. Not that long ago my initial reaction to seeing this problem would be 😱 oh no, a tree in Rust! Luckily I have a lot more experience dealing with referential structures now, and I also recently read &lt;a href=&quot;https:&#x2F;&#x2F;rust-unofficial.github.io&#x2F;too-many-lists&#x2F;index.html&quot;&gt;Learn Rust With Entirely Too Many Linked Lists&lt;&#x2F;a&gt; which is awesome and helped solidify the problems you can encounter with such structures.&lt;&#x2F;p&gt;
-&lt;span id=&quot;continue-reading&quot;&gt;&lt;&#x2F;span&gt;&lt;h2 id=&quot;the-algorithm&quot;&gt;The Algorithm&lt;&#x2F;h2&gt;
+&lt;h2 id=&quot;the-algorithm&quot;&gt;The Algorithm&lt;&#x2F;h2&gt;
 &lt;p&gt;Here is the problem:&lt;&#x2F;p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;Given the root of a binary search tree and the lowest and highest boundaries as low and high, trim the tree so that all its elements lie in [low, high]. Trimming the tree should not change the relative structure of the elements that will remain in the tree (i.e., any node&#x27;s descendant should remain a descendant). It can be proven that there is a unique answer.&lt;&#x2F;p&gt;
@@ -51,14 +52,6 @@
 
     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;Here is a quick animation of how it visits each node and modifies the tree. This tree is created from the list &lt;code&gt;[10, 8, 11, 7, 9, null, 13]&lt;&#x2F;code&gt;, &lt;code&gt;low = 8&lt;&#x2F;code&gt;, and &lt;code&gt;high = 12&lt;&#x2F;code&gt;. &lt;a id=&quot;start&quot;&gt;Click here&lt;&#x2F;a&gt; to start it.&lt;&#x2F;p&gt;
-&lt;script src=&quot;https:&#x2F;&#x2F;d3js.org&#x2F;d3.v5.min.js&quot;&gt;&lt;&#x2F;script&gt;
-&lt;script src=&quot;https:&#x2F;&#x2F;unpkg.com&#x2F;@hpcc-js&#x2F;wasm@0.3.11&#x2F;dist&#x2F;index.min.js&quot;&gt;&lt;&#x2F;script&gt;
-&lt;script src=&quot;https:&#x2F;&#x2F;unpkg.com&#x2F;d3-graphviz@3.0.5&#x2F;build&#x2F;d3-graphviz.js&quot;&gt;&lt;&#x2F;script&gt;
-&lt;div id=&quot;graph&quot; style=&quot;text-align: center; height: 16rem; width: 100%;&quot;&gt;
-    &lt;noscript&gt;You need javascript enabled to run this animation.&lt;&#x2F;noscript&gt; 
-&lt;&#x2F;div&gt;
-&lt;script src=&quot;algorithm-animation.js&quot;&gt;&lt;&#x2F;script&gt;
 &lt;p&gt;So how does this algorithm translate into Rust, given the real definition of &lt;code&gt;TreeNode&lt;&#x2F;code&gt;?&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;pseudo-code-to-rust-code&quot;&gt;Pseudo-code to Rust Code&lt;&#x2F;h2&gt;
 &lt;p&gt;First the tree nodes. These were given by the problem statement.&lt;&#x2F;p&gt;
@@ -156,11 +149,11 @@ warning: 3 warnings emitted
 &lt;span&gt;&lt;i class=&quot;icon fas fa-info-circle&quot;&gt;&lt;&#x2F;i&gt;&lt;&#x2F;span&gt;
 &lt;span class=&quot;alert-text&quot;&gt;
   &lt;p&gt;
-    It would also be a good idea to have some tests here as we build this. You can see the tests I had at &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;9dab7c9ec541a35517a6a6a613be3288d1eefd34&#x2F;src&#x2F;rc_tree.rs#L60&quot;&gt;wayofthepie&#x2F;bst-trim-post@9dab7c&lt;&#x2F;a&gt;, there is a bit to them. I&#x27;ll go into more detail on this later.
+    It would also be a good idea to have some tests here as we build this. You can see the tests I had at &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;3b80b8346818184b046fd1adea32fb1dcbd15875&#x2F;src&#x2F;rc_tree.rs#L60&quot;&gt;wayofthepie&#x2F;bst-trim-post@3b80b&lt;&#x2F;a&gt;, there is a bit to them. I&#x27;ll go into more detail on this later.
   &lt;&#x2F;p&gt;
 &lt;&#x2F;span&gt;
 &lt;&#x2F;div&gt;
-&lt;p&gt;Next, we need to check if &lt;code&gt;node.val &amp;lt; low&lt;&#x2F;code&gt; and if it is, recursively visit the right subtree, discarding the current node and its left subtree. Not that long ago, trying to do this with &lt;code&gt;Rc&amp;lt;RefCell&amp;lt;T&amp;gt;&amp;gt;&lt;&#x2F;code&gt; would have sent me into a spiral of misery. But that was past me, now I am future me (present me?), and I&#x27;ve learned a lot since then. So here is the next step:&lt;&#x2F;p&gt;
+&lt;p&gt;Next we need to check if &lt;code&gt;node.val &amp;lt; low&lt;&#x2F;code&gt; and if it is, recursively visit the right subtree, discarding the current node and its left subtree. Not that long ago, trying to do this with &lt;code&gt;Rc&amp;lt;RefCell&amp;lt;T&amp;gt;&amp;gt;&lt;&#x2F;code&gt; would have sent me into a spiral of misery. But that was past me, now I am future me (present me?), and I&#x27;ve learned a lot since then. So here is the next step:&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
 &lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
@@ -392,9 +385,9 @@ error: could not compile `rust-trees-post`
 ...
     Finished dev [unoptimized + debuginfo] &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;target&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(s) in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0.21&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;s
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;Awesome! However, we missed a step. If we run the tests it will fail. We will go through the tests in-depth in a moment, you can see them &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;9dab7c9ec541a35517a6a6a613be3288d1eefd34&#x2F;src&#x2F;rc_tree.rs#L60&quot;&gt;here&lt;&#x2F;a&gt;. The issue is that we never take into account the cases where &lt;code&gt;root.val == low&lt;&#x2F;code&gt; or &lt;code&gt;root.val == high&lt;&#x2F;code&gt;. We do &lt;em&gt;nothing&lt;&#x2F;em&gt; in both those cases. &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;9dab7c9ec541a35517a6a6a613be3288d1eefd34&#x2F;src&#x2F;rc_tree.rs#L105&quot;&gt;This test&lt;&#x2F;a&gt; builds a tree which looks as follows:&lt;&#x2F;p&gt;
+&lt;p&gt;Awesome! However, we missed a step. If we run the tests it will fail. We will go through the tests in-depth in a moment, you can see them &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;3b80b8346818184b046fd1adea32fb1dcbd15875&#x2F;src&#x2F;rc_tree.rs#L60&quot;&gt;here&lt;&#x2F;a&gt;. The issue is that we never take into account the cases where &lt;code&gt;root.val == low&lt;&#x2F;code&gt; or &lt;code&gt;root.val == high&lt;&#x2F;code&gt;. We do &lt;em&gt;nothing&lt;&#x2F;em&gt; in both those cases. &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;3b80b8346818184b046fd1adea32fb1dcbd15875&#x2F;src&#x2F;rc_tree.rs#L105&quot;&gt;This test&lt;&#x2F;a&gt; builds a tree which looks as follows:&lt;&#x2F;p&gt;
 &lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;rc-refcell-trees&#x2F;example1-tree.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
-&lt;p&gt;We want to &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;9dab7c9ec541a35517a6a6a613be3288d1eefd34&#x2F;src&#x2F;rc_tree.rs#L115&quot;&gt;filter out all nodes less than 8 and greater than 12&lt;&#x2F;a&gt;, so the resulting tree should be:&lt;&#x2F;p&gt;
+&lt;p&gt;We want to &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;39789be92f2cbac52eb50182053b980c0bd9e7d8&#x2F;src&#x2F;rc_tree.rs#L115&quot;&gt;filter out all nodes less than 8 and greater than 12&lt;&#x2F;a&gt;, so the resulting tree should be:&lt;&#x2F;p&gt;
 &lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;rc-refcell-trees&#x2F;example1-expected-result.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
 &lt;p&gt;However, the tree we end up with is:&lt;&#x2F;p&gt;
 &lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;rc-refcell-trees&#x2F;example1-actual-result.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
@@ -432,7 +425,7 @@ error: could not compile `rust-trees-post`
     Some(subtree)
 }
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;That seems a little wordy. Quick side note, since Rust 1.50 we are able to replace the if&#x2F;else&#x27;s in this code with the method &lt;code&gt;then&lt;&#x2F;code&gt; on &lt;code&gt;bool&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;p&gt;That seems a little wordy. Quick side note, with Rust 1.50 (which should be released Feb 11th 2021) we will be able to replace the if&#x2F;else&#x27;s in this code with the method &lt;code&gt;then&lt;&#x2F;code&gt; on &lt;code&gt;bool&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
 &lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
@@ -460,7 +453,7 @@ error: could not compile `rust-trees-post`
     Some(subtree)
 }
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;However, I think the cleanest solution here is to use &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;option&#x2F;enum.Option.html#method.take&quot;&gt;take&lt;&#x2F;a&gt; instead of &lt;code&gt;clone&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;This is not available on stable yet, and it&#x27;s possibly less clear what it&#x27;s doing as well. The cleanest solution is to use &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;std&#x2F;option&#x2F;enum.Option.html#method.take&quot;&gt;take&lt;&#x2F;a&gt; instead of &lt;code&gt;clone&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
 &lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;visit&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(
     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;subtree&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: Option&amp;lt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&amp;gt;,
@@ -684,7 +677,7 @@ queue.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;push_front&
     Some(root)
 }
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;Awesome! You can see the full code at &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;9dab7c9ec541a35517a6a6a613be3288d1eefd34&#x2F;src&#x2F;rc_tree.rs#L65&quot;&gt;wayofthepie&#x2F;bst-trim-post@9dab7c&lt;&#x2F;a&gt;. There is a bit here, but now we can build trees from a &lt;code&gt;Vec&lt;&#x2F;code&gt;. For example, if the tree is defined as &lt;code&gt;[3, 0, 4, null, 2, null, null, 1]&lt;&#x2F;code&gt; we would pass the &lt;code&gt;Vec&lt;&#x2F;code&gt; &lt;code&gt;vec![Some(3), Some(0), Some(4), None, Some(2), None, None, Some(1)]&lt;&#x2F;code&gt; to &lt;code&gt;build_tree&lt;&#x2F;code&gt;. &lt;&#x2F;p&gt;
+&lt;p&gt;Awesome! You can see the full code at &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;wayofthepie&#x2F;bst-trim-post&#x2F;blob&#x2F;3b80b8346818184b046fd1adea32fb1dcbd15875&#x2F;src&#x2F;rc_tree.rs#L65&quot;&gt;wayofthepie&#x2F;bst-trim-post@3b80b&lt;&#x2F;a&gt;. There is a bit here, but now we can build trees from a &lt;code&gt;Vec&lt;&#x2F;code&gt;. For example, if the tree is defined as &lt;code&gt;[3, 0, 4, null, 2, null, null, 1]&lt;&#x2F;code&gt; we would pass the &lt;code&gt;Vec&lt;&#x2F;code&gt; &lt;code&gt;vec![Some(3), Some(0), Some(4), None, Some(2), None, None, Some(1)]&lt;&#x2F;code&gt; to &lt;code&gt;build_tree&lt;&#x2F;code&gt;. &lt;&#x2F;p&gt;
 &lt;p&gt;And with that, we can &lt;em&gt;finally&lt;&#x2F;em&gt; write a test 🎉.&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
 &lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;#[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;test&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]
@@ -707,7 +700,7 @@ queue.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;push_front&
     );
 }
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;&#x2F;h1&gt;
-&lt;p&gt;That covers a lot of the issues I used to have with &lt;code&gt;Rc&amp;lt;RefCell&amp;lt;T&amp;gt;&amp;gt;&lt;&#x2F;code&gt; based types when initially learning Rust. I think the only place I&#x27;ve ever seen them used in trees is on Leetcode, but they appear in many other places, and the info in this post is still useful outside of their use in trees. I do find it odd that the trees are defined this way, however. If the &lt;code&gt;TreeNode&lt;&#x2F;code&gt; definition used &lt;code&gt;Box&amp;lt;TreeNode&amp;gt;&lt;&#x2F;code&gt; as the &lt;code&gt;left&lt;&#x2F;code&gt; and &lt;code&gt;right&lt;&#x2F;code&gt; subtrees the problem would be much easier to solve. It seems needlessly complicated for a problem like this. In the next post, I&#x27;ll change the &lt;code&gt;TreeNode&lt;&#x2F;code&gt; definition to use boxed subtrees, instead of &lt;code&gt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&lt;&#x2F;code&gt; and we&#x27;ll go through how that changes things.&lt;&#x2F;p&gt;
+&lt;p&gt;That covers a lot of the issues I used to have with &lt;code&gt;Rc&amp;lt;RefCell&amp;lt;T&amp;gt;&amp;gt;&lt;&#x2F;code&gt; based types when initially learning Rust. I think the only place I&#x27;ve ever seen them used in trees is on Leetcode, but they appear in many other places, and the info in this post is still useful outside of their use in trees. I do find it odd that the trees are defined this way, however. If the &lt;code&gt;TreeNode&lt;&#x2F;code&gt; definition used &lt;code&gt;Box&amp;lt;TreeNode&amp;gt;&lt;&#x2F;code&gt; as the &lt;code&gt;left&lt;&#x2F;code&gt; and &lt;code&gt;right&lt;&#x2F;code&gt; subtrees the problem would be much easier to solve. It seems needlessly complicated for a problem like this. In the next post I&#x27;ll change the &lt;code&gt;TreeNode&lt;&#x2F;code&gt; definition to use boxed subtrees, instead of &lt;code&gt;Rc&amp;lt;RefCell&amp;lt;TreeNode&amp;gt;&amp;gt;&lt;&#x2F;code&gt; and we&#x27;ll go through how that changes things.&lt;&#x2F;p&gt;
 &lt;hr &#x2F;&gt;
 &lt;div class=&quot;footnote-definition&quot; id=&quot;question-mark&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
 &lt;p&gt;See &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;edition-guide&#x2F;rust-2018&#x2F;error-handling-and-panics&#x2F;the-question-mark-operator-for-easier-error-handling.html&quot;&gt;The ? operator for easier error handling&lt;&#x2F;a&gt; in the &lt;a href=&quot;https:&#x2F;&#x2F;doc.rust-lang.org&#x2F;book&#x2F;&quot;&gt;The Rust Programming Language Book&lt;&#x2F;a&gt;. for more info. &lt;a href=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;rc-refcell-trees&#x2F;#question-mark-ref&quot;&gt;⮨&lt;&#x2F;a&gt; &lt;&#x2F;p&gt;
