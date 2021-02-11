@@ -51,11 +51,13 @@
 
     &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; root
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;Here is a quick animation of how it visits each node and modified the tree. This tree is created from the list &lt;code&gt;[10, 8, 11, 7, 9, null, 13]&lt;&#x2F;code&gt;, &lt;code&gt;low = 8&lt;&#x2F;code&gt;, and &lt;code&gt;high = 12&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Here is a quick animation of how it visits each node and modifies the tree. This tree is created from the list &lt;code&gt;[10, 8, 11, 7, 9, null, 13]&lt;&#x2F;code&gt;, &lt;code&gt;low = 8&lt;&#x2F;code&gt;, and &lt;code&gt;high = 12&lt;&#x2F;code&gt;. &lt;a id=&quot;start&quot;&gt;Click here&lt;&#x2F;a&gt; to start it.&lt;&#x2F;p&gt;
 &lt;script src=&quot;https:&#x2F;&#x2F;d3js.org&#x2F;d3.v5.min.js&quot;&gt;&lt;&#x2F;script&gt;
 &lt;script src=&quot;https:&#x2F;&#x2F;unpkg.com&#x2F;@hpcc-js&#x2F;wasm@0.3.11&#x2F;dist&#x2F;index.min.js&quot;&gt;&lt;&#x2F;script&gt;
 &lt;script src=&quot;https:&#x2F;&#x2F;unpkg.com&#x2F;d3-graphviz@3.0.5&#x2F;build&#x2F;d3-graphviz.js&quot;&gt;&lt;&#x2F;script&gt;
-&lt;div id=&quot;graph&quot; style=&quot;text-align: center; height: 16rem; width: 100%;&quot;&gt;&lt;&#x2F;div&gt;
+&lt;div id=&quot;graph&quot; style=&quot;text-align: center; height: 16rem; width: 100%;&quot;&gt;
+    &lt;noscript&gt;You need javascript enabled to run this animation.&lt;&#x2F;noscript&gt; 
+&lt;&#x2F;div&gt;
 &lt;script src=&quot;algorithm-animation.js&quot;&gt;&lt;&#x2F;script&gt;
 &lt;p&gt;So how does this algorithm translate into Rust, given the real definition of &lt;code&gt;TreeNode&lt;&#x2F;code&gt;?&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;pseudo-code-to-rust-code&quot;&gt;Pseudo-code to Rust Code&lt;&#x2F;h2&gt;

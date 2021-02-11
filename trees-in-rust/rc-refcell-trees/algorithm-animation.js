@@ -3,20 +3,35 @@ var graphviz = d3
   .select("#graph")
   .graphviz()
   .transition(function () {
-    return d3.transition("main").ease(d3.easeLinear).delay(500).duration(2000);
+    return d3.transition("main").ease(d3.easeLinear).delay(700).duration(2000);
   })
-  .on("initEnd", render);
+  .on("initEnd", renderFrameOne);
+
+function renderFrameOne() {
+  var dotLines = dots[dotIndex];
+  var dot = dotLines.join("");
+  dotIndex += 1;
+  graphviz.zoom(false);
+  graphviz.renderDot(dot);
+}
 
 function render() {
   var dotLines = dots[dotIndex];
   var dot = dotLines.join("");
   graphviz.zoom(false);
   graphviz.renderDot(dot).on("end", function () {
-    dotIndex = (dotIndex + 1) % dots.length;
+    if (dotIndex === dots.length) {
+      dotIndex = 0;
+      return;
+    }
     render();
+    dotIndex += 1;
   });
 }
-var title = "The Algorithm";
+
+var start = document.getElementById("start");
+start.style.cursor = "pointer";
+start.onclick = render;
 
 var dots = [
   [
