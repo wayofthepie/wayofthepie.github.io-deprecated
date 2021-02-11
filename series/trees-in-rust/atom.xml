@@ -503,7 +503,7 @@ error: could not compile `rust-trees-post`
 &lt;span&gt;&lt;i class=&quot;icon fas fa-info-circle&quot;&gt;&lt;&#x2F;i&gt;&lt;&#x2F;span&gt;
 &lt;span class=&quot;alert-text&quot;&gt;
   &lt;p&gt;
-  It would be good to have tests for this function also, but I ran out of time so just implemented it 😆.
+    It would be good to have tests for this function also, but it&#x27;s currently only used within tests, so just said I&#x27;d skip that 😆.
   &lt;&#x2F;p&gt;
 &lt;&#x2F;span&gt;
 &lt;&#x2F;div&gt;
