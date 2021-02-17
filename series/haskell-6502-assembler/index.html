@@ -53,6 +53,7 @@
         <ul class="sidebar-nav">
           <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
           <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/series" class="sidebar-nav-item">Series</a>
           <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
         </ul>
         <ul class="sidebar-nav-social">
@@ -74,14 +75,12 @@
     
     <div class="post">
        <h1 class="post-title">
-           <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;building-an-assembler-in-haskell&#x2F;">
-              Building An Assembler In Haskell
+           <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;building-an-assembler-in-haskell-part2&#x2F;">
+              Building An Assembler In Haskell: Implementation
            </a>
        </h1>
        <span class="post-metadata">
        <span class="post-series">
-           
-               
            
                
                     
@@ -92,9 +91,13 @@
 
                
            
+               
+           
        </span>
-       <span class="post-date">2017-03-03</span>
+       <span class="post-date">2017-03-30</span>
        
+       
+      
        
             <span class="post-tags">
             
@@ -103,7 +106,50 @@
             </span>
       
       
+      </span>
+       <p>In the
+<a href="https://wayofthepie.github.io/building-an-assembler-in-haskell/">previous post</a>
+we wrote a grammar for a simple assembly language, wrote the outline of our parser,
+derived some properties from the grammar for a simple parser <code>byte</code> and implemented <code>byte</code>.
+We also saw that there are a few deficiencies in our grammar. In this post we'll implement
+<code>bytes</code>, <code>menmonic</code>, <code>label</code> and <code>labelAssign</code>. For each parser I'll start with some <em>QuickCheck</em>
+properties then use those as the spec to implement the parser. Let's get to it!</p>
+
+        <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;building-an-assembler-in-haskell-part2&#x2F;#continue-reading">Continue Reading</a>
+    </div>
+    
+    <div class="post">
+       <h1 class="post-title">
+           <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;building-an-assembler-in-haskell&#x2F;">
+              Building An Assembler In Haskell
+           </a>
+       </h1>
+       <span class="post-metadata">
+       <span class="post-series">
+           
+               
+                    
+                    
+<div class="post-series">
+    <div>Series <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;series&#x2F;haskell-6502-assembler&#x2F;">Haskell 6502 Assembler</a></div>
+</div>
+
+               
+           
+               
+           
+       </span>
+       <span class="post-date">2017-03-03</span>
        
+       
+      
+       
+            <span class="post-tags">
+            
+                <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/haskell">haskell</a></span>
+            
+            </span>
+      
       
       </span>
        <p>Recently I started building an emulator for the MosTech 6502 Cpu, this post is

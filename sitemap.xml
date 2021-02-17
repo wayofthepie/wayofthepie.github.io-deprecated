@@ -30,10 +30,38 @@
         <loc>https://wayofthepie.github.io/leetcode/</loc>
     </url>
     <url>
+        <loc>https://wayofthepie.github.io/linux-broken-driver/</loc>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/linux-broken-driver/morning-silence/</loc>
+        <lastmod>2020-06-14</lastmod>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/ray-tracing/</loc>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/rust-cert-cli/</loc>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/</loc>
+        <lastmod>2020-06-07</lastmod>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part3/</loc>
+        <lastmod>2020-06-22</lastmod>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli/</loc>
+        <lastmod>2020-06-02</lastmod>
+    </url>
+    <url>
         <loc>https://wayofthepie.github.io/series/</loc>
     </url>
     <url>
         <loc>https://wayofthepie.github.io/series/haskell-6502-assembler/</loc>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/series/tdd-and-rust-a-cli-for-decoding-certs/</loc>
     </url>
     <url>
         <loc>https://wayofthepie.github.io/series/trees-in-rust/</loc>
@@ -45,7 +73,13 @@
         <loc>https://wayofthepie.github.io/tags/haskell/</loc>
     </url>
     <url>
+        <loc>https://wayofthepie.github.io/tags/linux/</loc>
+    </url>
+    <url>
         <loc>https://wayofthepie.github.io/tags/rust/</loc>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/tags/tls/</loc>
     </url>
     <url>
         <loc>https://wayofthepie.github.io/terraform-gcp/</loc>

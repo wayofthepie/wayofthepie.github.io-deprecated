@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="description" content="All things computers." />
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
+    />
+
+    <title></title>
+
+    <!-- CSS -->
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css"
+      media="print"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
+
+     
+     
+    
+  </head>
+
+  <body class="">
+    
+    <div class="sidebar">
+      <div class="container sidebar-sticky">
+        <ul class="sidebar-nav">
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/series" class="sidebar-nav-item">Series</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+        </ul>
+        <ul class="sidebar-nav-social">
+          <a
+            href="https://github.com/wayofthepie"
+            class="fab fa-github sidebar-nav-social-item"
+          ></a>
+          <a
+            href="https://twitter.com/wayofthepie"
+            class="fab fa-twitter sidebar-nav-social-item"
+          ></a>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="content container">
+      
+
+
+
+<div class="post">
+    <h1 class="post-title">Decode A Certificate</h1>
+    <span class="post-metadata">
+        
+        
+            
+            
+<div class="post-series">
+    <div>Series <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;series&#x2F;tdd-and-rust-a-cli-for-decoding-certs&#x2F;">TDD and Rust: A CLI for decoding certs</a></div>
+</div>
+
+        
+        
+        
+        
+
+        <span class="post-date">2020-06-22</span>
+        
+        
+        
+        
+            <span class="post-tags">
+            
+                <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/rust">rust</a></span>
+            
+            </span>
+        
+        
+    </span>
+    <ul class="table-of-content">
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part3/#some-missing-things">Some missing things</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part3/#read-a-certificate">Read a certificate</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part3/#x509-parser-api">x509-parser API</a>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part3/#validate-the-file-is-a-certificate">Validate the file is a certificate</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part3/#error-handling">Error handling</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part3/#refactor">Refactor</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part3/#parse-the-der-encoded-cert">Parse the der encoded cert</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part3/#print-the-certificate">Print the certificate</a>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part3/#tiny-refactor">Tiny refactor</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part3/#conclusion">Conclusion</a>
+            
+        </li>
+    
+    </ul>
+    <p>From this post on I will leave a note at the end of some sections linking to the latest code up to that point. It will look like this:</p>
+<div class="alert alert-info">
+<span><i class="icon fas fa-link"></i></span>
+<span class="alert-text">
+  <p>
+    <a href="https://github.com/wayofthepie/cert-decoder/tree/a9d761e1ba306587a332e97e9fd4e654f1049ab9">wayofthepie/cert-decoder@a9d761e</a>
+  </p>
+</span>
+</div>
+<p>That link points to the latest code from the last post. </p>
+<span id="continue-reading"></span><h1 id="some-missing-things">Some missing things</h1>
+<p>After publishing the first post I realized I missed a positive test, a test which checks that everything went ok. Let's write that. </p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">should_succeed</span><span style="color:#c0c5ce;">() {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = vec![&quot;</span><span style="color:#a3be8c;">a-file</span><span style="color:#c0c5ce;">&quot;.</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">()];
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> validator = FakeValidator { is_file: </span><span style="color:#d08770;">true </span><span style="color:#c0c5ce;">};
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> result = </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(validator, args);
+    assert!(result.</span><span style="color:#96b5b4;">is_ok</span><span style="color:#c0c5ce;">());
+}
+</span></code></pre>
+<p>It's a good idea to see it fail first. Let's change a behaviour it expects by making it return an error if the file <em>does</em> exist:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-diff" data-lang="diff"><span style="color:#bf616a;">- if !validator.is_file(path) {
+</span><span style="color:#a3be8c;">+ if validator.is_file(path) {
+</span><span style="color:#c0c5ce;">   return Err(
+...
+</span></code></pre>
+<p>Now it will fail:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">✦</span><span style="color:#c0c5ce;"> ➜ cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> test should_succeed
+
+</span><span style="color:#bf616a;">running</span><span style="color:#c0c5ce;"> 1 test
+</span><span style="color:#bf616a;">F
+failures:
+
+----</span><span style="color:#c0c5ce;"> test::should_succeed stdout ----
+</span><span style="color:#bf616a;">thread </span><span style="color:#c0c5ce;">&#39;</span><span style="color:#a3be8c;">test::should_succeed</span><span style="color:#c0c5ce;">&#39; panicked at &#39;</span><span style="color:#a3be8c;">assertion failed: result.is_ok()</span><span style="color:#c0c5ce;">&#39;, src/main.rs:98:9
+</span><span style="color:#bf616a;">note:</span><span style="color:#c0c5ce;"> run with `</span><span style="color:#bf616a;">RUST_BACKTRACE</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">1</span><span style="color:#c0c5ce;">` environment variable to display a backtrace
+
+
+</span><span style="color:#bf616a;">failures:
+    test::should_succeed
+
+test</span><span style="color:#c0c5ce;"> result: FAILED. 0 passed; </span><span style="color:#bf616a;">1</span><span style="color:#c0c5ce;"> failed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> ignored; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> measured; </span><span style="color:#bf616a;">2</span><span style="color:#c0c5ce;"> filtered out
+
+</span><span style="color:#bf616a;">error:</span><span style="color:#c0c5ce;"> test failed, to rerun pass &#39;</span><span style="color:#a3be8c;">--bin cert-decode</span><span style="color:#c0c5ce;">&#39;
+</span></code></pre>
+<p>And if we revert our change:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-diff" data-lang="diff"><span style="color:#bf616a;">- if validator.is_file(path) {
+</span><span style="color:#a3be8c;">+ if !validator.is_file(path) {
+</span><span style="color:#c0c5ce;">...    
+</span></code></pre>
+<p>It will pass:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">✦</span><span style="color:#c0c5ce;"> ➜ cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> test should_succeed
+
+</span><span style="color:#bf616a;">running</span><span style="color:#c0c5ce;"> 1 test
+</span><span style="color:#96b5b4;">.
+</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;"> result: ok. 1 passed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> failed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> ignored; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> measured; </span><span style="color:#bf616a;">2</span><span style="color:#c0c5ce;"> filtered out
+</span></code></pre>
+<p>Great! Now for some new things.</p>
+<div class="alert alert-info">
+<span><i class="icon fas fa-link"></i></span>
+<span class="alert-text">
+  <p>
+    <a href="https://github.com/wayofthepie/cert-decoder/tree/66da25ac49840efe43d4913eb178e71df52f5997">wayofthepie/cert-decoder@66da25a</a>
+  </p>
+</span>
+</div>
+<h1 id="read-a-certificate">Read a certificate</h1>
+<p>Time to read a certificate. The <a href="https://docs.rs/crate/x509-parser/0.7.0">x509-parser</a> crate will allow us to do this. Add as a dependency to <code>Cargo.toml</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-toml" data-lang="toml"><span style="color:#c0c5ce;">[package]
+</span><span style="color:#bf616a;">name </span><span style="color:#c0c5ce;">= &quot;</span><span style="color:#a3be8c;">cert-decode</span><span style="color:#c0c5ce;">&quot;
+</span><span style="color:#bf616a;">version </span><span style="color:#c0c5ce;">= &quot;</span><span style="color:#a3be8c;">0.1.0</span><span style="color:#c0c5ce;">&quot;
+</span><span style="color:#bf616a;">authors </span><span style="color:#c0c5ce;">= [&quot;</span><span style="color:#a3be8c;">Stephen OBrien &lt;wayofthepie@users.noreply.github.com&gt;</span><span style="color:#c0c5ce;">&quot;]
+</span><span style="color:#bf616a;">edition </span><span style="color:#c0c5ce;">= &quot;</span><span style="color:#a3be8c;">2018</span><span style="color:#c0c5ce;">&quot;
+
+[dependencies]
+</span><span style="color:#bf616a;">x509-parser </span><span style="color:#c0c5ce;">= &quot;</span><span style="color:#a3be8c;">0.7.0</span><span style="color:#c0c5ce;">&quot;
+</span></code></pre>
+<blockquote>
+<p><b><i class="fas fa-music"></i> Note</b></p>
+<p>I use <a href="https://github.com/killercup/cargo-edit">cargo-edit</a> to update <code>Cargo.toml</code>. You can install it by running:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">✦</span><span style="color:#c0c5ce;"> ➜ cargo install cargo-edit
+</span></code></pre>
+<p>Then to add a dependency you just need to run:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">✦</span><span style="color:#c0c5ce;"> ➜ cargo add x509-parser
+</span><span style="color:#c0c5ce;">    </span><span style="color:#bf616a;">Updating </span><span style="color:#c0c5ce;">&#39;</span><span style="color:#a3be8c;">https://github.com/rust-lang/crates.io-index</span><span style="color:#c0c5ce;">&#39; index
+</span><span style="color:#c0c5ce;">      </span><span style="color:#bf616a;">Adding</span><span style="color:#c0c5ce;"> x509-parser v0.7.0 to dependencies
+</span></code></pre>
+<p>See <a href="https://github.com/killercup/cargo-edit/blob/master/README.md">the README</a> for more details. The code blocks in this note have
+incorrect formatting, they are centered. I raised a bug about this, see <a href="https://github.com/thepracticaldev/dev.to/issues/8767">thepracticaldev/dev.to#8767</a>.</p>
+</blockquote>
+<p>It's a good idea to rebuild when adding a new dependency.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">✦ ➜ cargo build
+    Updating crates.io index
+   Compiling autocfg v1.</span><span style="color:#d08770;">0.0
+</span><span style="color:#c0c5ce;">   Compiling bitflags v1.</span><span style="color:#d08770;">2.1
+</span><span style="color:#c0c5ce;">   Compiling ryu v1.</span><span style="color:#d08770;">0.5
+</span><span style="color:#c0c5ce;">   Compiling lexical-core v0.</span><span style="color:#d08770;">7.4
+</span><span style="color:#c0c5ce;">   Compiling memchr v2.</span><span style="color:#d08770;">3.3
+</span><span style="color:#c0c5ce;">   Compiling version_check v0.</span><span style="color:#d08770;">9.2
+</span><span style="color:#c0c5ce;">   Compiling arrayvec v0.</span><span style="color:#d08770;">5.1
+</span><span style="color:#c0c5ce;">   Compiling static_assertions v1.</span><span style="color:#d08770;">1.0
+</span><span style="color:#c0c5ce;">   Compiling cfg-</span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> v0.</span><span style="color:#d08770;">1.10
+</span><span style="color:#c0c5ce;">   Compiling libc v0.</span><span style="color:#d08770;">2.71
+</span><span style="color:#c0c5ce;">   Compiling base64 v0.</span><span style="color:#d08770;">11.0
+</span><span style="color:#c0c5ce;">   Compiling nom v5.</span><span style="color:#d08770;">1.2
+</span><span style="color:#c0c5ce;">   Compiling num-traits v0.</span><span style="color:#d08770;">2.12
+</span><span style="color:#c0c5ce;">   Compiling num-integer v0.</span><span style="color:#d08770;">1.43
+</span><span style="color:#c0c5ce;">   Compiling num-bigint v0.</span><span style="color:#d08770;">2.6
+</span><span style="color:#c0c5ce;">   Compiling time v01.</span><span style="color:#d08770;">3
+</span><span style="color:#c0c5ce;">   Compiling rusticata-macros v2.</span><span style="color:#d08770;">1.0
+</span><span style="color:#c0c5ce;">   Compiling der-parser v3.</span><span style="color:#d08770;">0.4
+</span><span style="color:#c0c5ce;">   Compiling x509-parser v0.</span><span style="color:#d08770;">7.0
+</span><span style="color:#c0c5ce;">   Compiling cert-decode v0.</span><span style="color:#d08770;">1.0 </span><span style="color:#c0c5ce;">(/home/chaospie/repos/blog-cert-decode/cert-decode)
+    Finished dev [unoptimize + debuginfo] </span><span style="color:#96b5b4;">target</span><span style="color:#c0c5ce;">(s) in </span><span style="color:#d08770;">8.70</span><span style="color:#c0c5ce;">s
+</span></code></pre>
+<p>The <code>x509-parser</code> crate has pulled in a bunch of transitive dependencies. Not too many though. When working on a larger project you may want to view the overall dependency hierarchy. You can do this with <code>cargo tree</code>. For example:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">✦</span><span style="color:#c0c5ce;"> ➜ cargo tree
+</span><span style="color:#bf616a;">cert-decode</span><span style="color:#c0c5ce;"> v0.1.0 (/home/chaospie/repos/blog-cert-decode/cert-decode)
+</span><span style="color:#bf616a;">└──</span><span style="color:#c0c5ce;"> x509-parser v0.7.0
+    </span><span style="color:#bf616a;">├──</span><span style="color:#c0c5ce;"> base64 v0.11.0
+    </span><span style="color:#bf616a;">├──</span><span style="color:#c0c5ce;"> der-parser v3.0.4
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   ├── nom v5.1.2
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   ├── lexical-core v0.7.4
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   │   ├── arrayvec v0.5.1
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   │   ├── bitflags v1.2.1
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   │   ├── cfg-if v0.1.10
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   │   ├── ryu v1.0.5
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   │   └── static_assertions v1.1.0
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   └── memchr v2.3.3
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">build-dependencies</span><span style="color:#b48ead;">]
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   └── version_check v0.9.2
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   ├── num-bigint v0.2.6
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   ├── num-integer v0.1.43
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   │   └── num-traits v0.2.12
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   │       </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">build-dependencies</span><span style="color:#b48ead;">]
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   │       └── autocfg v1.0.0
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   │   </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">build-dependencies</span><span style="color:#b48ead;">]
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   │   └── autocfg v1.0.0
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   └── num-traits v0.2.12 (*)
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">build-dependencies</span><span style="color:#b48ead;">]
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   │   └── autocfg v1.0.0
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">   └── rusticata-macros v2.1.0
+    </span><span style="color:#bf616a;">│</span><span style="color:#c0c5ce;">       └── nom v5.1.2 (*)
+    </span><span style="color:#bf616a;">├──</span><span style="color:#c0c5ce;"> nom v5.1.2 (*)
+    </span><span style="color:#bf616a;">├──</span><span style="color:#c0c5ce;"> num-bigint v0.2.6 (*)
+    </span><span style="color:#bf616a;">├──</span><span style="color:#c0c5ce;"> rusticata-macros v2.1.0 (*)
+    </span><span style="color:#bf616a;">└──</span><span style="color:#c0c5ce;"> time v0.1.43
+        </span><span style="color:#bf616a;">└──</span><span style="color:#c0c5ce;"> libc v0.2.71
+</span></code></pre>
+<blockquote>
+<p><b><i class="fas fa-music"></i> Note</b></p>
+<p>As of Rust 1.44.0 <code>cargo tree</code> is part of <code>cargo</code> if you are using a version before that you will need to install <a href="https://crates.io/crates/cargo-tree">cargo-tree</a>. You should update to the latest Rust if there is no reason to be on a version less than 1.44.0.</p>
+</blockquote>
+<p>I've used the <code>x509-parser</code> crate in the past so I know a bit about it's API. But let's do some exploration anyway. First, let's set a goal and make a tiny test list. Our goal is simply to be able to print certificate details. Up to now, we have verified the argument we pass is a file, so I think what we should do next is:</p>
+<hr />
+<p><strong>Read and print certificate</strong></p>
+<ul>
+<li>☐ Validate file is a certificate</li>
+<li>☐ Print the certificate</li>
+</ul>
+<hr />
+<p>Let's dive into the docs for <code>x509-parser</code>.</p>
+<h2 id="x509-parser-api">x509-parser API</h2>
+<p>All crates published to <a href="https://crates.io/">crates.io</a> should have docs on <a href="https://docs.rs">docs.rs</a>. These docs will contain the public API of the crate and whatever further documentation the author added. We're using version 0.7.0 of the <code>x509-parser</code> crate, the docs for this are <a href="https://docs.rs/x509-parser/0.7.0/x509_parser/">here</a>. The very first example in these docs does almost what we need:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span style="color:#c0c5ce;">x509_parser::parse_x509_der;
+
+</span><span style="color:#b48ead;">static </span><span style="color:#d08770;">IGCA_DER</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">&#39;static </span><span style="color:#c0c5ce;">[</span><span style="color:#b48ead;">u8</span><span style="color:#c0c5ce;">] = include_bytes!(&quot;</span><span style="color:#a3be8c;">../assets/IGC_A.der</span><span style="color:#c0c5ce;">&quot;);
+
+</span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> res = </span><span style="color:#96b5b4;">parse_x509_der</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">IGCA_DER</span><span style="color:#c0c5ce;">);
+</span><span style="color:#b48ead;">match</span><span style="color:#c0c5ce;"> res {
+    Ok((rem, cert)) =&gt; {
+        assert!(rem.</span><span style="color:#96b5b4;">is_empty</span><span style="color:#c0c5ce;">());
+        </span><span style="color:#65737e;">//
+        </span><span style="color:#c0c5ce;">assert_eq!(cert.tbs_certificate.version, </span><span style="color:#d08770;">2</span><span style="color:#c0c5ce;">);
+    },
+    _ =&gt; panic!(&quot;</span><span style="color:#a3be8c;">x509 parsing failed: {:?}</span><span style="color:#c0c5ce;">&quot;, res),
+}
+</span></code></pre>
+<p>It seems we could use the <a href="https://docs.rs/x509-parser/0.7.0/x509_parser/fn.parse_x509_der.html">parse_x509_der</a> function to parse our certificate. Our certificate should be in PEM format however, that was a constraint we set in the initial post. Is there anything that can deal directly with PEM certificates in this API? </p>
+<p>There is! The <a href="https://docs.rs/x509-parser/0.7.0/x509_parser/pem/index.html">x509_parser::pem</a> module has functionality for doing just this. The second example <a href="https://docs.rs/x509-parser/0.7.0/x509_parser/pem/index.html">in that modules docs</a> does just what we want, it uses the <a href="https://docs.rs/x509-parser/0.7.0/x509_parser/pem/fn.pem_to_der.html">pem_to_der</a> function to convert a PEM encoded certificate into DER (Distinguished Encoding Rules) and then calls <a href="https://docs.rs/x509-parser/0.7.0/x509_parser/fn.parse_x509_der.html">parse_x509_der</a> on that DER to build a <a href="https://docs.rs/x509-parser/0.7.0/x509_parser/x509/struct.X509Certificate.html">X509Certificate</a>. Here is the example:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span style="color:#c0c5ce;">x509_parser::pem::pem_to_der;
+</span><span style="color:#b48ead;">use </span><span style="color:#c0c5ce;">x509_parser::parse_x509_der;
+
+</span><span style="color:#b48ead;">static </span><span style="color:#d08770;">IGCA_PEM</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">&#39;static </span><span style="color:#c0c5ce;">[</span><span style="color:#b48ead;">u8</span><span style="color:#c0c5ce;">] = include_bytes!(&quot;</span><span style="color:#a3be8c;">../assets/IGC_A.pem</span><span style="color:#c0c5ce;">&quot;);
+
+</span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> res = </span><span style="color:#96b5b4;">pem_to_der</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">IGCA_PEM</span><span style="color:#c0c5ce;">);
+</span><span style="color:#b48ead;">match</span><span style="color:#c0c5ce;"> res {
+    Ok((rem, pem)) =&gt; {
+        assert!(rem.</span><span style="color:#96b5b4;">is_empty</span><span style="color:#c0c5ce;">());
+        </span><span style="color:#65737e;">//
+        </span><span style="color:#c0c5ce;">assert_eq!(pem.label, String::from(&quot;</span><span style="color:#a3be8c;">CERTIFICATE</span><span style="color:#c0c5ce;">&quot;));
+        </span><span style="color:#65737e;">//
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> res_x509 = </span><span style="color:#96b5b4;">parse_x509_der</span><span style="color:#c0c5ce;">(&amp;pem.contents);
+        assert!(res_x509.</span><span style="color:#96b5b4;">is_ok</span><span style="color:#c0c5ce;">());
+    },
+    _ =&gt; panic!(&quot;</span><span style="color:#a3be8c;">PEM parsing failed: {:?}</span><span style="color:#c0c5ce;">&quot;, res),
+}
+</span></code></pre>
+<p>Don't worry if you don't understand everything in this example, we will cover a lot of this syntax in the next few posts. Let's look closer at <a href="https://docs.rs/x509-parser/0.7.0/x509_parser/pem/fn.pem_to_der.html">pem_to_der</a>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">pem_to_der</span><span style="color:#c0c5ce;">&lt;</span><span style="color:#b48ead;">&#39;a</span><span style="color:#c0c5ce;">&gt;(</span><span style="color:#bf616a;">i</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">&#39;a</span><span style="color:#c0c5ce;"> [</span><span style="color:#b48ead;">u8</span><span style="color:#c0c5ce;">]) -&gt; IResult&lt;&amp;</span><span style="color:#b48ead;">&#39;a </span><span style="color:#c0c5ce;">[</span><span style="color:#b48ead;">u8</span><span style="color:#c0c5ce;">], Pem, PEMError&gt;
+</span></code></pre>
+<p>It takes a <code>&amp;'a [u8]</code>, a <a href="https://doc.rust-lang.org/std/primitive.slice.html">slice</a> of bytes with a lifetime<sup class="footnote-reference"><a href="#generics-lifetimes">1</a></sup> of <code>'a</code>, and returns <code>IResult&lt;&amp;'a [u8], Pem, PEMError&gt;</code>. I will go into more detail on lifetimes in a future post, in short they tell the compiler how long a reference lives. In this specific case, the slice <code>i</code> which the function takes as an argument must live as long as the slice returned in the <code>IResult</code> return type, as both have a lifetime of <code>'a</code>. This tells us the slice in the return type must either be <code>i</code> or a subslice of <code>i</code>. For more information see <a href="https://doc.rust-lang.org/book/ch10-00-generics.html?highlight=generics#generic-types-traits-and-lifetimes">Generic Types, Traits, and Lifetimes</a>.</p>
+<p>Glossing over some other details which are outside the scope of this post, this <code>IResult</code> is effectively just a <a href="https://doc.rust-lang.org/std/result/enum.Result.html">Result</a> type which we saw in the first post. It can return <code>Ok</code> with some value or <code>Err</code> with an error. In this case, the type of the value in <code>Err</code> will be <a href="https://docs.rs/x509-parser/0.7.0/x509_parser/error/enum.PEMError.html">PEMError</a>. </p>
+<h1 id="validate-the-file-is-a-certificate">Validate the file is a certificate</h1>
+<p>Now we have enough knowledge to write a test in the case our cert is not PEM encoded. First, let's get a cert and save it so we can use that in our tests.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> openssl s_client</span><span style="color:#bf616a;"> -connect</span><span style="color:#c0c5ce;"> google.com:443 </span><span style="color:#d08770;">2</span><span style="color:#c0c5ce;">&gt;/dev/null &lt; /dev/null \
+&gt;     | </span><span style="color:#bf616a;">sed -n </span><span style="color:#c0c5ce;">&#39;</span><span style="color:#a3be8c;">/BEGIN CERTIFICATE/,/END CERTIFICATE/p</span><span style="color:#c0c5ce;">&#39; &gt; google.com.crt
+
+</span><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> cat google.com.crt
+</span><span style="color:#bf616a;">-----BEGIN</span><span style="color:#c0c5ce;"> CERTIFICATE-----
+</span><span style="color:#bf616a;">MIIJTzCCCDegAwIBAgIQVvrczQ6+8BwIAAAAAENV5zANBgkqhkiG9w0BAQsFADBC
+MQswCQYDVQQGEwJVUzEeMBwGA1UEChMVR29vZ2xlIFRydXN0IFNlcnZpY2VzMRMw
+...
+d5JOd+lJOypPGs0/p5OrR8B84Y7wyKFD/EXaKYVMZ4RUXnoAi5DF5RLKNAmnt7R9
+V6z8Kz2boaY5oZ0gvrA49R6T+u3yrstte931N49lwpaVsoA</span><span style="color:#c0c5ce;">=
+</span><span style="color:#bf616a;">-----END</span><span style="color:#c0c5ce;"> CERTIFICATE-----
+</span></code></pre>
+<p>I've stored this cert in the repo <a href="https://github.com/wayofthepie/cert-decoder/blob/be75e2c756984c289768788d3f1ffadaa223ddc2/resources/google.com.crt">here</a>. The test is as follows:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">should_error_if_given_argument_is_not_a_pem_encoded_certificate</span><span style="color:#c0c5ce;">() {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = vec![&quot;</span><span style="color:#a3be8c;">real-cert</span><span style="color:#c0c5ce;">&quot;.</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">()];
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> validator = FakeValidator { is_file: </span><span style="color:#d08770;">true </span><span style="color:#c0c5ce;">};
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> result = </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(validator, args);
+    assert!(result.</span><span style="color:#96b5b4;">is_err</span><span style="color:#c0c5ce;">())
+}
+</span></code></pre>
+<p>The update to the <code>execute</code> function will need a bit of refactoring, but first, let's implement it in the simplest way possible.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">execute</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">validator</span><span style="color:#c0c5ce;">: impl PathValidator, </span><span style="color:#bf616a;">args</span><span style="color:#c0c5ce;">: Vec&lt;String&gt;) -&gt; Result&lt;(), String&gt; {
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> args.</span><span style="color:#96b5b4;">len</span><span style="color:#c0c5ce;">() != </span><span style="color:#d08770;">1 </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> error = format!(
+            &quot;</span><span style="color:#d08770;">{}{}</span><span style="color:#c0c5ce;">&quot;,
+            &quot;</span><span style="color:#a3be8c;">Error: did not receive a single argument, </span><span style="color:#c0c5ce;">&quot;,
+            &quot;</span><span style="color:#a3be8c;">please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.</span><span style="color:#c0c5ce;">&quot;
+        );
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">Err(error);
+    }
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> path = &amp;args[</span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">];
+    </span><span style="color:#b48ead;">if </span><span style="color:#c0c5ce;">!validator.</span><span style="color:#96b5b4;">is_file</span><span style="color:#c0c5ce;">(path) {
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">Err(
+            &quot;</span><span style="color:#a3be8c;">Error: path given is not a regular file, please update to point to a certificate.</span><span style="color:#c0c5ce;">&quot;
+                .</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">(),
+        );
+    }
+    </span><span style="color:#65737e;">// read file to string
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> cert = std::fs::read_to_string(path).</span><span style="color:#96b5b4;">unwrap</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#65737e;">// pem to der
+    </span><span style="color:#b48ead;">let </span><span style="color:#c0c5ce;">_ = </span><span style="color:#96b5b4;">pem_to_der</span><span style="color:#c0c5ce;">(cert.</span><span style="color:#96b5b4;">as_bytes</span><span style="color:#c0c5ce;">()).</span><span style="color:#96b5b4;">unwrap</span><span style="color:#c0c5ce;">();
+    Ok(())
+}
+</span></code></pre>
+<p>We use <a href="https://doc.rust-lang.org/std/fs/fn.read_to_string.html">std::fs::read_to_string</a> to read the file path we pass as an argument directly to a string. This call returns a <code>Result</code> as it can fail if the path does not exist. But we know it does exist at this point, so we just <a href="https://doc.rust-lang.org/std/result/enum.Result.html#method.unwrap">unwrap</a> the value, giving us our cert as a string. Then we pass that string as bytes, by calling the <a href="https://doc.rust-lang.org/std/string/struct.String.html#method.as_bytes">as_bytes</a> function on it, to <code>pem_to_der</code>. This can fail and because here we just call <code>unwrap</code> this will <a href="https://doc.rust-lang.org/std/macro.panic.html">panic</a> if <code>pem_to_der</code> returns an <code>Err</code> value instead of and <code>Ok</code> value.</p>
+<p>To see what I mean, update the test so it reads <code>Cargo.toml</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">should_error_if_given_argument_is_not_a_pem_encoded_certificate</span><span style="color:#c0c5ce;">() {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = vec![&quot;</span><span style="color:#a3be8c;">Cargo.toml</span><span style="color:#c0c5ce;">&quot;.</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">()];
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> validator = FakeValidator { is_file: </span><span style="color:#d08770;">true </span><span style="color:#c0c5ce;">};
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> result = </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(validator, args);
+    assert!(result.</span><span style="color:#96b5b4;">is_err</span><span style="color:#c0c5ce;">())
+}
+</span></code></pre>
+<p>It will fail as follows because <code>Cargo.toml</code> is not PEM encoded:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">➜ cargo -q test pem
+
+running </span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;"> test
+F
+failures:
+
+---- test::should_error_if_given_argument_is_not_a_pem_encoded_certificate stdout ----
+thread &#39;test::should_error_if_given_argument_is_not_a_pem_encoded_certificate&#39; panicked at </span><span style="color:#b48ead;">&#39;called</span><span style="color:#c0c5ce;"> `Result::unwrap()` on an `Err` value: Error(MissingHeader)&#39;, src/main.rs:</span><span style="color:#d08770;">33</span><span style="color:#c0c5ce;">:</span><span style="color:#d08770;">13
+</span><span style="color:#c0c5ce;">note: run with `</span><span style="color:#d08770;">RUST_BACKTRACE</span><span style="color:#c0c5ce;">=</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">` environment variable to display a backtrace
+
+
+failures:
+    test::should_error_if_given_argument_is_not_a_pem_encoded_certificate
+
+test result: </span><span style="color:#d08770;">FAILED</span><span style="color:#c0c5ce;">. </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;"> passed; </span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;"> failed; </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;"> ignored; </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;"> measured; </span><span style="color:#d08770;">3</span><span style="color:#c0c5ce;"> filtered out
+
+error: test failed, to rerun pass &#39;--bin cert-decode&#39;
+</span></code></pre>
+<p>Even though it did error, it didn't do so in a way we could handle in our test. It would be better to <em>not</em> call unwrap on the return of <code>pem_to_der</code>. To do so, we need to change the return type of <code>execute</code> so it allows us to return both our existing <code>String</code> errors and the <code>PEMError</code> which <code>pem_to_der</code> returns.</p>
+<h2 id="error-handling">Error handling</h2>
+<p>There are many different ways to handle errors in Rust. A lot is going on in this space currently in regards libaries and discussions in the language itself. How you handle errors in a library vs in an application can vary wildly too. I don't want to add any more dependencies here and I also want to keep this simple, so we'll use the most general type for handling errors, <code>Box&lt;dyn std::error::Error&gt;</code><sup class="footnote-reference"><a href="#error-handling">2</a></sup>. </p>
+<p><a href="https://doc.rust-lang.org/beta/std/boxed/index.html">Box</a> is a simple way of allocating something on the heap in Rust. <code>Box&lt;dyn std::error::Error&gt;</code> is a trait object<sup class="footnote-reference"><a href="#trait-objects">3</a></sup>, this allows us to return a value of any type that implements the <a href="https://doc.rust-lang.org/std/error/trait.Error.html">std::error::Error</a> trait.</p>
+<p>Let's refactor. First, update <code>execute</code> as follows.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-diff" data-lang="diff"><span style="color:#bf616a;">-fn execute(validator: impl PathValidator, args: Vec&lt;String&gt;) -&gt; Result&lt;(), String&gt; {
+</span><span style="color:#a3be8c;">+fn execute(
++    validator: impl PathValidator,
++    args: Vec&lt;String&gt;,
++) -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+</span><span style="color:#c0c5ce;">     if args.len() != 1 {
+         let error = format!(
+             &quot;{}{}&quot;,
+             &quot;Error: did not receive a single argument, &quot;,
+             &quot;please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.&quot;
+         );
+</span><span style="color:#bf616a;">-        return Err(error);
+</span><span style="color:#a3be8c;">+        return Err(error.into());
+</span><span style="color:#c0c5ce;">     }
+     let path = &amp;args[0];
+     if !validator.is_file(path) {
+         return Err(
+             &quot;Error: path given is not a regular file, please update to point to a certificate.&quot;
+</span><span style="color:#bf616a;">-                .to_owned(),
+</span><span style="color:#a3be8c;">+                .into(),
+</span><span style="color:#c0c5ce;">         );
+     }
+     let cert = std::fs::read_to_string(path).unwrap();
+</span><span style="color:#bf616a;">-    let _ = pem_to_der(cert.as_bytes()).unwrap();
+</span><span style="color:#a3be8c;">+    let _ = pem_to_der(cert.as_bytes())?;
+</span><span style="color:#c0c5ce;">     Ok(())
+ }
+</span></code></pre>
+<p>We change the return type to of <code>execute</code> to <code>Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt;</code>. We were previously returning <code>String</code>'s from our custom errors, we can call <code>into</code> on our strings and this will convert them into <code>Box&lt;dyn std::error::Error&gt;</code>. There is an instance of <a href="https://doc.rust-lang.org/std/convert/trait.From.html">From</a> for converting a <a href="https://doc.rust-lang.org/std/convert/trait.From.html#impl-From%3CString%3E-2">String to a Box&lt;dyn std::error::Error&gt;</a>, because of this we get an <a href="https://doc.rust-lang.org/std/convert/trait.Into.html">Into</a> instance for automatically.</p>
+<p>Finally, we add a <code>?</code><sup class="footnote-reference"><a href="#question-mark">4</a></sup> to immediately return the error if <code>pem_to_der</code> returns an error. Next update <code>main</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-diff" data-lang="diff"><span style="color:#bf616a;">-fn main() -&gt; Result&lt;(), String&gt; {
+</span><span style="color:#a3be8c;">+fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+</span><span style="color:#c0c5ce;">     let args = std::env::args().skip(1).collect();
+     let validator = CertValidator;
+     execute(validator, args)
+ }
+</span></code></pre>
+<p>We just change the return type here. Finally, update the tests.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-diff" data-lang="diff"><span style="color:#c0c5ce;"> #[cfg(test)]
+ mod test {
+     ... 
+     #[test]
+     fn should_error_if_not_given_a_single_argument() {
+         ...
+         assert!(result.is_err());
+         assert_eq!(
+</span><span style="color:#bf616a;">-            result.err().unwrap(),
+</span><span style="color:#a3be8c;">+            format!(&quot;{}&quot;, result.err().unwrap()),
+</span><span style="color:#c0c5ce;">             format!(
+                 &quot;{}{}&quot;,
+                 &quot;Error: did not receive a single argument, &quot;,
+                 &quot;please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.&quot;
+             )
+         );
+     }
+ 
+     #[test]
+     fn should_error_if_argument_is_not_a_regular_file() {
+         ...
+         assert!(result.is_err());
+         assert_eq!(
+</span><span style="color:#bf616a;">-            result.err().unwrap(),
+</span><span style="color:#a3be8c;">+            format!(&quot;{}&quot;, result.err().unwrap()),
+</span><span style="color:#c0c5ce;">             &quot;Error: path given is not a regular file, please update to point to a certificate.&quot;
+         );
+     }
+ 
+     #[test]
+     fn should_error_if_given_argument_is_not_a_pem_encoded_certificate() {
+        ...
+     }
+ 
+     #[test]
+     fn should_succeed() {
+</span><span style="color:#bf616a;">-        let args = vec![&quot;a-file&quot;.to_owned()];
+</span><span style="color:#a3be8c;">+        let args = vec![&quot;resources/google.com.crt&quot;.to_owned()];
+</span><span style="color:#c0c5ce;">         let validator = FakeValidator { is_file: true };
+         let result = execute(validator, args);
+         assert!(result.is_ok());
+     }
+ 
+</span></code></pre>
+<p>We call <a href="https://doc.rust-lang.org/std/macro.format.html">format</a> on the error message to turn the <code>Box&lt;dyn std::error::Error&gt;</code> in to a string. We also change the <code>should_succeed</code> test to read the real cert. This does IO, but that's ok for now. Re-run and the tests should be green.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">✦</span><span style="color:#c0c5ce;"> ➜ cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> test
+
+</span><span style="color:#bf616a;">running</span><span style="color:#c0c5ce;"> 4 tests
+</span><span style="color:#bf616a;">....
+test</span><span style="color:#c0c5ce;"> result: ok. 4 passed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> failed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> ignored; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> measured; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> filtered out
+</span></code></pre><div class="alert alert-info">
+<span><i class="icon fas fa-link"></i></span>
+<span class="alert-text">
+  <p>
+    <a href="https://github.com/wayofthepie/cert-decoder/tree/37cbc87df3ef54f9a72a7be468e20cc26d7011d1">wayofthepie/cert-decoder@37cbc87</a>
+  </p>
+</span>
+</div>
+<h2 id="refactor">Refactor</h2>
+<p>Now we have refactored to allow returning different types of errors, read, and decoded the PEM certificate into DER format. Let's clean things up a little. We are doing IO again, so let's tackle that first. Right now we are passing an implementation of <code>PathValidator</code> to <code>execute</code>. It would make sense to expand what this trait does, but we should rename it. Let's call it <code>FileProcessor</code>. Implementations will have <code>is_file</code> and <code>read_to_string</code> so this makes sense. Let's also rename <code>CertValidator</code> to <code>CertProcessor</code>. </p>
+<pre style="background-color:#2b303b;">
+<code class="language-diff" data-lang="diff"><span style="color:#c0c5ce;"> use std::path::Path;
+ use x509_parser::pem::pem_to_der;
+ 
+</span><span style="color:#bf616a;">-trait PathValidator {
+</span><span style="color:#a3be8c;">+trait FileProcessor {
+</span><span style="color:#c0c5ce;">     fn is_file(&amp;self, path: &amp;str) -&gt; bool;
+ }
+ 
+</span><span style="color:#bf616a;">-struct CertValidator;
+</span><span style="color:#a3be8c;">+struct CertProcessor;
+ 
+</span><span style="color:#bf616a;">-impl PathValidator for CertValidator {
+</span><span style="color:#a3be8c;">+impl FileProcessor for CertProcessor {
+</span><span style="color:#c0c5ce;">     fn is_file(&amp;self, path: &amp;str) -&gt; bool {
+         Path::new(path).is_file()
+     }
+ }
+ 
+ fn execute(
+</span><span style="color:#bf616a;">-    validator: impl PathValidator,
+</span><span style="color:#a3be8c;">+    validator: impl FileProcessor,
+</span><span style="color:#c0c5ce;">     args: Vec&lt;String&gt;,
+ ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    ...
+    Ok(())
+ }
+ 
+ fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+     let args = std::env::args().skip(1).collect();
+</span><span style="color:#bf616a;">-    let validator = CertValidator;
+</span><span style="color:#a3be8c;">+    let validator = CertProcessor;
+</span><span style="color:#c0c5ce;">     execute(validator, args)
+ }
+ 
+ #[cfg(test)]
+ mod test {
+ 
+</span><span style="color:#bf616a;">-    use crate::{execute, PathValidator};
+</span><span style="color:#a3be8c;">+    use crate::{execute, FileProcessor};
+ 
+</span><span style="color:#bf616a;">-    struct FakeValidator {
+</span><span style="color:#a3be8c;">+    struct FakeProcessor {
+</span><span style="color:#c0c5ce;">         is_file: bool,
+     }
+ 
+</span><span style="color:#bf616a;">-    impl PathValidator for FakeValidator {
+</span><span style="color:#a3be8c;">+    impl FileProcessor for FakeProcessor {
+</span><span style="color:#c0c5ce;">         fn is_file(&amp;self, _: &amp;str) -&gt; bool {
+             self.is_file
+         }
+     }
+ 
+     #[test]
+     fn should_error_if_not_given_a_single_argument() {
+         // arrange
+         let args = Vec::new();
+</span><span style="color:#bf616a;">-        let validator = FakeValidator { is_file: false };
+</span><span style="color:#a3be8c;">+        let validator = FakeProcessor { is_file: false };
+ 
+</span><span style="color:#c0c5ce;">         ...
+     }
+ 
+     #[test]
+     fn should_error_if_argument_is_not_a_regular_file() {
+         // arrange
+         let args = vec![&quot;not-a-regular-file&quot;.to_owned()];
+</span><span style="color:#bf616a;">-        let validator = FakeValidator { is_file: false };
+</span><span style="color:#a3be8c;">+        let validator = FakeProcessor { is_file: false };
+ 
+</span><span style="color:#c0c5ce;">         ...
+     }
+ 
+     #[test]
+     fn should_error_if_given_argument_is_not_a_pem_encoded_certificate() {
+         let args = vec![&quot;Cargo.toml&quot;.to_owned()];
+</span><span style="color:#bf616a;">-        let validator = FakeValidator { is_file: true };
+</span><span style="color:#a3be8c;">+        let validator = FakeProcessor { is_file: true };
+</span><span style="color:#c0c5ce;">         let result = execute(validator, args);
+         assert!(result.is_err())
+     }
+ 
+     #[test]
+     fn should_succeed() {
+         let args = vec![&quot;resources/google.com.crt&quot;.to_owned()];
+</span><span style="color:#bf616a;">-        let validator = FakeValidator { is_file: true };
+</span><span style="color:#a3be8c;">+        let validator = FakeProcessor { is_file: true };
+</span><span style="color:#c0c5ce;">         let result = execute(validator, args);
+         assert!(result.is_ok());
+     }
+ }
+</span></code></pre>
+<blockquote>
+<p><b><i class="fas fa-music"></i> Note</b></p>
+<p>You may have noticed I forgot to update the name of the variables from <code>validator</code> to something more appropriate like <code>processor</code>!
+This was indeed a mistake. I added a small refactor section near the end of the post which fixes this.</p>
+</blockquote>
+<div class="alert alert-info">
+<span><i class="icon fas fa-link"></i></span>
+<span class="alert-text">
+  <p>
+    <a href="https://github.com/wayofthepie/cert-decoder/tree/a30ae7cf5cfdb51ad1f8cea79e0b20e9ed2f41b3">wayofthepie/cert-decoder@a30ae7c</a>
+  </p>
+</span>
+</div>
+<p>Now we can add a <code>read_to_string</code> method to the <code>FileProcessor</code> trait and implement.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-diff" data-lang="diff"><span style="color:#c0c5ce;"> use std::path::Path;
+ use x509_parser::pem::pem_to_der;
+ 
+ trait FileProcessor {
+     fn is_file(&amp;self, path: &amp;str) -&gt; bool;
+</span><span style="color:#a3be8c;">+    fn read_to_string(&amp;self, path: &amp;str) -&gt; Result&lt;String, Box&lt;dyn std::error::Error&gt;&gt;;
+</span><span style="color:#c0c5ce;"> }
+ 
+ struct CertProcessor;
+ 
+ impl FileProcessor for CertProcessor {
+     fn is_file(&amp;self, path: &amp;str) -&gt; bool {
+         Path::new(path).is_file()
+     }
+</span><span style="color:#a3be8c;">+    fn read_to_string(&amp;self, path: &amp;str) -&gt; Result&lt;String, Box&lt;dyn std::error::Error&gt;&gt; {
++        Ok(std::fs::read_to_string(path)?)
++    }
+</span><span style="color:#c0c5ce;"> }
+ 
+ fn execute(
+</span><span style="color:#bf616a;">-    validator: impl FileProcessor,
+</span><span style="color:#a3be8c;">+    processor: impl FileProcessor,
+</span><span style="color:#c0c5ce;">     args: Vec&lt;String&gt;,
+ ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+     if args.len() != 1 {
+         let error = format!(
+             &quot;{}{}&quot;,
+             &quot;Error: did not receive a single argument, &quot;,
+             &quot;please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.&quot;
+         );
+         return Err(error.into());
+     }
+     let path = &amp;args[0];
+</span><span style="color:#bf616a;">-    if !validator.is_file(path) {
+</span><span style="color:#a3be8c;">+    if !processor.is_file(path) {
+</span><span style="color:#c0c5ce;">         return Err(
+             &quot;Error: path given is not a regular file, please update to point to a certificate.&quot;
+                 .into(),
+         );
+     }
+</span><span style="color:#bf616a;">-    let cert = std::fs::read_to_string(path).unwrap();
+</span><span style="color:#a3be8c;">+    let cert = processor.read_to_string(path)?;
+</span><span style="color:#c0c5ce;">     let _ = pem_to_der(cert.as_bytes())?;
+     Ok(())
+ }
+ 
+ fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+     let args = std::env::args().skip(1).collect();
+     let validator = CertProcessor;
+     execute(validator, args)
+ }
+ 
+ #[cfg(test)]
+ mod test {
+ 
+     use crate::{execute, FileProcessor};
+ 
+     struct FakeProcessor {
+         is_file: bool,
+</span><span style="color:#a3be8c;">+        file_str: String,
+</span><span style="color:#c0c5ce;">     }
+ 
+     impl FileProcessor for FakeProcessor {
+         fn is_file(&amp;self, _: &amp;str) -&gt; bool {
+             self.is_file
+         }
+</span><span style="color:#a3be8c;">+        fn read_to_string(&amp;self, _: &amp;str) -&gt; Result&lt;String, Box&lt;dyn std::error::Error&gt;&gt; {
++            Ok(self.file_str.clone())
++        }
+</span><span style="color:#c0c5ce;">     }
+ 
+     #[test]
+     fn should_error_if_not_given_a_single_argument() {
+         // arrange
+         let args = Vec::new();
+</span><span style="color:#bf616a;">-        let validator = FakeProcessor { is_file: false };
+</span><span style="color:#a3be8c;">+        let validator = FakeProcessor {
++            is_file: false,
++            file_str: &quot;&quot;.to_owned(),
++        };
+ 
+</span><span style="color:#c0c5ce;">         // act
+         let result = execute(validator, args);
+ 
+         // assert
+         assert!(result.is_err());
+         assert_eq!(
+             format!(&quot;{}&quot;, result.err().unwrap()),
+             format!(
+                 &quot;{}{}&quot;,
+                 &quot;Error: did not receive a single argument, &quot;,
+                 &quot;please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.&quot;
+             )
+         );
+     }
+ 
+     #[test]
+     fn should_error_if_argument_is_not_a_regular_file() {
+         // arrange
+         let args = vec![&quot;not-a-regular-file&quot;.to_owned()];
+</span><span style="color:#bf616a;">-        let validator = FakeProcessor { is_file: false };
+</span><span style="color:#a3be8c;">+        let validator = FakeProcessor {
++            is_file: false,
++            file_str: &quot;&quot;.to_owned(),
++        };
+ 
+</span><span style="color:#c0c5ce;">         // act
+         let result = execute(validator, args);
+ 
+         // assert
+         assert!(result.is_err());
+         assert_eq!(
+             format!(&quot;{}&quot;, result.err().unwrap()),
+             &quot;Error: path given is not a regular file, please update to point to a certificate.&quot;
+         );
+     }
+ 
+     #[test]
+     fn should_error_if_given_argument_is_not_a_pem_encoded_certificate() {
+         let args = vec![&quot;Cargo.toml&quot;.to_owned()];
+</span><span style="color:#bf616a;">-        let validator = FakeProcessor { is_file: true };
+</span><span style="color:#a3be8c;">+        let validator = FakeProcessor {
++            is_file: true,
++            file_str: &quot;&quot;.to_owned(),
++        };
+</span><span style="color:#c0c5ce;">         let result = execute(validator, args);
+         assert!(result.is_err())
+     }
+ 
+     #[test]
+     fn should_succeed() {
+</span><span style="color:#bf616a;">-        let args = vec![&quot;resources/google.com.crt&quot;.to_owned()];
+-        let validator = FakeProcessor { is_file: true };
+</span><span style="color:#a3be8c;">+        let cert = include_str!(&quot;../resources/google.com.crt&quot;);
++        let args = vec![&quot;doesnt-really-matter&quot;.to_owned()];
++        let validator = FakeProcessor {
++            is_file: true,
++            file_str: cert.to_owned(),
++        };
+</span><span style="color:#c0c5ce;">         let result = execute(validator, args);
+         assert!(result.is_ok());
+     }
+</span></code></pre>
+<blockquote>
+<p><b><i class="fas fa-music"></i> Note</b></p>
+<p>In the <code>should_succeed</code> test we use the <a href="https://doc.rust-lang.org/std/macro.include_str.html">include_str</a> macro to read the real cert at compile time. This is cleaner than pasting the cert directly in the test. </p>
+</blockquote>
+<div class="alert alert-info">
+<span><i class="icon fas fa-link"></i></span>
+<span class="alert-text">
+  <p>
+    <a href="https://github.com/wayofthepie/cert-decoder/tree/436d85f6a6da208181738d186029462c66c53511">wayofthepie/cert-decoder@436d85f</a>
+  </p>
+</span>
+</div>
+<p>We can improve the tests by deriving<sup class="footnote-reference"><a href="#deriving">5</a></sup> <a href="https://doc.rust-lang.org/std/default/trait.Default.html">Default</a> for our <code>FakeProcessor</code>. This will give us a basic implementation of <code>FakeProcessor</code>, defaulting all the fields to the value of the <code>Default</code> implementation for their type. For example, the default for <code>bool</code> is <code>false</code> and for <code>String</code> is the empty string.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-diff" data-lang="diff"><span style="color:#c0c5ce;"> #[cfg(test)]
+ mod test {
+ 
+     use crate::{execute, FileProcessor};
+ 
+     ...
+</span><span style="color:#bf616a;">-
+</span><span style="color:#a3be8c;">+    #[derive(Default)]
+</span><span style="color:#c0c5ce;">     struct FakeProcessor {
+         is_file: bool,
+         file_str: String,
+     }
+ 
+     #[test]
+     fn should_error_if_not_given_a_single_argument() {
+</span><span style="color:#bf616a;">-        // arrange
+</span><span style="color:#c0c5ce;">         let args = Vec::new();
+</span><span style="color:#bf616a;">-        let validator = FakeProcessor {
+-            is_file: false,
+-            file_str: &quot;&quot;.to_owned(),
+-        };
+-
+-        // act
+</span><span style="color:#a3be8c;">+        let validator = FakeProcessor::default();
+</span><span style="color:#c0c5ce;">         let result = execute(validator, args);
+</span><span style="color:#bf616a;">-
+-        // assert
+</span><span style="color:#c0c5ce;">         assert!(result.is_err());
+         assert_eq!(
+             format!(&quot;{}&quot;, result.err().unwrap()),
+             format!(
+                 &quot;{}{}&quot;,
+                 &quot;Error: did not receive a single argument, &quot;,
+                 &quot;please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.&quot;
+             )
+         );
+     }
+ 
+     #[test]
+     fn should_error_if_argument_is_not_a_regular_file() {
+</span><span style="color:#bf616a;">-        // arrange
+</span><span style="color:#c0c5ce;">         let args = vec![&quot;not-a-regular-file&quot;.to_owned()];
+</span><span style="color:#bf616a;">-        let validator = FakeProcessor {
+-            is_file: false,
+-            file_str: &quot;&quot;.to_owned(),
+-        };
+-
+-        // act
+</span><span style="color:#a3be8c;">+        let validator = FakeProcessor::default();
+</span><span style="color:#c0c5ce;">         let result = execute(validator, args);
+</span><span style="color:#bf616a;">-
+-        // assert
+</span><span style="color:#c0c5ce;">         assert!(result.is_err());
+         assert_eq!(
+             format!(&quot;{}&quot;, result.err().unwrap()),
+             &quot;Error: path given is not a regular file, please update to point to a certificate.&quot;
+         );
+     }
+ 
+     #[test]
+     fn should_error_if_given_argument_is_not_a_pem_encoded_certificate() {
+         let args = vec![&quot;Cargo.toml&quot;.to_owned()];
+         let validator = FakeProcessor {
+             is_file: true,
+</span><span style="color:#bf616a;">-            file_str: &quot;&quot;.to_owned(),
+</span><span style="color:#a3be8c;">+            ..FakeProcessor::default()
+</span><span style="color:#c0c5ce;">         };
+         let result = execute(validator, args);
+         assert!(result.is_err())
+     }
+     ... 
+ }
+</span></code></pre>
+<blockquote>
+<p><b><i class="fas fa-music"></i> Note</b></p>
+<p>In a test above we used <a href="https://doc.rust-lang.org/book/ch05-01-defining-structs.html#creating-instances-from-other-instances-with-struct-update-syntax">struct update syntax</a>, <code>..FakeProcessor::default()</code>. This will &quot;fill in&quot; any fields we do not explicitly set. It will allow us to add more fields to <code>FileProcessor</code> if needed and not have to update all tests. </p>
+</blockquote>
+<p>After each change, you should run the tests! If you run them now they should still be green.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">✦</span><span style="color:#c0c5ce;"> ➜ cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> test
+
+</span><span style="color:#bf616a;">running</span><span style="color:#c0c5ce;"> 4 tests
+</span><span style="color:#bf616a;">....
+test</span><span style="color:#c0c5ce;"> result: ok. 4 passed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> failed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> ignored; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> measured; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> filtered out
+</span></code></pre><div class="alert alert-info">
+<span><i class="icon fas fa-link"></i></span>
+<span class="alert-text">
+  <p>
+    <a href="https://github.com/wayofthepie/cert-decoder/tree/e984bd7ffea42e30cd35bb6f65b7a7808c9be777">wayofthepie/cert-decoder@e984bd7f</a>
+  </p>
+</span>
+</div>
+<h2 id="parse-the-der-encoded-cert">Parse the der encoded cert</h2>
+<p>Let's parse the DER bytes into an <code>X509Certificate</code>. In the <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part3/#x509-parser-api">x509 parser API</a> section we saw an example of this using the <a href="https://docs.rs/x509-parser/0.7.0/x509_parser/fn.parse_x509_der.html">parse_x509_der</a> function. It can fail, so first, a test.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">should_error_if_argument_is_not_a_valid_certificate</span><span style="color:#c0c5ce;">() {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> cert = include_str!(&quot;</span><span style="color:#a3be8c;">../resources/bad.crt</span><span style="color:#c0c5ce;">&quot;);
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = vec![&quot;</span><span style="color:#a3be8c;">doesnt-really-matter</span><span style="color:#c0c5ce;">&quot;.</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">()];
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> processor = FakeProcessor {
+        is_file: </span><span style="color:#d08770;">true</span><span style="color:#c0c5ce;">,
+        file_str: cert.</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">(),
+    };
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> result = </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(processor, args);
+    assert!(result.</span><span style="color:#96b5b4;">is_err</span><span style="color:#c0c5ce;">());
+}
+</span></code></pre>
+<p>I have added a file called <code>bad.crt</code> to the resources folder. This just contains a base64 encoded string, which is not a valid certificate. So it will succeed in the <code>pem_to_der</code> call but calling <code>parse_x509_der</code> should return an error. First, let's see this test fail.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">✦</span><span style="color:#c0c5ce;"> ➜ cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> test
+
+</span><span style="color:#bf616a;">running</span><span style="color:#c0c5ce;"> 5 tests
+</span><span style="color:#bf616a;">...F.
+failures:
+
+----</span><span style="color:#c0c5ce;"> test::should_error_if_argument_is_not_a_valid_certificate stdout ----
+</span><span style="color:#bf616a;">thread </span><span style="color:#c0c5ce;">&#39;</span><span style="color:#a3be8c;">test::should_error_if_argument_is_not_a_valid_certificate</span><span style="color:#c0c5ce;">&#39; panicked at &#39;</span><span style="color:#a3be8c;">assertion failed: result.is_err()</span><span style="color:#c0c5ce;">&#39;, src/main.rs:118:9
+</span><span style="color:#bf616a;">note:</span><span style="color:#c0c5ce;"> run with `</span><span style="color:#bf616a;">RUST_BACKTRACE</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">1</span><span style="color:#c0c5ce;">` environment variable to display a backtrace
+
+
+</span><span style="color:#bf616a;">failures:
+    test::should_error_if_argument_is_not_a_valid_certificate
+
+test</span><span style="color:#c0c5ce;"> result: FAILED. 4 passed; </span><span style="color:#bf616a;">1</span><span style="color:#c0c5ce;"> failed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> ignored; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> measured; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> filtered out
+
+</span><span style="color:#bf616a;">error:</span><span style="color:#c0c5ce;"> test failed, to rerun pass &#39;</span><span style="color:#a3be8c;">--bin cert-decode</span><span style="color:#c0c5ce;">&#39;
+</span></code></pre>
+<p>Great! Now, let's parse the DER we get.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">execute</span><span style="color:#c0c5ce;">(
+    </span><span style="color:#bf616a;">processor</span><span style="color:#c0c5ce;">: impl FileProcessor,
+    </span><span style="color:#bf616a;">args</span><span style="color:#c0c5ce;">: Vec&lt;String&gt;,
+) -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    </span><span style="color:#65737e;">// stripped out irrelevant code 
+    </span><span style="color:#c0c5ce;">...
+    
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> cert = processor.</span><span style="color:#96b5b4;">read_to_string</span><span style="color:#c0c5ce;">(path)?;
+    </span><span style="color:#b48ead;">let </span><span style="color:#c0c5ce;">(_, pem) = </span><span style="color:#96b5b4;">pem_to_der</span><span style="color:#c0c5ce;">(cert.</span><span style="color:#96b5b4;">as_bytes</span><span style="color:#c0c5ce;">())?;
+    </span><span style="color:#b48ead;">let </span><span style="color:#c0c5ce;">_ = </span><span style="color:#96b5b4;">parse_x509_der</span><span style="color:#c0c5ce;">(&amp;pem.contents)?;
+    Ok(())
+}
+</span></code></pre>
+<p>And re-run the tests.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">✦</span><span style="color:#c0c5ce;"> ➜ cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> test
+
+</span><span style="color:#bf616a;">running</span><span style="color:#c0c5ce;"> 5 tests
+</span><span style="color:#bf616a;">.....
+test</span><span style="color:#c0c5ce;"> result: ok. 5 passed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> failed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> ignored; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> measured; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> filtered out
+</span></code></pre>
+<p>Great! We didn't need to update the <code>should_succeed</code> test, meaning it is reading our real certificate correctly. There are few things we can improve here, but first, let's mark off the first item in our test list.</p>
+<hr />
+<p><strong>Read and print certificate</strong></p>
+<ul>
+<li>:heavy_check_mark: Validate file is a certificate</li>
+<li>☐ Print the certificate </li>
+</ul>
+<hr />
+<div class="alert alert-info">
+<span><i class="icon fas fa-link"></i></span>
+<span class="alert-text">
+  <p>
+    <a href="https://github.com/wayofthepie/cert-decoder/tree/11ff773576691584fc1400176b9bff7778fea2b5">wayofthepie/cert-decoder@11ff773</a>
+  </p>
+</span>
+</div>
+<h2 id="print-the-certificate">Print the certificate</h2>
+<p>It turns out we will have to do a bit more processing to get a human-readable output format, so I'm going to cheat here! On success, <code>parse_x509_der</code> returns a tuple with remaining bytes and an <code>X509Certificate</code>. The <code>X509Certificate</code> type implements <a href="https://doc.rust-lang.org/std/fmt/trait.Debug.html">Debug</a> so we can print its debug format.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-diff" data-lang="diff"><span style="color:#c0c5ce;">
+ fn execute(
+     processor: impl FileProcessor,
+     args: Vec&lt;String&gt;,
+ ) -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+     ... 
+     let cert = processor.read_to_string(path)?;
+     let (_, pem) = pem_to_der(cert.as_bytes())?;
+</span><span style="color:#bf616a;">-    let _ = parse_x509_der(&amp;pem.contents)?;
+</span><span style="color:#a3be8c;">+    let (_, cert) = parse_x509_der(&amp;pem.contents)?;
++    let output = format!(&quot;{:#?}&quot;, cert.tbs_certificate);
++    println!(&quot;{}&quot;, output);
+</span><span style="color:#c0c5ce;">     Ok(())
+ }
+
+ ...
+
+</span></code></pre>
+<p>We use the debug format specifier <code>{:?}</code> in the <code>format</code> macro. We also add a <code>#</code> to pretty print it, <code>{:#?}</code>. The only thing we print here is the <code>tbs_certificate</code> field as that contains all the details we will need. To test this, let's run the actual cli.</p>
+<blockquote>
+<p><b><i class="fas fa-music"></i> Note</b></p>
+<p>From the above change you might be thinking &quot;Why create a pre-formatted string and pass that to <code>println!</code>? Couldn't you just use the debug format specifier directly in <code>println!</code>?&quot;. You can do this, try it and do <code>cargo -q run -- resources/google.com.crt</code>. Now do it again with a pipe - <code>cargo -q run -- resources/google.com.crt | head -n20</code> - it will fail. I may do a short post on why this happens. </p>
+</blockquote>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">✦</span><span style="color:#c0c5ce;"> ➜ cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> run -- resources/google.com.crt | </span><span style="color:#bf616a;">head -n20
+TbsCertificate </span><span style="color:#c0c5ce;">{
+    version: 2,
+    serial: BigUint {
+        data: [
+            4412903,
+            134217728,
+            247394332,
+            1459281101,
+        ],
+    },
+    signature: AlgorithmIdentifier {
+        algorithm: OID(1.2.840.113549.1.1.11),
+        parameters: BerObject {
+            class: 0,
+            structured: 0,
+            tag: EndOfContent,
+            content: ContextSpecific(
+                EndOfContent,
+                Some(
+                    BerObject {
+</span></code></pre>
+<p>Pretty unreadable! But it's a start, we're making some headway. In the next post, we'll clean this up.</p>
+<hr />
+<p><strong>Read and print certificate</strong></p>
+<ul>
+<li>:heavy_check_mark: Validate file is a certificate</li>
+<li>:heavy_check_mark: Print the certificate </li>
+</ul>
+<hr />
+<div class="alert alert-info">
+<span><i class="icon fas fa-link"></i></span>
+<span class="alert-text">
+  <p>
+    <a href="https://github.com/wayofthepie/cert-decoder/tree/11058e3760ee31a0f47ba57e50af016b8ca9760b">wayofthepie/cert-decoder@11058e3</a>
+  </p>
+</span>
+</div>
+<h1 id="tiny-refactor">Tiny refactor</h1>
+<p>I realized I misnamed a few things. I missed them when refactoring. In the tests, most of the <code>FakeProcessor</code> variables are still called <code>validator</code>. Similarly in <code>main</code>. Let's update those.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-diff" data-lang="diff"><span style="color:#c0c5ce;">  ...
+
+ fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+     let args = std::env::args().skip(1).collect();
+</span><span style="color:#bf616a;">-    let validator = CertProcessor;
+-    execute(validator, args)
+</span><span style="color:#a3be8c;">+    let processor = CertProcessor;
++    execute(processor, args)
+</span><span style="color:#c0c5ce;"> }
+ 
+ #[cfg(test)]
+ mod test {
+ 
+     ...
+     
+ 
+     #[test]
+     fn should_error_if_not_given_a_single_argument() {
+         let args = Vec::new();
+</span><span style="color:#bf616a;">-        let validator = FakeProcessor::default();
+-        let result = execute(validator, args);
+</span><span style="color:#a3be8c;">+        let processor = FakeProcessor::default();
++        let result = execute(processor, args);
+</span><span style="color:#c0c5ce;">         assert!(result.is_err());
+         assert_eq!(
+             format!(&quot;{}&quot;, result.err().unwrap()),
+             format!(
+                 &quot;{}{}&quot;,
+                 &quot;Error: did not receive a single argument, &quot;,
+                 &quot;please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.&quot;
+             )
+         );
+     }
+ 
+     #[test]
+     fn should_error_if_argument_is_not_a_regular_file() {
+         let args = vec![&quot;not-a-regular-file&quot;.to_owned()];
+</span><span style="color:#bf616a;">-        let validator = FakeProcessor::default();
+-        let result = execute(validator, args);
+</span><span style="color:#a3be8c;">+        let processor = FakeProcessor::default();
++        let result = execute(processor, args);
+</span><span style="color:#c0c5ce;">         assert!(result.is_err());
+         assert_eq!(
+             format!(&quot;{}&quot;, result.err().unwrap()),
+             &quot;Error: path given is not a regular file, please update to point to a certificate.&quot;
+         );
+     }
+ 
+     #[test]
+     fn should_error_if_given_argument_is_not_a_pem_encoded_certificate() {
+         let args = vec![&quot;Cargo.toml&quot;.to_owned()];
+</span><span style="color:#bf616a;">-        let validator = FakeProcessor {
+</span><span style="color:#a3be8c;">+        let processor = FakeProcessor {
+</span><span style="color:#c0c5ce;">             is_file: true,
+             ..FakeProcessor::default()
+         };
+</span><span style="color:#bf616a;">-        let result = execute(validator, args);
+</span><span style="color:#a3be8c;">+        let result = execute(processor, args);
+</span><span style="color:#c0c5ce;">         assert!(result.is_err())
+     }
+ 
+     ...
+
+     #[test]
+     fn should_succeed() {
+         let cert = include_str!(&quot;../resources/google.com.crt&quot;);
+         let args = vec![&quot;doesnt-really-matter&quot;.to_owned()];
+</span><span style="color:#bf616a;">-        let validator = FakeProcessor {
+</span><span style="color:#a3be8c;">+        let processor = FakeProcessor {
+</span><span style="color:#c0c5ce;">             is_file: true,
+             file_str: cert.to_owned(),
+         };
+</span><span style="color:#bf616a;">-        let result = execute(validator, args);
+</span><span style="color:#a3be8c;">+        let result = execute(processor, args);
+</span><span style="color:#c0c5ce;">         println!(&quot;{:#?}&quot;, result);
+         assert!(result.is_ok());
+     }
+ }
+</span></code></pre><div class="alert alert-info">
+<span><i class="icon fas fa-link"></i></span>
+<span class="alert-text">
+  <p>
+    <a href="https://github.com/wayofthepie/cert-decoder/tree/371ea84cbd017c1375b71399a7539d45b6d4ea5f">wayofthepie/cert-decoder@371ea84</a>
+  </p>
+</span>
+</div>
+<h1 id="conclusion">Conclusion</h1>
+<p>There were a few things I glossed over that appeared in this post. I will take note of them and make sure they appear in one of the next posts. For example lifetimes, a better explanation of <code>Box</code>, and that <code>println</code> issue I mentioned in a note in the last section.</p>
+<p>There is also a small display issue when an error occurs. For example, if we pass no argument:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">✦</span><span style="color:#c0c5ce;"> ➜ cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> run --
+</span><span style="color:#bf616a;">Error: </span><span style="color:#c0c5ce;">&quot;</span><span style="color:#a3be8c;">Error: did not receive a single argument, please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.</span><span style="color:#c0c5ce;">&quot;
+</span></code></pre>
+<p>It repeats the word &quot;Error&quot; and also wraps our error string in quotes. We will fix this too in the next post!</p>
+<hr />
+<div class="footnote-definition" id="parser-combinator"><sup class="footnote-definition-label">6</sup>
+<p><a href="https://github.com/Geal/nom/blob/master/README.md">noms readme</a> has a short overview of <a href="https://github.com/Geal/nom#parser-combinators">parser combinators</a>.</p>
+</div>
+<div class="footnote-definition" id="type-alias"><sup class="footnote-definition-label">7</sup>
+<p>See <a href="https://doc.rust-lang.org/book/ch19-04-advanced-types.html?highlight=Type,alias#advanced-types">Advanced Types</a> in the <a href="https://doc.rust-lang.org/book/title-page.html">Rust Book</a> for more on type aliases.</p>
+</div>
+<div class="footnote-definition" id="generics-lifetimes"><sup class="footnote-definition-label">1</sup>
+<p>See <a href="https://doc.rust-lang.org/book/ch10-00-generics.html?highlight=generics#generic-types-traits-and-lifetimes">Generic Types, Traits, and Lifetimes</a> in the <a href="https://doc.rust-lang.org/book/">Rust book</a>.</p>
+</div>
+<div class="footnote-definition" id="error-handling"><sup class="footnote-definition-label">2</sup>
+<p>Error handling in Rust is a big topic, to get started see the <a href="https://doc.rust-lang.org/stable/rust-by-example/error.html">Error Handling</a> chapter in the <a href="https://doc.rust-lang.org/book/">Rust book</a>. For more on boxed errors see <a href="https://doc.rust-lang.org/stable/rust-by-example/error/multiple_error_types/boxing_errors.html">Boxing errors</a>.d</p>
+</div>
+<div class="footnote-definition" id="trait-objects"><sup class="footnote-definition-label">3</sup>
+<p>See <a href="https://doc.rust-lang.org/book/ch17-02-trait-objects.html">Using Trait Objects That Allow for Values of Different Types</a> in the <a href="https://doc.rust-lang.org/book/">Rust book</a>.</p>
+</div>
+<div class="footnote-definition" id="question-mark"><sup class="footnote-definition-label">4</sup>
+<p>For more on how the <code>?</code> works see <a href="https://doc.rust-lang.org/edition-guide/rust-2018/error-handling-and-panics/the-question-mark-operator-for-easier-error-handling.html">The ? operator for easier error handling</a>.
+<sup class="footnote-reference"><a href="#deriving">5</a></sup>: For more on deriving see <a href="https://doc.rust-lang.org/stable/rust-by-example/trait/derive.html">Derive</a></p>
+</div>
+
+    <script src="https://utteranc.es/client.js"
+        repo="wayofthepie/wayofthepie.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+    </script>
+</div>
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="description" content="All things computers." />
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
+    />
+
+    <title></title>
+
+    <!-- CSS -->
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css"
+      media="print"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
+
+     
+     
+    
+  </head>
+
+  <body class="">
+    
+    <div class="sidebar">
+      <div class="container sidebar-sticky">
+        <ul class="sidebar-nav">
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/series" class="sidebar-nav-item">Series</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+        </ul>
+        <ul class="sidebar-nav-social">
+          <a
+            href="https://github.com/wayofthepie"
+            class="fab fa-github sidebar-nav-social-item"
+          ></a>
+          <a
+            href="https://twitter.com/wayofthepie"
+            class="fab fa-twitter sidebar-nav-social-item"
+          ></a>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="content container">
+      
+
+
+
+<div class="post">
+    <h1 class="post-title">Rust and GitHub Actions</h1>
+    <span class="post-metadata">
+        
+        
+        
+        
+            
+            
+<div class="post-series">
+    <div>Series <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;series&#x2F;tdd-and-rust-a-cli-for-decoding-certs&#x2F;">TDD and Rust: A CLI for decoding certs</a></div>
+</div>
+
+        
+        
+
+        <span class="post-date">2020-06-07</span>
+        
+        
+            <span class="post-tags">
+            
+                <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/rust">rust</a></span>
+            
+            </span>
+        
+        
+        
+        
+    </span>
+    <ul class="table-of-content">
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/#build-and-test">Build and test</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/#clippy-lint">Clippy lint</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/#block-pr-s-on-failing-checks">Block PR&#x27;s on failing checks</a>
+                    
+                        <ul>
+                            
+                                <li>
+                                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/#clippy-deny-lints">Clippy deny lints</a>
+                                </li>
+                            
+                                <li>
+                                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/#protected-branch-rule">Protected branch rule</a>
+                                </li>
+                            
+                                <li>
+                                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/#clean-up-and-merge">Clean up and merge</a>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/#security-audit">Security audit</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/#conclusion">Conclusion</a>
+            
+        </li>
+    
+    </ul>
+    <p>Before we continue implementing our CLI, let's take time to set up some <a href="https://help.github.com/en/actions">GitHub Actions</a> to build and test our commits. We'll use the actions defined in the <a href="https://github.com/actions-rs">actions-rs GitHub Organization</a>.</p>
+<span id="continue-reading"></span><div class="alert alert-info">
+<span><i class="icon fas fa-info-circle"></i></span>
+<span class="alert-text">
+  <p>
+  Originally posted on <a href="https://dev.to">dev.to</a>, <a href="https://dev.to/wayofthepie/rust-and-github-actions-3kob">here</a>.
+  </p>
+</span>
+</div>
+<h1 id="build-and-test">Build and test</h1>
+<p>The workflow I normally follow when coding is to create a short-lived branch on which all commits are built and tested then create a Pull Request (PR) into the master branch. I do this even if I am the only developer on a repo. Let's set this up. Check out a new branch, let's call it actions. Then, create a file called <code>build.yml</code> under <code>.github/workflows/</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> mkdir</span><span style="color:#bf616a;"> -p</span><span style="color:#c0c5ce;"> .github/workflows
+</span><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> touch .github/workflows/build.yml
+</span></code></pre>
+<p>We'll create a simple action that builds and tests our CLI. Add the following to <code>build.yml</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-yaml" data-lang="yaml"><span style="color:#d08770;">on</span><span style="color:#c0c5ce;">: [</span><span style="color:#a3be8c;">push</span><span style="color:#c0c5ce;">]
+</span><span style="color:#bf616a;">name</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">build
+jobs</span><span style="color:#c0c5ce;">:
+  </span><span style="color:#bf616a;">build</span><span style="color:#c0c5ce;">:
+    </span><span style="color:#bf616a;">runs-on</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">ubuntu-latest
+    steps</span><span style="color:#c0c5ce;">:
+      - </span><span style="color:#bf616a;">uses</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">actions/checkout@v2
+      </span><span style="color:#c0c5ce;">- </span><span style="color:#bf616a;">uses</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">actions-rs/toolchain@v1
+        with</span><span style="color:#c0c5ce;">:
+          </span><span style="color:#bf616a;">toolchain</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">stable
+      </span><span style="color:#c0c5ce;">- </span><span style="color:#bf616a;">name</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">build
+        uses</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">actions-rs/cargo@v1
+        with</span><span style="color:#c0c5ce;">:
+          </span><span style="color:#bf616a;">command</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">build
+      </span><span style="color:#c0c5ce;">- </span><span style="color:#bf616a;">name</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">test
+        uses</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">actions-rs/cargo@v1
+        with</span><span style="color:#c0c5ce;">:
+          </span><span style="color:#bf616a;">command</span><span style="color:#c0c5ce;">: </span><span style="color:#a3be8c;">test
+</span></code></pre>
+<p><code>on</code> defines the event(s)<sup class="footnote-reference"><a href="#events">1</a></sup> which should trigger this workflow. We set it to run on a <code>push</code> to any branch. The workflow has a single job, called <code>build</code>. This job runs on the <code>ubuntu-latest</code> <a href="https://help.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners">Virtual Environment</a>. It checks out our code, installs the stable Rust toolchain and runs a <code>cargo build</code> then runs a <code>cargo test</code>.</p>
+<p>Commit this change and push to your repo. GitHub Actions will then run this workflow. Once complete, when you click the <code>Actions</code> tab on your repo, you should see something like this:</p>
+<p><img src="https://dev-to-uploads.s3.amazonaws.com/i/243h3td9vvz0t2unxdts.png" alt="Alt Text" /></p>
+<p>I had two builds, as I rebased a commit, you will likely only see one. Click into the build, then click the <code>build</code> job on the left with the checkmark and it will show you the steps in the workflow.
+<img src="https://dev-to-uploads.s3.amazonaws.com/i/bc5tgf2sd36xh13pwcj9.png" alt="Alt Text" /></p>
+<p>This is a good start. All commits will be built and tested. We can add a check to PR's so that they will block merges if this workflow fails. But first, let's add some improvements. The code up to this point can be seen <a href="https://github.com/wayofthepie/cert-decoder/tree/da88d93a4a4aacc47b3b9286951f2d96f7d5841c">here</a>. </p>
+<h1 id="clippy-lint">Clippy lint</h1>
+<p>One thing we did not do in the last post was to run a linter. Rust has an awesome linter called <a href="https://github.com/rust-lang/rust-clippy">Clippy</a> which can highlight quite a lot of issues. Let's run it in our project now.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> cargo clippy
+    </span><span style="color:#bf616a;">Finished</span><span style="color:#c0c5ce;"> dev </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">unoptimized + debuginfo</span><span style="color:#b48ead;">]</span><span style="color:#c0c5ce;"> target(s) </span><span style="color:#bf616a;">in</span><span style="color:#c0c5ce;"> 0.01s
+</span></code></pre>
+<p>No issues, great! Like any test, let's see it fail. Or in this case, make Clippy give out to us. Let's add something Clippy does not like to <code>main.rs</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() -&gt; Result&lt;(), String&gt; {
+    assert!(</span><span style="color:#d08770;">false</span><span style="color:#c0c5ce;">); </span><span style="color:#65737e;">// clippy won&#39;t like this 
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = std::env::args().</span><span style="color:#96b5b4;">skip</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">).</span><span style="color:#96b5b4;">collect</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> validator = CertValidator;
+    </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(validator, args)
+}
+</span></code></pre>
+<p>Assertions on a constant are optimized out by the compiler<sup class="footnote-reference"><a href="#clippy-lint">2</a></sup>, so Clippy will warn about this. </p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> cargo clippy
+</span><span style="color:#bf616a;">warning: </span><span style="color:#c0c5ce;">`</span><span style="color:#bf616a;">assert!</span><span style="color:#c0c5ce;">(false)` should probably be replaced
+  </span><span style="color:#bf616a;">--</span><span style="color:#c0c5ce;">&gt; src/main.rs:35:5
+   |
+</span><span style="color:#bf616a;">35 </span><span style="color:#c0c5ce;">|     </span><span style="color:#bf616a;">assert!</span><span style="color:#c0c5ce;">(false);
+   |     </span><span style="color:#bf616a;">^^^^^^^^^^^^^^^
+   </span><span style="color:#c0c5ce;">|
+   = </span><span style="color:#bf616a;">note: </span><span style="color:#c0c5ce;">`</span><span style="color:#bf616a;">#[warn</span><span style="color:#c0c5ce;">(clippy::assertions_on_constants)</span><span style="color:#bf616a;">]</span><span style="color:#c0c5ce;">` on by default
+   = </span><span style="color:#bf616a;">help:</span><span style="color:#c0c5ce;"> use `</span><span style="color:#8fa1b3;">panic!</span><span style="color:#c0c5ce;">()` or `unreachable!()`
+ = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#assertions_on_constants
+   = note: this warning originates in a macro (</span><span style="color:#bf616a;">in</span><span style="color:#c0c5ce;"> Nightly builds, run with</span><span style="color:#bf616a;"> -Z</span><span style="color:#c0c5ce;"> macro-backtrace for more info)
+
+</span><span style="color:#bf616a;">warning:</span><span style="color:#c0c5ce;"> 1 warning emitted
+
+    </span><span style="color:#bf616a;">Finished</span><span style="color:#c0c5ce;"> dev </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">unoptimized + debuginfo</span><span style="color:#b48ead;">]</span><span style="color:#c0c5ce;"> target(s) </span><span style="color:#bf616a;">in</span><span style="color:#c0c5ce;"> 0.01s
+</span></code></pre><div class="alert alert-info">
+<span><i class="icon fas fa-music"></i></span>
+<span class="alert-text">
+  <p>
+Sometimes on a subsequent run, Clippy will just say it's successful and not run correctly. See <a href="https://github.com/rust-lang/rust-clippy/issues/2604"></a> for more information. If you think this is happening you can force a full re-run by modifying a file, e.g. <b>touch src/main.rs; cargo clippy</b>. It seems this should be fixed, but might only be fixed in nightly Rust, not stable.
+  </p>
+</span>
+</div>
+<p>Great! Just what we want. Let's leave this assertion here and update our existing workflow to add a lint step which runs Clippy. The <a href="https://github.com/actions-rs/clippy-check">clippy-check</a> action will allow us to easily do this.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-yaml" data-lang="yaml"><span style="color:#d08770;">on</span><span style="color:#c0c5ce;">: [</span><span style="color:#a3be8c;">push</span><span style="color:#c0c5ce;">]
+</span><span style="color:#bf616a;">name</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">build
+jobs</span><span style="color:#c0c5ce;">:
+  </span><span style="color:#bf616a;">build</span><span style="color:#c0c5ce;">:
+    </span><span style="color:#bf616a;">runs-on</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">ubuntu-latest
+    steps</span><span style="color:#c0c5ce;">:
+      - </span><span style="color:#bf616a;">uses</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">actions/checkout@v2
+      </span><span style="color:#c0c5ce;">- </span><span style="color:#bf616a;">uses</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">actions-rs/toolchain@v1
+        with</span><span style="color:#c0c5ce;">:
+          </span><span style="color:#bf616a;">toolchain</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">table
+      </span><span style="color:#c0c5ce;">- </span><span style="color:#bf616a;">name</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">build
+        uses</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">actions-rs/cargo@v1
+        with</span><span style="color:#c0c5ce;">:
+          </span><span style="color:#bf616a;">command</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">build
+      </span><span style="color:#c0c5ce;">- </span><span style="color:#bf616a;">name</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">test
+        uses</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">actions-rs/cargo@v1
+        with</span><span style="color:#c0c5ce;">:
+          </span><span style="color:#bf616a;">command</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">test
+      </span><span style="color:#c0c5ce;">- </span><span style="color:#bf616a;">name</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">lint
+        uses</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">actions-rs/clippy-check@v1
+        with</span><span style="color:#c0c5ce;">:
+          </span><span style="color:#bf616a;">token</span><span style="color:#c0c5ce;">: </span><span style="color:#a3be8c;">${{ secrets.GITHUB_TOKEN }}
+</span></code></pre>
+<p>Commit both the assertion and the <code>lint</code> addition to the workflow and push. Once the workflow run finishes, click into the Clippy step and you should see something like this:</p>
+<p><img src="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/clippy-in-gh-actions.png" alt="Clippy warnings in github actions." /></p>
+<p>The warning is now attached to a commit and links to a specific file. Click the text &quot;Check warning on line 35 in src/main.rs&quot; in the annotation and it should bring you to exactly where this issue occurs.</p>
+<p><img src="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/warning-in-gh-actions.png" alt="Single clippy warning in github actions." /></p>
+<p>This is nice! Create a PR and you will see this annotation exactly as it is above in the <code>Files Changed</code> tab. I find this useful, even if I am the sole developer. Sometimes I forget to run Clippy and I always do a quick review of the code in a PR. Create a PR into for this and you will also see the checks have all passed.</p>
+<p><img src="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/action-checks-passed.png" alt="Alt Text" /></p>
+<p>Let's make one last change. The code up this point can be found <a href="https://github.com/wayofthepie/cert-decoder/commit/134827d780528b43d1181f07d65e5b397e2867e4">here</a>.</p>
+<h2 id="block-pr-s-on-failing-checks">Block PR's on failing checks</h2>
+<p>If we somehow manage to check something in which does not compile, has failing tests, or has Clippy lint issues which it is set to deny, we should block the PR, i.e. not allow it to be merged until these issues are fixed. This may seem like overkill if you are the only dev on a repo, but I do this all the time because I make these mistakes! No matter how careful I try to be.</p>
+<p>Before we configure our repo to block PRs, a quick note on Clippy lints.</p>
+<h3 id="clippy-deny-lints">Clippy deny lints</h3>
+<p>The lint we have in our PR above is just a warning. Clippy also has several lints that will cause it to fail if detected. These are lints at the <code>Deny</code> level in the list of <a href="https://rust-lang.github.io/rust-clippy/master/index.html">Clippy lints</a>. For example, the lint <a href="https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant">approx_constant</a> checks for constants which are defined under <a href="https://doc.rust-lang.org/stable/std/f32/consts/#constants">std::f32::consts</a> or <a href="https://doc.rust-lang.org/stable/std/f64/consts/#constants">std::f64::consts</a>. If it finds matching constants in your code it will error out.</p>
+<p>To see this in action, update <code>main</code> with an unused variable which approximates pi. Before you do that, make sure you have committed your changes up to here, so we can easily reset. I've commented out the <code>assert!(false)</code> we added earlier so we don't also get a warning for that from Clippy.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() -&gt; Result&lt;(), String&gt; {
+    </span><span style="color:#65737e;">// assert!(false);
+    </span><span style="color:#b48ead;">let </span><span style="color:#c0c5ce;">_ = </span><span style="color:#d08770;">3.14</span><span style="color:#c0c5ce;">;
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = std::env::args().</span><span style="color:#96b5b4;">skip</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">).</span><span style="color:#96b5b4;">collect</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> validator = CertValidator;
+    </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(validator, args)
+}
+</span></code></pre>
+<p>Run Clippy and it will give an error, and return a non-zero exit code.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> cargo clippy
+    </span><span style="color:#bf616a;">Checking</span><span style="color:#c0c5ce;"> cert-decode v0.1.0 (/home/chaospie/repos/blog-cert-decode/cert-decode)
+</span><span style="color:#bf616a;">error:</span><span style="color:#c0c5ce;"> approximate value of `</span><span style="color:#bf616a;">f{32,</span><span style="color:#c0c5ce;"> 64}</span><span style="color:#bf616a;">::consts::PI</span><span style="color:#c0c5ce;">` found. Consider using it directly
+  </span><span style="color:#bf616a;">--</span><span style="color:#c0c5ce;">&gt; src/main.rs:36:13
+   |
+</span><span style="color:#bf616a;">36 </span><span style="color:#c0c5ce;">|     </span><span style="color:#96b5b4;">let</span><span style="color:#c0c5ce;"> _ = </span><span style="color:#d08770;">3</span><span style="color:#c0c5ce;">.</span><span style="color:#d08770;">14</span><span style="color:#c0c5ce;">;
+   |             </span><span style="color:#bf616a;">^^^^
+   </span><span style="color:#c0c5ce;">|
+   = </span><span style="color:#bf616a;">note: </span><span style="color:#c0c5ce;">`</span><span style="color:#bf616a;">#[deny</span><span style="color:#c0c5ce;">(clippy::approx_constant)</span><span style="color:#bf616a;">]</span><span style="color:#c0c5ce;">` on by default
+   = </span><span style="color:#bf616a;">help:</span><span style="color:#c0c5ce;"> for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant
+
+</span><span style="color:#bf616a;">error:</span><span style="color:#c0c5ce;"> aborting due to previous error
+
+</span><span style="color:#bf616a;">error:</span><span style="color:#c0c5ce;"> could not compile `</span><span style="color:#bf616a;">cert-decode</span><span style="color:#c0c5ce;">`.
+
+</span><span style="color:#bf616a;">To</span><span style="color:#c0c5ce;"> learn more, run the command again with</span><span style="color:#bf616a;"> --verbose</span><span style="color:#c0c5ce;">.
+
+</span><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> echo $</span><span style="color:#bf616a;">?
+101
+</span></code></pre>
+<p><code>echo $?</code> will print the return code of the last command executed in the shell. Don't forget to reset these changes, either manually or by running <code>git checkout src/main.rs</code>.</p>
+<h3 id="protected-branch-rule">Protected branch rule</h3>
+<p>The configuration for blocking PRs is defined with a protected branch<sup class="footnote-reference"><a href="#protected-branch">3</a></sup> rule. Go to <em>Settings -&gt; Branches -&gt; Branch protection rules -&gt; Add rule</em> in you repo. Set the <em>Branch name pattern</em> to <code>master</code> and select the status checks to verify in PRs as follows.</p>
+<p><img src="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/protected-branch-rules.png" alt="View of githubs protected branch rules settings." /></p>
+<div class="alert alert-info">
+<span><i class="icon fas fa-music"></i></span>
+<span class="alert-text">
+  <p>
+So I have an extra status check here called <b>build_and_test</b> because I had initially defined the job in our workflow YAML <b>build_and_test</b>. It is now called <b>build</b>.
+  </p>
+</span>
+</div>
+<p>Now if we raise a PR with any failure in our <code>build</code> job - the job in our workflow YAML - or the Clippy step specifically, the PR will be blocked from merging. This is what it would look like:</p>
+<p><img src="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/actions-failing-build.png" alt="Github actions failing build overview." /></p>
+<p>And the details of the lint error:</p>
+<p><img src="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/lint-error.png" alt="Github actions clippy error showing specific lint issue and the line it occurred." /></p>
+<p>Note that because I am the only dev, I am an admin on this repo so I can still merge. But it is glaringly obvious something is wrong. This has saved me a few times.</p>
+<h3 id="clean-up-and-merge">Clean up and merge</h3>
+<p>The PR you raised, before our Clippy deny lints digression, has a warning because of the <code>assert!(false)</code> call in <code>main</code>. Clean that up, commit, push, and merge it. <code>main</code> should look as follows again:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() -&gt; Result&lt;(), String&gt; {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = std::env::args().</span><span style="color:#96b5b4;">skip</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">).</span><span style="color:#96b5b4;">collect</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> validator = CertValidator;
+    </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(validator, args)
+}
+</span></code></pre>
+<p>The only change in your PR should be the <code>build.yml</code> file. Once merged the workflow will run again on <code>master</code> and be successful. There is one more workflow I usually add to Rust repositories. So let's add that also. See <a href="https://github.com/wayofthepie/cert-decoder/commit/50da0793f35ecdb5b0ea18196d0b16a24d426902">here</a> for the code up to this point.</p>
+<h1 id="security-audit">Security audit</h1>
+<p>GitHub tracks vulnerabilities from several <a href="https://help.github.com/en/github/visualizing-repository-data-with-graphs/listing-the-packages-that-a-repository-depends-on#supported-languages">supported language package managers</a>. It will alert you if your repository contains a vulnerable dependency. It doesn't support <code>cargo</code> yet, I'm not sure if they have plans to support it either. However, <code>cargo</code> has the <a href="https://github.com/RustSec/cargo-audit">cargo-audit</a> and we can use this in a workflow. <a href="https://github.com/actions-rs">actions-rs</a> has an action just for this, <a href="https://github.com/actions-rs/audit-check">audit-check</a>.</p>
+<p>Let's create a new branch called <code>audit-workflow</code> and add a new workflow at <code>.github/workflows/security-audit.yml</code>. </p>
+<pre style="background-color:#2b303b;">
+<code class="language-yaml" data-lang="yaml"><span style="color:#bf616a;">name</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">Security audit
+</span><span style="color:#d08770;">on</span><span style="color:#c0c5ce;">:
+  </span><span style="color:#bf616a;">schedule</span><span style="color:#c0c5ce;">:
+    - </span><span style="color:#bf616a;">cron</span><span style="color:#c0c5ce;">: &quot;</span><span style="color:#a3be8c;">0 8 * * *</span><span style="color:#c0c5ce;">&quot;
+  </span><span style="color:#bf616a;">push</span><span style="color:#c0c5ce;">:
+    </span><span style="color:#bf616a;">paths</span><span style="color:#c0c5ce;">:
+      - &quot;</span><span style="color:#a3be8c;">**/Cargo.*</span><span style="color:#c0c5ce;">&quot;
+  </span><span style="color:#bf616a;">pull_request</span><span style="color:#c0c5ce;">:
+    </span><span style="color:#bf616a;">branches</span><span style="color:#c0c5ce;">:
+      - </span><span style="color:#bf616a;">master
+jobs</span><span style="color:#c0c5ce;">:
+  </span><span style="color:#bf616a;">security_audit</span><span style="color:#c0c5ce;">:
+    </span><span style="color:#bf616a;">runs-on</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">ubuntu-latest
+    steps</span><span style="color:#c0c5ce;">:
+      - </span><span style="color:#bf616a;">uses</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">actions/checkout@v1
+      </span><span style="color:#c0c5ce;">- </span><span style="color:#bf616a;">uses</span><span style="color:#c0c5ce;">: </span><span style="color:#bf616a;">actions-rs/audit-check@v1
+        with</span><span style="color:#c0c5ce;">:
+          </span><span style="color:#bf616a;">token</span><span style="color:#c0c5ce;">: </span><span style="color:#a3be8c;">${{ secrets.GITHUB_TOKEN }}
+</span></code></pre>
+<p>This will run the audit check at 8 am UTC every day, whenever we commit and push a change to any branch which updates <code>Cargo.toml</code> or <code>Cargo.lock</code> and whenever we create a PR into master. </p>
+<p>Why all these cases? Well, we do it daily at 8 am as a vulnerability can be found in dependencies at any time, so we should check daily that nothing new was found. We do it on changes to <code>Cargo.*</code> files so we can immediately detect if a change in dependencies has introduced and vulnerability. Finally, we do it on a PR into <code>master</code> so we can be sure, at least at the time of the PR, that we are not pushing known vulnerabilities to our <code>master</code> branch.</p>
+<p>Commit and push this workflow change to our branch. Let's test that it works. To do so add a dependency to <code>Cargo.toml</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-toml" data-lang="toml"><span style="color:#c0c5ce;">[package]
+</span><span style="color:#bf616a;">name </span><span style="color:#c0c5ce;">= &quot;</span><span style="color:#a3be8c;">cert-decode</span><span style="color:#c0c5ce;">&quot;
+</span><span style="color:#bf616a;">version </span><span style="color:#c0c5ce;">= &quot;</span><span style="color:#a3be8c;">0.1.0</span><span style="color:#c0c5ce;">&quot;
+</span><span style="color:#bf616a;">authors </span><span style="color:#c0c5ce;">= [&quot;</span><span style="color:#a3be8c;">Stephen OBrien &lt;wayofthepie@users.noreply.github.com&gt;</span><span style="color:#c0c5ce;">&quot;]
+</span><span style="color:#bf616a;">edition </span><span style="color:#c0c5ce;">= &quot;</span><span style="color:#a3be8c;">2018</span><span style="color:#c0c5ce;">&quot;
+
+[dependencies]
+</span><span style="color:#bf616a;">x509-parser </span><span style="color:#c0c5ce;">= &quot;</span><span style="color:#a3be8c;">0.7.0</span><span style="color:#c0c5ce;">&quot;
+</span></code></pre>
+<p>Run a build with <code>cargo build</code> so <code>Cargo.lock</code> gets updated. Because this is just a test, we can edit the last commit and then later remove the dependency and edit again. Don't ever do this on a shared branch! This is how to do it:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> git add Cargo.* 
+</span><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> git commit</span><span style="color:#bf616a;"> --amend --no-edit
+$</span><span style="color:#c0c5ce;"> git push origin +HEAD
+</span></code></pre>
+<p>The <code>+HEAD</code> in the <code>git push</code> command says to force push to the branch <code>HEAD</code><sup class="footnote-reference"><a href="#HEAD">4</a></sup> points to. A force push rewrites history, this is why you should not do it on a shared branch. <code>HEAD</code> is the current branch. As we have changed the <code>Cargo.*</code> files the audit workflow should run. It will hopefully be successful.</p>
+<p><img src="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/security-audit-workflow-actions.png" alt="Overview of actions when we add the security audit workflow." /></p>
+<p>To go back to the previous state you can remove the dependency from <code>Cargo.toml</code>:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-toml" data-lang="toml"><span style="color:#c0c5ce;">[package]
+</span><span style="color:#bf616a;">name </span><span style="color:#c0c5ce;">= &quot;</span><span style="color:#a3be8c;">cert-decode</span><span style="color:#c0c5ce;">&quot;
+</span><span style="color:#bf616a;">version </span><span style="color:#c0c5ce;">= &quot;</span><span style="color:#a3be8c;">0.1.0</span><span style="color:#c0c5ce;">&quot;
+</span><span style="color:#bf616a;">authors </span><span style="color:#c0c5ce;">= [&quot;</span><span style="color:#a3be8c;">Stephen OBrien &lt;wayofthepie@users.noreply.github.com&gt;</span><span style="color:#c0c5ce;">&quot;]
+</span><span style="color:#bf616a;">edition </span><span style="color:#c0c5ce;">= &quot;</span><span style="color:#a3be8c;">2018</span><span style="color:#c0c5ce;">&quot;
+
+[dependencies]
+</span></code></pre>
+<p>Build with <code>cargo build</code>, and edit the last commit again.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> git add Cargo.* 
+</span><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> git commit</span><span style="color:#bf616a;"> --amend --no-edit
+$</span><span style="color:#c0c5ce;"> git push origin +HEAD
+</span></code></pre>
+<p>Before creating another PR for this, you should update the branch protection settings and add <code>security_audit</code> as a status check.</p>
+<p><img src="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli-part2/add-sec-audit-workflow-to-protected.png" alt="Add security_audit workflow to the protected branch settings." /></p>
+<p>Now you can create a PR into <code>master</code> and this should run again. If it's green, merge it. The code up to the end of this post can be found <a href="https://github.com/wayofthepie/cert-decoder/commit/a9d761e1ba306587a332e97e9fd4e654f1049ab9">here</a>.</p>
+<div class="alert alert-info">
+<span><i class="icon fas fa-music"></i></span>
+<span class="alert-text">
+  <p>
+This audit workflow can take some time to run as it first needs to install <b>cargo-audit</b>. This takes about 5 minutes looking at the logs for a run. We can improve this with caching, but I'll leave that for another post.
+  </p>
+</span>
+</div>
+<h1 id="conclusion">Conclusion</h1>
+<p>We now have:</p>
+<ul>
+<li>A build and test workflow for all our commits.</li>
+<li>Security auditing on our dependencies.</li>
+<li>Checks which block PR's if we have broken builds, lint issues, or vulnerabilities in dependencies</li>
+</ul>
+<p>This is something I always set up at the start of a project. We'll go back to implementing the CLI in the next post. </p>
+<hr />
+<div class="footnote-definition" id="events"><sup class="footnote-definition-label">1</sup>
+<p>See <a href="https://help.github.com/en/actions/reference/events-that-trigger-workflows">Events that trigger workflows</a>.</p>
+</div>
+<div class="footnote-definition" id="clippy-lint"><sup class="footnote-definition-label">2</sup>
+<p>See the <a href="https://rust-lang.github.io/rust-clippy/master/index.html#assertions_on_constants">assertions_on_constants</a> lint.</p>
+</div>
+<div class="footnote-definition" id="protected-branch"><sup class="footnote-definition-label">3</sup>
+<p>See <a href="https://help.github.com/en/github/administering-a-repository/configuring-protected-branches">Configuring protected branches</a>.</p>
+</div>
+<div class="footnote-definition" id="HEAD"><sup class="footnote-definition-label">4</sup>
+<p>For more on the <code>HEAD</code> reference see <a href="https://git-scm.com/book/en/v2/Git-Internals-Git-References#ref_the_ref">here</a>.</p>
+</div>
+
+    <script src="https://utteranc.es/client.js"
+        repo="wayofthepie/wayofthepie.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+    </script>
+</div>
+
+    </div>
+  </body>
+</html>

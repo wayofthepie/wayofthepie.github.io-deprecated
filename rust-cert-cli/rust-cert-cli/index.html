@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="description" content="All things computers." />
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
+    />
+
+    <title></title>
+
+    <!-- CSS -->
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css"
+      media="print"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
+
+     
+     
+    
+  </head>
+
+  <body class="">
+    
+    <div class="sidebar">
+      <div class="container sidebar-sticky">
+        <ul class="sidebar-nav">
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/series" class="sidebar-nav-item">Series</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+        </ul>
+        <ul class="sidebar-nav-social">
+          <a
+            href="https://github.com/wayofthepie"
+            class="fab fa-github sidebar-nav-social-item"
+          ></a>
+          <a
+            href="https://twitter.com/wayofthepie"
+            class="fab fa-twitter sidebar-nav-social-item"
+          ></a>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="content container">
+      
+
+
+
+<div class="post">
+    <h1 class="post-title">A Rust cli for decoding certs</h1>
+    <span class="post-metadata">
+        
+        
+        
+        
+            
+            
+<div class="post-series">
+    <div>Series <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;series&#x2F;tdd-and-rust-a-cli-for-decoding-certs&#x2F;">TDD and Rust: A CLI for decoding certs</a></div>
+</div>
+
+        
+        
+
+        <span class="post-date">2020-06-02</span>
+        
+        
+            <span class="post-tags">
+            
+                <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/rust">rust</a></span>
+            
+                <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/tls">tls</a></span>
+            
+            </span>
+        
+        
+        
+        
+    </span>
+    <ul class="table-of-content">
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli/#what-are-we-building">What are we building?</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli/#some-constraints-to-simplify-the-cli">Some constraints to simplify the cli</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli/#test-list">Test list</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli/#validate-args">Validate args</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli/#a-note-on-this-workflow">A note on this workflow</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli/#add-an-error-message">Add an error message</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli/#check-argument-is-a-path-that-exists">Check argument is a path that exists</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli/#factor-out-io">Factor out IO</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli/#check-argument-is-a-file">Check argument is a file</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli/#another-small-refactor">Another small refactor</a>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/rust-cert-cli/rust-cert-cli/#in-the-next-post">In the next post</a>
+            
+        </li>
+    
+    </ul>
+    <p>In this series of posts, we'll start to build a simple cli in <a href="https://www.rust-lang.org/">Rust</a> for decoding X.509 certificates. I'll try to keep it as beginner-friendly as possible, by explaining things as best I can when they may be unclear. Some basic Rust knowledge should hopefully be all you need. Feel free to ask any questions in the comments below!</p>
+<span id="continue-reading"></span><div class="alert alert-info">
+<span><i class="icon fas fa-info-circle"></i></span>
+<span class="alert-text">
+  <p>
+  Originally posted on <a href="https://dev.to">dev.to</a>, <a href="https://dev.to/wayofthepie/a-rust-cli-for-decoding-certs-280i">here</a>.
+  </p>
+</span>
+</div>
+<p>If you are completely new to Rust and don't even have it installed, you can install it using <a href="https://rustup.rs/">rustup</a>. You should hopefully still be able to follow along. This first post will mainly focus on a Test Driven Development workflow. I wrote this as I was developing so mistakes or things which I overlooked and ended up factoring out afterward are all kept in.</p>
+<h1 id="what-are-we-building">What are we building?</h1>
+<p>I generally use the <code>openssl</code> cli for pulling information out of certificates. Specifically the <code>x509</code> command, for example:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#65737e;"># get certificate
+</span><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> openssl s_client</span><span style="color:#bf616a;"> -connect</span><span style="color:#c0c5ce;"> google.com:443 </span><span style="color:#d08770;">2</span><span style="color:#c0c5ce;">&gt;/dev/null &lt; /dev/null \
+    | </span><span style="color:#bf616a;">sed -n </span><span style="color:#c0c5ce;">&#39;</span><span style="color:#a3be8c;">/BEGIN CERTIFICATE/,/END CERTIFICATE/p</span><span style="color:#c0c5ce;">&#39; &gt; google.com.crt 
+
+</span><span style="color:#65737e;"># extract info
+</span><span style="color:#c0c5ce;">$ openssl x509</span><span style="color:#bf616a;"> -text -noout -in</span><span style="color:#c0c5ce;"> google.com.crt | </span><span style="color:#bf616a;">head -n</span><span style="color:#c0c5ce;"> 5
+</span><span style="color:#bf616a;">Certificate:
+    Data:
+        Version:</span><span style="color:#c0c5ce;"> 3 (0x2)
+        </span><span style="color:#bf616a;">Serial</span><span style="color:#c0c5ce;"> Number:
+            </span><span style="color:#bf616a;">1a:86:8b:0d:af:9b:c7:34:08:00:00:00:00:3e:bd:97
+</span></code></pre>
+<p>All this does is print out a certificate as a human-readable string. I've written about what information certificates contain <a href="https://dev.to/wayofthepie/structure-of-an-ssl-x-509-certificate-16b">here</a> if interested. What we want to do in the next few posts is to see if we can build something similar to the <code>openssl x509 -text</code> output from above in a Rust cli. </p>
+<h1 id="some-constraints-to-simplify-the-cli">Some constraints to simplify the cli</h1>
+<p>Let's think about the API for this cli, how a user will call it. To keep things simple, it should just take a file path to a single certificate. So we should end up with a call like so:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">$</span><span style="color:#c0c5ce;"> cert-decoder /path/to/some/cert.pem
+</span></code></pre>
+<p>Another constraint to keep this simple at the beginning is the encoding of the certificate. Let's say the certificate must be PEM <sup class="footnote-reference"><a href="#pem">1</a></sup> (Privacy Enhanced Mail) encoded. This is the encoding you generally see certificates with. It's a string which begins with a line comprised of <code>-----BEGIN CERTIFICATE-----</code>, then some base64 encoded DER (Distinguished Encoding Rules) and ends with a line comprised of <code>-----END CERTIFICATE-----</code>. It looks as follows, with some of the base64 string stripped out and replaced with <code>...</code>:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-plaintext" data-lang="plaintext"><span style="color:#c0c5ce;">-----BEGIN CERTIFICATE-----
+MIIJTzCCCDegAwIBAgIQGoaLDa+bxzQIAAAAAD69lzANBgkqhkiG9w0BAQsFADBC
+...
+DMCTA95gzVKezFCaUidRU9UyHOFzltfYDt7HRlp7MwWoPLM=
+-----END CERTIFICATE-----
+</span></code></pre><h1 id="test-list">Test list</h1>
+<p>We have a basic API and some constraints now. Let's make a test list before we do anything else. This is simply a list of tests we should write to cover some piece of functionality. Let's just cover the most simple thing initially, validating the arguments. </p>
+<hr />
+<p><strong>Validate args</strong></p>
+<ul>
+<li>☐ Only allow a single argument</li>
+<li>☐ Argument is a path that exists</li>
+<li>☐ Argument should be a single file </li>
+</ul>
+<hr />
+<p>Implementing this we can start to use it and see where we should go next.</p>
+<h1 id="validate-args">Validate args</h1>
+<p>First, create a new project with <code>cargo new cert-decoder</code>. <code>main.rs</code>  should look as follows initially.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() {
+</span><span style="color:#c0c5ce;">   println!(&quot;</span><span style="color:#a3be8c;">Hello, world!</span><span style="color:#c0c5ce;">&quot;)
+}
+</span></code></pre>
+<p>Let's create a test for the first item on our test list.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() {
+    println!(&quot;</span><span style="color:#a3be8c;">Hello, world!</span><span style="color:#c0c5ce;">&quot;)
+}
+
+#[</span><span style="color:#bf616a;">cfg</span><span style="color:#c0c5ce;">(test)]
+</span><span style="color:#b48ead;">mod </span><span style="color:#c0c5ce;">test {
+
+    #[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">should_error_if_not_given_a_single_argument</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#65737e;">// create fake args list, with no args
+        // run function with args
+        // check that it returns an error
+    </span><span style="color:#c0c5ce;">}
+}
+</span></code></pre>
+<p>Above I've outlined what we need to do in this test in comments. It's not easy to test this through the <code>main</code> function as <code>main</code> does not take any arguments in its signature. In Rust to read program arguments you use the function <a href="https://doc.rust-lang.org/stable/std/env/fn.args.html">std::env::args</a>, more on that later.</p>
+<p>Let's create a new function called <code>execute</code>. We know we want this function to return an error so we will make it return a <a href="https://doc.rust-lang.org/std/result/enum.Result.html">Result</a>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">execute</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">args</span><span style="color:#c0c5ce;">: Vec&lt;String&gt;) -&gt; Result&lt;(), ()&gt; {
+    Ok(())
+}
+
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() {
+    println!(&quot;</span><span style="color:#a3be8c;">Hello, world!</span><span style="color:#c0c5ce;">&quot;)
+}
+
+#[</span><span style="color:#bf616a;">cfg</span><span style="color:#c0c5ce;">(test)]
+</span><span style="color:#b48ead;">mod </span><span style="color:#c0c5ce;">test {
+
+    #[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">should_error_if_not_given_a_single_argument</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#65737e;">// create fake args list, with no args
+        // run function with args
+        // check that it returns an error
+    </span><span style="color:#c0c5ce;">}
+}
+</span></code></pre>
+<p>For now execute just returns an <code>Ok</code> result with a value of <strong><a href="https://doc.rust-lang.org/std/primitive.unit.html">()</a></strong>. This is called the <em>unit</em> type. Now let's write our test.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">execute</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">args</span><span style="color:#c0c5ce;">: Vec&lt;String&gt;) -&gt; Result&lt;(), ()&gt; {
+    Ok(())
+}
+
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() {
+    println!(&quot;</span><span style="color:#a3be8c;">Hello, world!</span><span style="color:#c0c5ce;">&quot;)
+}
+
+#[</span><span style="color:#bf616a;">cfg</span><span style="color:#c0c5ce;">(test)]
+</span><span style="color:#b48ead;">mod </span><span style="color:#c0c5ce;">test {
+
+    </span><span style="color:#b48ead;">use crate</span><span style="color:#c0c5ce;">::execute;
+
+    #[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">should_error_if_not_given_a_single_argument</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = Vec::new();
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> result = </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(args);
+        assert!(result.</span><span style="color:#96b5b4;">is_err</span><span style="color:#c0c5ce;">());
+    }
+}
+</span></code></pre>
+<p>If we run this with <code>cargo -q test</code><sup class="footnote-reference"><a href="#cargoq">2</a></sup> it will fail. There will also be a warning about the <code>args</code> parameter in <code>execute</code> not being used, but we can ignore that for now.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> test
+</span><span style="color:#bf616a;">...
+running</span><span style="color:#c0c5ce;"> 1 test
+</span><span style="color:#bf616a;">F
+failures:
+
+----</span><span style="color:#c0c5ce;"> test::should_error_if_not_given_a_single_argument stdout ----
+</span><span style="color:#bf616a;">thread </span><span style="color:#c0c5ce;">&#39;</span><span style="color:#a3be8c;">test::should_error_if_not_given_a_single_argument</span><span style="color:#c0c5ce;">&#39; panicked at &#39;</span><span style="color:#a3be8c;">assertion failed: result.is_err()</span><span style="color:#c0c5ce;">&#39;, src/ma
+</span><span style="color:#bf616a;">in.rs:18:9
+note:</span><span style="color:#c0c5ce;"> run with `</span><span style="color:#bf616a;">RUST_BACKTRACE</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">1</span><span style="color:#c0c5ce;">` environment variable to display a backtrace
+
+
+</span><span style="color:#bf616a;">failures:
+    test::should_error_if_not_given_a_single_argument
+
+test</span><span style="color:#c0c5ce;"> result: FAILED. 0 passed; </span><span style="color:#bf616a;">1</span><span style="color:#c0c5ce;"> failed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> ignored; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> measured; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> filtered out
+
+</span><span style="color:#bf616a;">error:</span><span style="color:#c0c5ce;"> test failed, to rerun pass &#39;</span><span style="color:#a3be8c;">--bin cert-decode</span><span style="color:#c0c5ce;">&#39;
+</span></code></pre>
+<p>Let's make it pass by making a tiny change.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">execute</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">args</span><span style="color:#c0c5ce;">: Vec&lt;String&gt;) -&gt; Result&lt;(), ()&gt; {
+    Err(())
+}
+
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() {
+    println!(&quot;</span><span style="color:#a3be8c;">Hello, world!</span><span style="color:#c0c5ce;">&quot;)
+}
+
+#[</span><span style="color:#bf616a;">cfg</span><span style="color:#c0c5ce;">(test)]
+</span><span style="color:#b48ead;">mod </span><span style="color:#c0c5ce;">test {
+
+    </span><span style="color:#b48ead;">use crate</span><span style="color:#c0c5ce;">::execute;
+
+    #[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">should_error_if_not_given_a_single_argument</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = Vec::new();
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> result = </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(args);
+        assert!(result.</span><span style="color:#96b5b4;">is_err</span><span style="color:#c0c5ce;">());
+    }
+}
+</span></code></pre>
+<p>Let's re-run and it should be green.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> test
+</span><span style="color:#bf616a;">...
+running</span><span style="color:#c0c5ce;"> 1 test
+</span><span style="color:#96b5b4;">.
+</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;"> result: ok. 1 passed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> failed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> ignored; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> measured; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> filtered out
+</span></code></pre>
+<p>Great! Now we just need to make it return an error only in the case we mention in our first test list item. When we do not receive just a single argument.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">execute</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">args</span><span style="color:#c0c5ce;">: Vec&lt;String&gt;) -&gt; Result&lt;(), ()&gt; {
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> args.</span><span style="color:#96b5b4;">len</span><span style="color:#c0c5ce;">() != </span><span style="color:#d08770;">1 </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">Err(());
+    }
+    Ok(())
+}
+</span></code></pre>
+<p>Re-run and it should still be green.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> test
+
+</span><span style="color:#bf616a;">running</span><span style="color:#c0c5ce;"> 1 test
+</span><span style="color:#96b5b4;">.
+</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;"> result: ok. 1 passed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> failed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> ignored; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> measured; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> filtered out
+</span></code></pre>
+<p>Awesome! We should change this to return an error message. But first a quick note about this workflow.</p>
+<h2 id="a-note-on-this-workflow">A note on this workflow</h2>
+<p>This is how I generally write code. What's the smallest useful change I can make to add functionality? In this case, to get started it was argument validation. With that in mind, I decomposed this further into items that look like individually testable parts of the behavior we want in argument validation. I made a list of them so I can tick them off as I go. This helps to keep the focus on a single small piece of functionality. It's especially useful when decomposing complex changes.</p>
+<p>To implement, write a test that specifies the behavior of one of the items. Then, make it fail, make it pass with <em>any</em> code, change to implement the real behavior, and finally refactor where appropriate.</p>
+<h2 id="add-an-error-message">Add an error message</h2>
+<p>Let's improve the argument length check by returning a useful error message. One thing I always try to keep in mind is to make the error message actionable. For example, here we could just say &quot;Error: did not receive a single argument.&quot;. However, it would be better to also add an action - &quot;Error: did not receive a single argument. Please invoke cert-decoder as follows: './cert-decoder /path/to/cert'.&quot;. Not only are we telling a user what went wrong, but we are also telling them how to fix it.</p>
+<p>Let's update our test.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">should_error_if_not_given_a_single_argument</span><span style="color:#c0c5ce;">() {
+    </span><span style="color:#65737e;">// arrange
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = Vec::new();
+
+    </span><span style="color:#65737e;">// act
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> result = </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(args);
+
+    </span><span style="color:#65737e;">// assert
+    </span><span style="color:#c0c5ce;">assert!(result.</span><span style="color:#96b5b4;">is_err</span><span style="color:#c0c5ce;">());
+    assert_eq!(
+        result.</span><span style="color:#96b5b4;">err</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">unwrap</span><span style="color:#c0c5ce;">(),
+        format!(
+            &quot;</span><span style="color:#d08770;">{}{}</span><span style="color:#c0c5ce;">&quot;,
+            &quot;</span><span style="color:#a3be8c;">Error: did not receive a single argument, </span><span style="color:#c0c5ce;">&quot;,
+            &quot;</span><span style="color:#a3be8c;">please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.</span><span style="color:#c0c5ce;">&quot;
+        )
+    );
+}
+</span></code></pre>
+<blockquote>
+<p><strong>:memo: Note</strong></p>
+<p><a href="https://doc.rust-lang.org/std/result/enum.Result.html#method.is_err">result.err()</a> will return an <a href="https://doc.rust-lang.org/std/option/enum.Option.html">Option</a>. The <code>Option</code> will be <code>Some</code> if the value of the <code>Result</code> is <code>Err</code>. This <code>Some</code> will contain the same value <code>Err</code> contained. The <code>Option</code> will be <code>None</code> if the <code>Result</code> is <code>Ok</code>. </p>
+<p>In this case we know for certain the <code>Result</code>'s value is <code>Err</code> as we asserted it before with <a href="https://doc.rust-lang.org/std/result/enum.Result.html#method.is_err">is_err</a>. So the <code>Option</code> returned from <code>result.err()</code> will be <code>Some</code> and we can safely call <a href="https://doc.rust-lang.org/std/option/enum.Option.html#method.unwrap">unwrap</a> on that <code>Some</code> to get the value it contains. </p>
+</blockquote>
+<p>This won't compile because we are trying to compare two different types now. <code>result.err().unwrap()</code> will return <code>()</code> and we are trying to compare this to a string. So we need to update the return type of <code>execute</code>. We could also add the correct return value, the string we are asserting <code>execute</code> returns. But I like to do things in tiny changes so let's just update the type first and return an empty string. </p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">execute</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">args</span><span style="color:#c0c5ce;">: Vec&lt;String&gt;) -&gt; Result&lt;(), String&gt; {
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> args.</span><span style="color:#96b5b4;">len</span><span style="color:#c0c5ce;">() != </span><span style="color:#d08770;">1 </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">Err(&quot;&quot;.</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">());
+    }
+    Ok(())
+}
+</span></code></pre>
+<p>Now if we run <code>cargo -q test</code> it will compile but the test will fail.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-plaintext" data-lang="plaintext"><span style="color:#c0c5ce;">➜ cargo -q test
+
+running 1 test
+F
+failures:
+
+---- test::should_error_if_not_given_a_single_argument stdout ----
+thread &#39;test::should_error_if_not_given_a_single_argument&#39; panicked at &#39;assertion failed: `(left == right)`
+  left: `&quot;&quot;`,
+ right: `&quot;Error: did not receive a single argument, please invoke cert-decoder as follows: ./cert-decoder /path/to/cert&quot;`&#39;, src/main.rs:27:9
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+...
+</span></code></pre>
+<p>So let's make some changes.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">execute</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">args</span><span style="color:#c0c5ce;">: Vec&lt;String&gt;) -&gt; Result&lt;(), String&gt; {
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> args.</span><span style="color:#96b5b4;">len</span><span style="color:#c0c5ce;">() != </span><span style="color:#d08770;">1 </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> error = format!(
+            &quot;</span><span style="color:#d08770;">{}{}</span><span style="color:#c0c5ce;">&quot;,
+            &quot;</span><span style="color:#a3be8c;">Error: did not receive a single argument, </span><span style="color:#c0c5ce;">&quot;,
+            &quot;</span><span style="color:#a3be8c;">please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.</span><span style="color:#c0c5ce;">&quot;
+        );
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">Err(error);
+    }
+    Ok(())
+}
+</span></code></pre>
+<p>And re-run.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> test
+
+</span><span style="color:#bf616a;">running</span><span style="color:#c0c5ce;"> 1 test
+</span><span style="color:#96b5b4;">.
+</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;"> result: ok. 1 passed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> failed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> ignored; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> measured; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> filtered out
+</span></code></pre>
+<p>Great! Our test is green and we have an argument length check with a nice error message. It won't do anything if we try to run it though. To fix that, let's update <code>main</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() -&gt; Result&lt;(), String&gt; {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = std::env::args().</span><span style="color:#96b5b4;">skip</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">).</span><span style="color:#96b5b4;">collect</span><span style="color:#c0c5ce;">();
+    </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(args)
+}
+</span></code></pre>
+<p>Here we add a real call to get the args in <code>main</code>, <code>std::env::args().skip(1).collect()</code>. The name of the binary will be part of the args, that is why we skip one argument.</p>
+<blockquote>
+<p><strong>:memo: Note</strong> </p>
+<p>Let's breakdown the <code>std::env::args().skip(1).collect()</code>. If you understood it you can skip this note. </p>
+<p><code>std::env::args()</code> will return a value of type <a href="https://doc.rust-lang.org/stable/std/env/struct.Args.html">Args</a>. <code>Args</code> implements the <a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html">Iterator</a> trait, which means it has <a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.skip">skip</a> and <a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect">collect</a> methods. We skip one item, which is the binary name and collect the rest. Because we are using this as an argument to <code>execute</code>, <code>Rust</code> can infer its type which is <code>Vec&lt;String&gt;</code>.</p>
+</blockquote>
+<p>Now we can run with no argument using <code>cargo run</code> and it will give an error.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> run
+</span><span style="color:#bf616a;">Error: </span><span style="color:#c0c5ce;">&quot;</span><span style="color:#a3be8c;">Error: did not receive a single argument, please invoke cert-decoder as follows: ./cert-decoder /path/to/c
+ert.</span><span style="color:#c0c5ce;">&quot;
+</span></code></pre>
+<p>And if we pass an argument it will print nothing.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> run -- something
+
+</span></code></pre>
+<p>Anything after the <code>--</code> will be passed to our program as arguments. We can check off the first item on our test list now.</p>
+<hr />
+<p><strong>Validate args</strong></p>
+<ul>
+<li><i class="fas fa-check"></i> Only allow a single argument</li>
+<li>☐ Argument is a path that exists</li>
+<li>☐ Argument should be a single file </li>
+</ul>
+<hr />
+<h2 id="check-argument-is-a-path-that-exists">Check argument is a path that exists</h2>
+<p>First, a test.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">should_error_if_argument_is_not_a_path_which_exists</span><span style="color:#c0c5ce;">() {
+    </span><span style="color:#65737e;">// arrange
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = vec![&quot;</span><span style="color:#a3be8c;">does-not-exist</span><span style="color:#c0c5ce;">&quot;.</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">()];
+
+    </span><span style="color:#65737e;">// act
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> result = </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(args);
+
+    </span><span style="color:#65737e;">// assert
+    </span><span style="color:#c0c5ce;">assert!(result.</span><span style="color:#96b5b4;">is_err</span><span style="color:#c0c5ce;">());
+    assert_eq!(
+        result.</span><span style="color:#96b5b4;">err</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">unwrap</span><span style="color:#c0c5ce;">(),
+        &quot;</span><span style="color:#a3be8c;">Error: path given as argument does not exist, it must be a path to a certificate!</span><span style="color:#c0c5ce;">&quot;
+    );
+}
+</span></code></pre>
+<p>As always, run the test to see it fail first. It will fail because the result will not be an error. Let's make it return an error. </p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span style="color:#c0c5ce;">std::path::Path;
+
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">execute</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">args</span><span style="color:#c0c5ce;">: Vec&lt;String&gt;) -&gt; Result&lt;(), String&gt; {
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> args.</span><span style="color:#96b5b4;">len</span><span style="color:#c0c5ce;">() != </span><span style="color:#d08770;">1 </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> error = format!(
+            &quot;</span><span style="color:#d08770;">{}{}</span><span style="color:#c0c5ce;">&quot;,
+            &quot;</span><span style="color:#a3be8c;">Error: did not receive a single argument, </span><span style="color:#c0c5ce;">&quot;,
+            &quot;</span><span style="color:#a3be8c;">please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.</span><span style="color:#c0c5ce;">&quot;
+        );
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">Err(error);
+    }
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> path = Path::new(&amp;args[</span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">]);
+    </span><span style="color:#b48ead;">if </span><span style="color:#c0c5ce;">!path.</span><span style="color:#96b5b4;">exists</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">Err(
+            &quot;</span><span style="color:#a3be8c;">Error: path given as argument does not exist, it must be a path to a certificate!</span><span style="color:#c0c5ce;">&quot;
+                .</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">(),
+        );
+    }
+    Ok(())
+}
+</span></code></pre>
+<p>Now the test will pass. <a href="https://doc.rust-lang.org/std/path/struct.Path.html">Path</a> contains many operations for interacting with filesystems. The call to <a href="https://doc.rust-lang.org/std/path/struct.Path.html#method.exists">exists</a> above will check the real filesystem to see if the path we give as an argument exists. This is generally not something you want to do in your tests. </p>
+<p>Before we factor out this IO, let's tick this item off on our test list as it is working.</p>
+<hr />
+<p><strong>Validate args</strong></p>
+<ul>
+<li><i class="fas fa-check"></i> Only allow a single argument</li>
+<li><i class="fas fa-check"></i> Argument is a path that exists</li>
+<li>☐ Argument should be a single file </li>
+</ul>
+<hr />
+<p>The code up to this point can be seen <a href="https://github.com/wayofthepie/cert-decoder/tree/b5c242bb92eb125117554d2692f5bc8c93082ca3">here</a>.</p>
+<h2 id="factor-out-io">Factor out IO</h2>
+<p>Almost any code you write is going to do some kind of IO, e.g. network calls, file reads. Normally we don't want this to happen in a test. Beyond just keeping IO out of tests, making it clearer where IO does happen is very useful for readability and refactoring. Especially as a system grows.</p>
+<p>Right now what we want to do is make our code testable under different scenarios without touching the real filesystem. There are a few ways to do this, but I generally use traits and have a real and fake implementation of the trait. Let's define a trait that has an <code>exists</code> method, just like <code>Path</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">trait </span><span style="color:#c0c5ce;">PathValidator {
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">exists</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">path</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">str</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">bool</span><span style="color:#c0c5ce;">;
+}
+</span></code></pre>
+<p>It took me a while to come up with a name I was somewhat happy with for this trait. Naming is hard. Now that we have a trait, let's implement it for the real case.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span style="color:#c0c5ce;">CertValidator;
+
+</span><span style="color:#b48ead;">impl </span><span style="color:#c0c5ce;">PathValidator </span><span style="color:#b48ead;">for </span><span style="color:#c0c5ce;">CertValidator {
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">exists</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">path</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">str</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">bool </span><span style="color:#c0c5ce;">{
+        Path::new(path).</span><span style="color:#96b5b4;">exists</span><span style="color:#c0c5ce;">()
+    }
+}
+</span></code></pre>
+<p>Now our tests need a version of this also.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">cfg</span><span style="color:#c0c5ce;">(test)]
+</span><span style="color:#b48ead;">mod </span><span style="color:#c0c5ce;">test {
+
+    </span><span style="color:#b48ead;">use crate</span><span style="color:#c0c5ce;">::{execute, PathValidator};
+
+    </span><span style="color:#b48ead;">struct </span><span style="color:#c0c5ce;">FakeValidator {
+        </span><span style="color:#bf616a;">is_path</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">bool</span><span style="color:#c0c5ce;">,
+    }
+
+    </span><span style="color:#b48ead;">impl </span><span style="color:#c0c5ce;">PathValidator </span><span style="color:#b48ead;">for </span><span style="color:#c0c5ce;">FakeValidator {
+        </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">exists</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">, _: &amp;</span><span style="color:#b48ead;">str</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">bool </span><span style="color:#c0c5ce;">{
+            </span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.is_path
+        }
+    }   
+    ...
+}
+</span></code></pre>
+<p>Finally, we need to refactor the <code>execute</code> function to take something that implements <code>PathValidator</code> as a parameter and update our tests to reflect this. The change as a whole is as follows, with some notes in comments.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">use </span><span style="color:#c0c5ce;">std::path::Path;
+
+</span><span style="color:#b48ead;">trait </span><span style="color:#c0c5ce;">PathValidator {
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">exists</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">path</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">str</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">bool</span><span style="color:#c0c5ce;">;
+}
+
+</span><span style="color:#b48ead;">struct </span><span style="color:#c0c5ce;">CertValidator;
+
+</span><span style="color:#b48ead;">impl </span><span style="color:#c0c5ce;">PathValidator </span><span style="color:#b48ead;">for </span><span style="color:#c0c5ce;">CertValidator {
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">exists</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">path</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">str</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">bool </span><span style="color:#c0c5ce;">{
+        Path::new(path).</span><span style="color:#96b5b4;">exists</span><span style="color:#c0c5ce;">()
+    }
+}
+
+</span><span style="color:#65737e;">// Here we change the signature of execute to also take a value of type `impl PathValidator`, 
+// see the note after this code block for more information. 
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">execute</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">validator</span><span style="color:#c0c5ce;">: impl PathValidator, </span><span style="color:#bf616a;">args</span><span style="color:#c0c5ce;">: Vec&lt;String&gt;) -&gt; Result&lt;(), String&gt; {
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> args.</span><span style="color:#96b5b4;">len</span><span style="color:#c0c5ce;">() != </span><span style="color:#d08770;">1 </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> error = format!(
+            &quot;</span><span style="color:#d08770;">{}{}</span><span style="color:#c0c5ce;">&quot;,
+            &quot;</span><span style="color:#a3be8c;">Error: did not receive a single argument, </span><span style="color:#c0c5ce;">&quot;,
+            &quot;</span><span style="color:#a3be8c;">please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.</span><span style="color:#c0c5ce;">&quot;
+        );
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">Err(error);
+    }
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> path = &amp;args[</span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">];
+
+    </span><span style="color:#65737e;">// Instead of calling Path&#39;s exists method, we call exists on our 
+    // PathValidator implementation.
+    </span><span style="color:#b48ead;">if </span><span style="color:#c0c5ce;">!validator.</span><span style="color:#96b5b4;">exists</span><span style="color:#c0c5ce;">(path) {
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">Err(
+            &quot;</span><span style="color:#a3be8c;">Error: path given as argument does not exist, it must be a path to a certificate!</span><span style="color:#c0c5ce;">&quot;
+                .</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">(),
+        );
+    }
+    Ok(())
+}
+
+</span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() -&gt; Result&lt;(), String&gt; {
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = std::env::args().</span><span style="color:#96b5b4;">skip</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">).</span><span style="color:#96b5b4;">collect</span><span style="color:#c0c5ce;">();
+
+    </span><span style="color:#65737e;">// Here we create our real PathValidator implementation,
+    // CertValidator, which touches the filesystem.
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> validator = CertValidator;
+    </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(validator, args)
+}
+
+#[</span><span style="color:#bf616a;">cfg</span><span style="color:#c0c5ce;">(test)]
+</span><span style="color:#b48ead;">mod </span><span style="color:#c0c5ce;">test {
+
+    </span><span style="color:#b48ead;">use crate</span><span style="color:#c0c5ce;">::{execute, PathValidator};
+
+    </span><span style="color:#b48ead;">struct </span><span style="color:#c0c5ce;">FakeValidator {
+        </span><span style="color:#bf616a;">is_path</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">bool</span><span style="color:#c0c5ce;">,
+    }
+
+    </span><span style="color:#b48ead;">impl </span><span style="color:#c0c5ce;">PathValidator </span><span style="color:#b48ead;">for </span><span style="color:#c0c5ce;">FakeValidator {
+        </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">exists</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">, _: &amp;</span><span style="color:#b48ead;">str</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">bool </span><span style="color:#c0c5ce;">{
+            </span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.is_path
+        }
+    }
+
+    #[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">should_error_if_not_given_a_single_argument</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#65737e;">// arrange
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = Vec::new();
+
+        </span><span style="color:#65737e;">// We construct a FakeValidator that says all paths exist.
+        // It will never be called in this test, however.
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> validator = FakeValidator { is_path: </span><span style="color:#d08770;">true </span><span style="color:#c0c5ce;">};
+
+        </span><span style="color:#65737e;">// act
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> result = </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(validator, args);
+
+        </span><span style="color:#65737e;">// assert
+        </span><span style="color:#c0c5ce;">assert!(result.</span><span style="color:#96b5b4;">is_err</span><span style="color:#c0c5ce;">());
+        assert_eq!(
+            result.</span><span style="color:#96b5b4;">err</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">unwrap</span><span style="color:#c0c5ce;">(),
+            format!(
+                &quot;</span><span style="color:#d08770;">{}{}</span><span style="color:#c0c5ce;">&quot;,
+                &quot;</span><span style="color:#a3be8c;">Error: did not receive a single argument, </span><span style="color:#c0c5ce;">&quot;,
+                &quot;</span><span style="color:#a3be8c;">please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.</span><span style="color:#c0c5ce;">&quot;
+            )
+        );
+    }
+
+    #[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">should_error_if_argument_is_not_a_path_which_exists</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#65737e;">// arrange
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = vec![&quot;</span><span style="color:#a3be8c;">does-not-exist</span><span style="color:#c0c5ce;">&quot;.</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">()];
+
+        </span><span style="color:#65737e;">// We construct a validator that says no path exists.
+        // This will cause our test to fail and return the error we want,
+        // mimicing a path which does not exist without touching the real
+        // filesystem.
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> validator = FakeValidator { is_path: </span><span style="color:#d08770;">false </span><span style="color:#c0c5ce;">};
+
+        </span><span style="color:#65737e;">// act
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> result = </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(validator, args);
+
+        </span><span style="color:#65737e;">// assert
+        </span><span style="color:#c0c5ce;">assert!(result.</span><span style="color:#96b5b4;">is_err</span><span style="color:#c0c5ce;">());
+        assert_eq!(
+            result.</span><span style="color:#96b5b4;">err</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">unwrap</span><span style="color:#c0c5ce;">(),
+            &quot;</span><span style="color:#a3be8c;">Error: path given as argument does not exist, it must be a path to a certificate!</span><span style="color:#c0c5ce;">&quot;
+        );
+    }
+}
+</span></code></pre>
+<blockquote>
+<p>:memo: Note</p>
+<p>The type of <code>validator</code> in the <code>execute</code> function is <code>impl PathValidator</code>. This simply says <code>validator</code> can be a value of any type which implements <code>PathValidator</code>. You can read more about this in the <a href="https://doc.rust-lang.org/book/title-page.html">Rust book</a> in the section on <a href="https://doc.rust-lang.org/book/ch10-02-traits.html?highlight=impl,trait#traits-as-parameters">Traits as Parameters</a>.</p>
+</blockquote>
+<p>Run the tests again and they should still be green! If you run with <code>cargo run</code> as we did earlier, it should still work as expected. The code up to this point can be seen <a href="https://github.com/wayofthepie/cert-decoder/tree/19fee59da8d1e4625e2693c1e388be1912e2d9ee">here</a>.</p>
+<h2 id="check-argument-is-a-file">Check argument is a file</h2>
+<p>What's left on our test list?</p>
+<hr />
+<p><strong>Validate args</strong></p>
+<ul>
+<li><i class="fas fa-check"></i> Only allow a single argument</li>
+<li><i class="fas fa-check"></i> Argument is a path that exists</li>
+<li>☐ Argument should be a single file </li>
+</ul>
+<hr />
+<p>Right now the argument we pass can be several file types other than a regular file, for example, a directory. As we only validate if the given path exists, not what that path points to. So let's validate it is also a file. First, a test.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#c0c5ce;">#[</span><span style="color:#bf616a;">cfg</span><span style="color:#c0c5ce;">(test)]
+</span><span style="color:#b48ead;">mod </span><span style="color:#c0c5ce;">test {
+
+    </span><span style="color:#b48ead;">use crate</span><span style="color:#c0c5ce;">::{execute, PathValidator};
+
+    </span><span style="color:#b48ead;">struct </span><span style="color:#c0c5ce;">FakeValidator {
+        </span><span style="color:#bf616a;">is_path</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">bool</span><span style="color:#c0c5ce;">,
+        </span><span style="color:#bf616a;">is_file</span><span style="color:#c0c5ce;">: </span><span style="color:#b48ead;">bool</span><span style="color:#c0c5ce;">,
+    }
+
+    </span><span style="color:#b48ead;">impl </span><span style="color:#c0c5ce;">PathValidator </span><span style="color:#b48ead;">for </span><span style="color:#c0c5ce;">FakeValidator {
+        </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">exists</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">, _: &amp;</span><span style="color:#b48ead;">str</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">bool </span><span style="color:#c0c5ce;">{
+            </span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.is_path
+        }
+
+        </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">is_file</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">, _: &amp;</span><span style="color:#b48ead;">str</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">bool </span><span style="color:#c0c5ce;">{
+            </span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">.is_file
+        }
+    }
+
+    ... 
+
+    #[</span><span style="color:#bf616a;">test</span><span style="color:#c0c5ce;">]
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">should_error_if_argument_is_not_a_regular_file</span><span style="color:#c0c5ce;">() {
+        </span><span style="color:#65737e;">// arrange
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> args = vec![&quot;</span><span style="color:#a3be8c;">not-a-regular-file</span><span style="color:#c0c5ce;">&quot;.</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">()];
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> validator = FakeValidator {
+            is_path: </span><span style="color:#d08770;">true</span><span style="color:#c0c5ce;">,
+            is_file: </span><span style="color:#d08770;">false</span><span style="color:#c0c5ce;">,
+        };
+
+        </span><span style="color:#65737e;">// act
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> result = </span><span style="color:#96b5b4;">execute</span><span style="color:#c0c5ce;">(validator, args);
+
+        </span><span style="color:#65737e;">// assert
+        </span><span style="color:#c0c5ce;">assert!(result.</span><span style="color:#96b5b4;">is_err</span><span style="color:#c0c5ce;">());
+        assert_eq!(
+            result.</span><span style="color:#96b5b4;">err</span><span style="color:#c0c5ce;">().</span><span style="color:#96b5b4;">unwrap</span><span style="color:#c0c5ce;">(),
+            &quot;</span><span style="color:#a3be8c;">Error: path given is not a regular file, please update to point to a certificate.</span><span style="color:#c0c5ce;">&quot;
+        );
+    }
+}
+</span></code></pre>
+<p>This won't compile as there is no <code>is_file</code> method on our <code>PathValidator</code> trait. Here I've also updated the <code>FakeValidator</code> in the other test, setting <code>is_file</code> to <code>false</code>. Let's update that and implement the real version next.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">trait </span><span style="color:#c0c5ce;">PathValidator {
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">exists</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">path</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">str</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">bool</span><span style="color:#c0c5ce;">;
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">is_file</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">path</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">str</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">bool</span><span style="color:#c0c5ce;">;
+}
+
+</span><span style="color:#b48ead;">struct </span><span style="color:#c0c5ce;">CertValidator;
+
+</span><span style="color:#b48ead;">impl </span><span style="color:#c0c5ce;">PathValidator </span><span style="color:#b48ead;">for </span><span style="color:#c0c5ce;">CertValidator {
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">exists</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">path</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">str</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">bool </span><span style="color:#c0c5ce;">{
+        Path::new(path).</span><span style="color:#96b5b4;">exists</span><span style="color:#c0c5ce;">()
+    }
+
+    </span><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">is_file</span><span style="color:#c0c5ce;">(&amp;</span><span style="color:#bf616a;">self</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">path</span><span style="color:#c0c5ce;">: &amp;</span><span style="color:#b48ead;">str</span><span style="color:#c0c5ce;">) -&gt; </span><span style="color:#b48ead;">bool </span><span style="color:#c0c5ce;">{
+        Path::new(path).</span><span style="color:#96b5b4;">is_file</span><span style="color:#c0c5ce;">()
+    }
+}
+</span></code></pre>
+<p>Now we have a new <code>is_file</code> method. If we re-run the test it should fail as we are not returning an error. You can run a single test with <code>cargo test</code> by passing its name, or a string that is contained in its name. </p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> test should_error_if_argument_is_not_a_regular_file
+
+</span><span style="color:#bf616a;">running</span><span style="color:#c0c5ce;"> 1 test
+</span><span style="color:#bf616a;">F
+failures:
+
+----</span><span style="color:#c0c5ce;"> test::should_error_if_argument_is_not_a_regular_file stdout ----
+</span><span style="color:#bf616a;">thread </span><span style="color:#c0c5ce;">&#39;</span><span style="color:#a3be8c;">test::should_error_if_argument_is_not_a_regular_file</span><span style="color:#c0c5ce;">&#39; panicked at &#39;</span><span style="color:#a3be8c;">assertion failed: result.is_err()</span><span style="color:#c0c5ce;">&#39;, src
+</span><span style="color:#bf616a;">/main.rs:122:9
+note:</span><span style="color:#c0c5ce;"> run with `</span><span style="color:#bf616a;">RUST_BACKTRACE</span><span style="color:#c0c5ce;">=</span><span style="color:#a3be8c;">1</span><span style="color:#c0c5ce;">` environment variable to display a backtrace
+
+
+</span><span style="color:#bf616a;">failures:
+    test::should_error_if_argument_is_not_a_regular_file
+
+test</span><span style="color:#c0c5ce;"> result: FAILED. 0 passed; </span><span style="color:#bf616a;">1</span><span style="color:#c0c5ce;"> failed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> ignored; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> measured; </span><span style="color:#bf616a;">2</span><span style="color:#c0c5ce;"> filtered out
+
+</span><span style="color:#bf616a;">error:</span><span style="color:#c0c5ce;"> test failed, to rerun pass &#39;</span><span style="color:#a3be8c;">--bin cert-decode</span><span style="color:#c0c5ce;">&#39;
+</span></code></pre>
+<p>Let's make it return an error if the path given is not a regular file.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">fn </span><span style="color:#8fa1b3;">execute</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">validator</span><span style="color:#c0c5ce;">: impl PathValidator, </span><span style="color:#bf616a;">args</span><span style="color:#c0c5ce;">: Vec&lt;String&gt;) -&gt; Result&lt;(), String&gt; {
+    </span><span style="color:#b48ead;">if</span><span style="color:#c0c5ce;"> args.</span><span style="color:#96b5b4;">len</span><span style="color:#c0c5ce;">() != </span><span style="color:#d08770;">1 </span><span style="color:#c0c5ce;">{
+        </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> error = format!(
+            &quot;</span><span style="color:#d08770;">{}{}</span><span style="color:#c0c5ce;">&quot;,
+            &quot;</span><span style="color:#a3be8c;">Error: did not receive a single argument, </span><span style="color:#c0c5ce;">&quot;,
+            &quot;</span><span style="color:#a3be8c;">please invoke cert-decoder as follows: ./cert-decoder /path/to/cert.</span><span style="color:#c0c5ce;">&quot;
+        );
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">Err(error);
+    }
+    </span><span style="color:#b48ead;">let</span><span style="color:#c0c5ce;"> path = &amp;args[</span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">];
+    </span><span style="color:#b48ead;">if </span><span style="color:#c0c5ce;">!validator.</span><span style="color:#96b5b4;">exists</span><span style="color:#c0c5ce;">(path) {
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">Err(
+            &quot;</span><span style="color:#a3be8c;">Error: path given as argument does not exist, it must be a path to a certificate!</span><span style="color:#c0c5ce;">&quot;
+                .</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">(),
+        );
+    }
+    </span><span style="color:#b48ead;">if </span><span style="color:#c0c5ce;">!validator.</span><span style="color:#96b5b4;">is_file</span><span style="color:#c0c5ce;">(path) {
+        </span><span style="color:#b48ead;">return </span><span style="color:#c0c5ce;">Err(
+            &quot;</span><span style="color:#a3be8c;">Error: path given is not a regular file, please update to point to a certificate.</span><span style="color:#c0c5ce;">&quot;
+                .</span><span style="color:#96b5b4;">to_owned</span><span style="color:#c0c5ce;">(),
+        );
+    }
+    Ok(())
+}
+</span></code></pre>
+<p>Re-run and all tests should be green.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> cargo</span><span style="color:#bf616a;"> -q</span><span style="color:#c0c5ce;"> test
+
+</span><span style="color:#bf616a;">running</span><span style="color:#c0c5ce;"> 3 tests
+</span><span style="color:#bf616a;">...
+test</span><span style="color:#c0c5ce;"> result: ok. 3 passed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> failed; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> ignored; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> measured; </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> filtered out
+
+</span></code></pre>
+<p>Great! The code up to this point can be seen <a href="https://github.com/wayofthepie/cert-decoder/tree/a992dd190de61a922cec95233e0fdbd43c500a8f">here</a>. We can now tick this off on the test list.</p>
+<hr />
+<p><strong>Validate args</strong></p>
+<ul>
+<li><i class="fas fa-check"></i> Only allow a single argument</li>
+<li><i class="fas fa-check"></i> Argument is a path that exists</li>
+<li><i class="fas fa-check"></i> Argument should be a single file </li>
+</ul>
+<hr />
+<h2 id="another-small-refactor">Another small refactor</h2>
+<p>We can refactor this a bit. If we have a regular file then it must be a path that exists. This means we can get rid of the exists check and its test entirely. Here is a diff of this change.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-diff" data-lang="diff"><span style="color:#c0c5ce;">diff --git a/src/main.rs b/src/main.rs
+index 171545b..2ec2d92 100644
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -1,17 +1,12 @@
+ </span><span style="color:#8fa1b3;">use std::path::Path;
+ 
+</span><span style="color:#c0c5ce;"> trait PathValidator {
+</span><span style="color:#bf616a;">-    fn exists(&amp;self, path: &amp;str) -&gt; bool;
+</span><span style="color:#c0c5ce;">     fn is_file(&amp;self, path: &amp;str) -&gt; bool;
+ }
+ 
+ struct CertValidator;
+ 
+ impl PathValidator for CertValidator {
+</span><span style="color:#bf616a;">-    fn exists(&amp;self, path: &amp;str) -&gt; bool {
+-        Path::new(path).exists()
+-    }
+-
+</span><span style="color:#c0c5ce;">     fn is_file(&amp;self, path: &amp;str) -&gt; bool {
+         Path::new(path).is_file()
+     }
+@@ -27,12 +22,6 @@ </span><span style="color:#8fa1b3;">fn execute(validator: impl PathValidator, args: Vec&lt;String&gt;) -&gt; Result&lt;(), Strin
+</span><span style="color:#c0c5ce;">         return Err(error);
+     }
+     let path = &amp;args[0];
+</span><span style="color:#bf616a;">-    if !validator.exists(path) {
+-        return Err(
+-            &quot;Error: path given as argument does not exist, it must be a path to a certificate!&quot;
+-                .to_owned(),
+-        );
+-    }
+</span><span style="color:#c0c5ce;">     if !validator.is_file(path) {
+         return Err(
+             &quot;Error: path given is not a regular file, please update to point to a certificate.&quot;
+@@ -54,15 +43,10 @@ </span><span style="color:#8fa1b3;">mod test {
+</span><span style="color:#c0c5ce;">     use crate::{execute, PathValidator};
+ 
+     struct FakeValidator {
+</span><span style="color:#bf616a;">-        is_path: bool,
+</span><span style="color:#c0c5ce;">         is_file: bool,
+     }
+ 
+     impl PathValidator for FakeValidator {
+</span><span style="color:#bf616a;">-        fn exists(&amp;self, _: &amp;str) -&gt; bool {
+-            self.is_path
+-        }
+-
+</span><span style="color:#c0c5ce;">         fn is_file(&amp;self, _: &amp;str) -&gt; bool {
+             self.is_file
+         }
+@@ -72,10 +56,7 @@ </span><span style="color:#8fa1b3;">mod test {
+</span><span style="color:#c0c5ce;">     fn should_error_if_not_given_a_single_argument() {
+         // arrange
+         let args = Vec::new();
+</span><span style="color:#bf616a;">-        let validator = FakeValidator {
+-            is_path: true,
+-            is_file: false,
+-        };
+</span><span style="color:#a3be8c;">+        let validator = FakeValidator { is_file: false };
+ 
+</span><span style="color:#c0c5ce;">         // act
+         let result = execute(validator, args);
+@@ -92,34 +73,11 @@ </span><span style="color:#8fa1b3;">mod test {
+</span><span style="color:#c0c5ce;">         );
+     }
+ 
+</span><span style="color:#bf616a;">-    #[test]
+-    fn should_error_if_argument_is_not_a_path_which_exists() {
+-        // arrange
+-        let args = vec![&quot;does-not-exist&quot;.to_owned()];
+-        let validator = FakeValidator {
+-            is_path: false,
+-            is_file: false,
+-        };
+-
+-        // act
+-        let result = execute(validator, args);
+-
+-        // assert
+-        assert!(result.is_err());
+-        assert_eq!(
+-            result.err().unwrap(),
+-            &quot;Error: path given as argument does not exist, it must be a path to a certificate!&quot;
+-        );
+-    }
+-
+</span><span style="color:#c0c5ce;">     #[test]
+     fn should_error_if_argument_is_not_a_regular_file() {
+         // arrange
+         let args = vec![&quot;not-a-regular-file&quot;.to_owned()];
+</span><span style="color:#bf616a;">-        let validator = FakeValidator {
+-            is_path: true,
+-            is_file: false,
+-        };
+</span><span style="color:#a3be8c;">+        let validator = FakeValidator { is_file: false };
+ 
+</span><span style="color:#c0c5ce;">         // act
+         let result = execute(validator, args);
+</span></code></pre>
+<p>The code up to this point can be seen <a href="https://github.com/wayofthepie/cert-decoder/tree/5c79d66dc65f42ad3750d776f1fafa8994355fb8">here</a>.</p>
+<h1 id="in-the-next-post">In the next post</h1>
+<p>In the next post, we'll look at reading information out of the certificate using the <a href="https://docs.rs/x509-parser/0.7.0/x509_parser/">x509_parser</a> crate. We'll also switch to using <a href="https://docs.rs/structopt/0.3.14/structopt/">structopt</a> for argument parsing. I didn't use <code>structopt</code> here as I wanted to keep things simple and mainly focus on the workflow, show how we can evolve functionality in small testable steps. I'm hoping the value of this workflow will be more apparent as we add more functionality to this cli, and things get more complex.</p>
+<p>There are also a couple of things implemented here which you would not see in general Rust code. For example, returning a <code>String</code> as the <code>Err</code> value of a <code>Result</code>. This is ok, we will refactor them as we go. It's better to start with something small, get it working, then refactor than to try to make it perfect right away.</p>
+<div class="footnote-definition" id="pem"><sup class="footnote-definition-label">1</sup>
+<p><code>PEM</code> encoding - see <a href="https://tools.ietf.org/html/rfc7468#section-2">Section 2</a> of <a href="https://tools.ietf.org/html/rfc7468">RFC 7468</a>.</p>
+</div>
+<div class="footnote-definition" id="unitreturn"><sup class="footnote-definition-label">3</sup>
+<p>This is not entirely accurate, if you do not specify a return type it will implicitly be <strong><a href="https://doc.rust-lang.org/std/primitive.unit.html">()</a></strong>, the <em>unit</em> type.</p>
+</div>
+<div class="footnote-definition" id="cargoq"><sup class="footnote-definition-label">2</sup>
+<p>The <code>-q</code> in <code>cargo -q test</code> is short for <code>--quiet</code>.</p>
+</div>
+
+    <script src="https://utteranc.es/client.js"
+        repo="wayofthepie/wayofthepie.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+    </script>
+</div>
+
+    </div>
+  </body>
+</html>

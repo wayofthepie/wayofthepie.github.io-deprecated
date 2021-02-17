@@ -53,6 +53,7 @@
         <ul class="sidebar-nav">
           <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
           <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/series" class="sidebar-nav-item">Series</a>
           <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
         </ul>
         <ul class="sidebar-nav-social">
@@ -78,8 +79,6 @@
             <span class="post-metadata">
                 
                 
-                
-                
                     
                     
 <div class="post-series">
@@ -88,7 +87,109 @@
 
                 
                 
+                
+                
                 <span class="post-date">2021-02-11</span>
+                
+                
+                
+                
+                    <span class="post-tags">
+                    
+                        <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/rust">rust</a></span>
+                    
+                    </span>
+                
+                
+            </span>
+           <p>This post came from a Leetcode problem in February's daily challenges which I solved. It contains a few things that were issues for me when initially learning Rust, namely, how to properly use <a href="https://doc.rust-lang.org/std/rc/struct.Rc.html">Rc</a> and <a href="https://doc.rust-lang.org/std/cell/struct.RefCell.html">RefCell</a>. Now that I understand them a lot more, I thought I'd write about them. </p>
+
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;rc-refcell-trees&#x2F;#continue-reading">Continue Reading</a>
+          <hr/>
+        </div>
+        
+        <div class="post">
+            <h1 class="post-title"><a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;rust-cert-cli&#x2F;rust-cert-cli-part3&#x2F;">Decode A Certificate</a></h1>
+            <span class="post-metadata">
+                
+                
+                    
+                    
+<div class="post-series">
+    <div>Series <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;series&#x2F;tdd-and-rust-a-cli-for-decoding-certs&#x2F;">TDD and Rust: A CLI for decoding certs</a></div>
+</div>
+
+                
+                
+                
+                
+                <span class="post-date">2020-06-22</span>
+                
+                
+                
+                
+                    <span class="post-tags">
+                    
+                        <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/rust">rust</a></span>
+                    
+                    </span>
+                
+                
+            </span>
+           <p>From this post on I will leave a note at the end of some sections linking to the latest code up to that point. It will look like this:</p>
+<div class="alert alert-info">
+<span><i class="icon fas fa-link"></i></span>
+<span class="alert-text">
+  <p>
+    <a href="https://github.com/wayofthepie/cert-decoder/tree/a9d761e1ba306587a332e97e9fd4e654f1049ab9">wayofthepie/cert-decoder@a9d761e</a>
+  </p>
+</span>
+</div>
+<p>That link points to the latest code from the last post. </p>
+
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;rust-cert-cli&#x2F;rust-cert-cli-part3&#x2F;#continue-reading">Continue Reading</a>
+          <hr/>
+        </div>
+        
+        <div class="post">
+            <h1 class="post-title"><a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;linux-broken-driver&#x2F;morning-silence&#x2F;">Morning silence and broken drivers</a></h1>
+            <span class="post-metadata">
+                
+                
+                
+                <span class="post-date">2020-06-14</span>
+                
+                
+                    <span class="post-tags">
+                    
+                        <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/linux">linux</a></span>
+                    
+                    </span>
+                
+                
+            </span>
+           <p>I woke up this morning and booted my desktop. No sound! Some digging around and I noticed <code>dmesg</code> spitting out an error. I don't have that message saved but here are the details from the kernel logs.</p>
+
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;linux-broken-driver&#x2F;morning-silence&#x2F;#continue-reading">Continue Reading</a>
+          <hr/>
+        </div>
+        
+        <div class="post">
+            <h1 class="post-title"><a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;rust-cert-cli&#x2F;rust-cert-cli-part2&#x2F;">Rust and GitHub Actions</a></h1>
+            <span class="post-metadata">
+                
+                
+                
+                
+                    
+                    
+<div class="post-series">
+    <div>Series <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;series&#x2F;tdd-and-rust-a-cli-for-decoding-certs&#x2F;">TDD and Rust: A CLI for decoding certs</a></div>
+</div>
+
+                
+                
+                <span class="post-date">2020-06-07</span>
                 
                 
                     <span class="post-tags">
@@ -101,9 +202,46 @@
                 
                 
             </span>
-           <p>This post came from a Leetcode problem in February's daily challenges which I solved. It contains a few things that were issues for me when initially learning Rust, namely, how to properly use <a href="https://doc.rust-lang.org/std/rc/struct.Rc.html">Rc</a> and <a href="https://doc.rust-lang.org/std/cell/struct.RefCell.html">RefCell</a>. Now that I understand them a lot more, I thought I'd write about them. </p>
+           <p>Before we continue implementing our CLI, let's take time to set up some <a href="https://help.github.com/en/actions">GitHub Actions</a> to build and test our commits. We'll use the actions defined in the <a href="https://github.com/actions-rs">actions-rs GitHub Organization</a>.</p>
 
-          <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;trees-in-rust&#x2F;rc-refcell-trees&#x2F;#continue-reading">Continue Reading</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;rust-cert-cli&#x2F;rust-cert-cli-part2&#x2F;#continue-reading">Continue Reading</a>
+          <hr/>
+        </div>
+        
+        <div class="post">
+            <h1 class="post-title"><a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;rust-cert-cli&#x2F;rust-cert-cli&#x2F;">A Rust cli for decoding certs</a></h1>
+            <span class="post-metadata">
+                
+                
+                
+                
+                    
+                    
+<div class="post-series">
+    <div>Series <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;series&#x2F;tdd-and-rust-a-cli-for-decoding-certs&#x2F;">TDD and Rust: A CLI for decoding certs</a></div>
+</div>
+
+                
+                
+                <span class="post-date">2020-06-02</span>
+                
+                
+                    <span class="post-tags">
+                    
+                        <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/rust">rust</a></span>
+                    
+                        <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/tls">tls</a></span>
+                    
+                    </span>
+                
+                
+                
+                
+            </span>
+           <p>In this series of posts, we'll start to build a simple cli in <a href="https://www.rust-lang.org/">Rust</a> for decoding X.509 certificates. I'll try to keep it as beginner-friendly as possible, by explaining things as best I can when they may be unclear. Some basic Rust knowledge should hopefully be all you need. Feel free to ask any questions in the comments below!</p>
+
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;rust-cert-cli&#x2F;rust-cert-cli&#x2F;#continue-reading">Continue Reading</a>
+          <hr/>
         </div>
         
         <div class="post">
@@ -118,6 +256,7 @@ We have come across many issues in relation to memory when running JVM's within 
 bounded containers. </p>
 
           <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;containerizing-the-jvm-basic-mem-overview&#x2F;#continue-reading">Continue Reading</a>
+          <hr/>
         </div>
         
         <div class="post">
@@ -133,6 +272,7 @@ on <a href="https://cloud.google.com/docs/">Google Cloud Platform</a> (GCP) to c
 Kubernetes Container Cluster.</p>
 
           <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;terraform-gcp&#x2F;#continue-reading">Continue Reading</a>
+          <hr/>
         </div>
         
         <div class="post">
@@ -140,8 +280,19 @@ Kubernetes Container Cluster.</p>
             <span class="post-metadata">
                 
                 
+                    
+                    
+<div class="post-series">
+    <div>Series <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;series&#x2F;haskell-6502-assembler&#x2F;">Haskell 6502 Assembler</a></div>
+</div>
+
+                
+                
+                
                 
                 <span class="post-date">2017-03-30</span>
+                
+                
                 
                 
                     <span class="post-tags">
@@ -161,13 +312,12 @@ We also saw that there are a few deficiencies in our grammar. In this post we'll
 properties then use those as the spec to implement the parser. Let's get to it!</p>
 
           <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;building-an-assembler-in-haskell-part2&#x2F;#continue-reading">Continue Reading</a>
+          <hr/>
         </div>
         
         <div class="post">
             <h1 class="post-title"><a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;building-an-assembler-in-haskell&#x2F;">Building An Assembler In Haskell</a></h1>
             <span class="post-metadata">
-                
-                
                 
                 
                     
@@ -178,7 +328,11 @@ properties then use those as the spec to implement the parser. Let's get to it!<
 
                 
                 
+                
+                
                 <span class="post-date">2017-03-03</span>
+                
+                
                 
                 
                     <span class="post-tags">
@@ -186,8 +340,6 @@ properties then use those as the spec to implement the parser. Let's get to it!<
                         <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/haskell">haskell</a></span>
                     
                     </span>
-                
-                
                 
                 
             </span>
@@ -198,6 +350,7 @@ this post, so at the end of most sections that introduce new code I'll link to a
 which has the code up to that point.</p>
 
           <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;building-an-assembler-in-haskell&#x2F;#continue-reading">Continue Reading</a>
+          <hr/>
         </div>
         
         <div class="post">
@@ -209,6 +362,7 @@ which has the code up to that point.</p>
             </span>
            
           <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;js-and-haskell-stuff&#x2F;#continue-reading">Continue Reading</a>
+          <hr/>
         </div>
         
         <div class="post">
@@ -220,6 +374,7 @@ which has the code up to that point.</p>
             </span>
            
           <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;installing-nixos&#x2F;#continue-reading">Continue Reading</a>
+          <hr/>
         </div>
         
       </div>
