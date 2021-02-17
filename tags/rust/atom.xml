@@ -1756,6 +1756,88 @@ TbsCertificate &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
 </content>
 	</entry>
 	<entry xml:lang="en">
+		<title>Three Bytes To An Integer</title>
+		<published>2020-06-21T00:00:00+00:00</published>
+		<updated>2020-06-21T00:00:00+00:00</updated>
+		<link href="https://wayofthepie.github.io/three-bytes-to-an-integer/" type="text/html"/>
+		<id>https://wayofthepie.github.io/three-bytes-to-an-integer/</id>
+		<content type="html">&lt;p&gt;This post is a quick overview of how I turned an initially poor solution to a problem into a better one, and the thought process behind it.&lt;&#x2F;p&gt;
+&lt;span id=&quot;continue-reading&quot;&gt;&lt;&#x2F;span&gt;&lt;div class=&quot;alert alert-info&quot;&gt;
+&lt;span&gt;&lt;i class=&quot;icon fas fa-info-circle&quot;&gt;&lt;&#x2F;i&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;alert-text&quot;&gt;
+  &lt;p&gt;
+  Originally posted on &lt;a href=&quot;https:&#x2F;&#x2F;dev.to&quot;&gt;dev.to&lt;&#x2F;a&gt;, &lt;a href=&quot;https:&#x2F;&#x2F;dev.to&#x2F;wayofthepie&#x2F;three-bytes-to-an-integer-13g5&quot;&gt;here&lt;&#x2F;a&gt;.
+  &lt;&#x2F;p&gt;
+&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;h1 id=&quot;the-problem&quot;&gt;The problem&lt;&#x2F;h1&gt;
+&lt;p&gt;I&#x27;m working on pulling information out of the &lt;a href=&quot;https:&#x2F;&#x2F;www.certificate-transparency.org&#x2F;what-is-ct&quot;&gt;Certificate Transparency Logs&lt;&#x2F;a&gt;. The logs are made up of a JSON list of log entries. A single entry is a JSON object with two fields, &lt;code&gt;leaf_input&lt;&#x2F;code&gt; and &lt;code&gt;extra_data&lt;&#x2F;code&gt;. The &lt;code&gt;leaf_input&lt;&#x2F;code&gt; field contains base64 encoded binary data. I want to pull information out of this binary data. &lt;&#x2F;p&gt;
+&lt;p&gt;To outline the structure of the binary data I&#x27;ll use the following notation, indicating byte numbers:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;[n]&lt;&#x2F;strong&gt; - indicates byte n, so [0] is the first byte.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;[n..=m]&lt;&#x2F;strong&gt; - indicates a range of bytes, inclusive, so [2..=4] means bytes 2, 3 and 4.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;strong&gt;[n..]&lt;&#x2F;strong&gt; - indicates the remaining bytes in the binary data after and including index n.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-plaintext&quot; data-lang=&quot;plaintext&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;[0] [1] [2..=9] [10..=11] [12..=14] [15..]
+ |   |     |        |         |      |
+ |   |     |        |         |      |- (rest) the rest of the bytes
+ |   |     |        |         |      
+ |   |     |        |         |- (length) the length of the certificate      
+ |   |     |        |               
+ |   |     |        | - the log entry type, not relevant in this post              
+ |   |     |                       
+ |   |     | - timestamp, not relevant in this post                       
+ |   |                            
+ |   | - signature type, not relevant in this post                       
+ |                               
+ | - version, not relevant in this post            
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The relevant parts here are the &lt;strong&gt;length&lt;&#x2F;strong&gt; (bytes [12..=14]) and the &lt;strong&gt;rest&lt;&#x2F;strong&gt; (indicated by &lt;code&gt;[15..]&lt;&#x2F;code&gt; above). &lt;strong&gt;rest&lt;&#x2F;strong&gt; contains an X.509 certificate we want, and the three bytes in the &lt;strong&gt;length&lt;&#x2F;strong&gt; define an integer which tells us how many bytes that certificate makes up in &lt;strong&gt;rest&lt;&#x2F;strong&gt;. Once we read &lt;strong&gt;length&lt;&#x2F;strong&gt; bytes from &lt;strong&gt;rest&lt;&#x2F;strong&gt;, the remainder of &lt;strong&gt;rest&lt;&#x2F;strong&gt; is data that we do not need.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;a-solution&quot;&gt;A solution&lt;&#x2F;h1&gt;
+&lt;p&gt;So we need to turn the three bytes which make up &lt;strong&gt;length&lt;&#x2F;strong&gt; into an integer. An integer whose size is 3 bytes would be a 24-bit int. Rust does not support 24-bit ints. The closest is a &lt;code&gt;u32&lt;&#x2F;code&gt;, a 32-bit unsigned int. You can&#x27;t just turn 3 bytes into a &lt;code&gt;u32&lt;&#x2F;code&gt; however. The first solution I came up with was something like the following code. &lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;&#x2F;&#x2F; &amp;quot;bytes&amp;quot; is the full binary data inside the &amp;quot;leaf_input&amp;quot; field
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;get_cert_length&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bytes&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &amp;amp;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u8&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]) -&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length_bytes_slice = &amp;amp;bytes[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;12&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;..=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;14&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;];
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; length_bytes = b.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;iter&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;cloned&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().collect::&amp;lt;Vec&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u8&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt;&amp;gt;();
+    length_bytes.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;reverse&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;();
+    length_bytes.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;push&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return u32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;::from_le_bytes(length_bytes.&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;as_slice&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;try_into&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;().&lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;unwrap&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;());
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This is not great! We allocate a new &lt;code&gt;Vec&lt;&#x2F;code&gt; and we have to pad it with a zero to make it 4 bytes in length. Because we cannot push a value onto the start of a &lt;code&gt;Vec&lt;&#x2F;code&gt; we first reverse it. Then we convert it into an array of type &lt;code&gt;[u8; 4]&lt;&#x2F;code&gt; - this is what &lt;code&gt;length_bytes.as_slice().try_into().unwrap()&lt;&#x2F;code&gt; does. Finally, we read the bytes in little endian format as a &lt;code&gt;u32&lt;&#x2F;code&gt;. Way too much happening here for what on the surface seems like a simple conversion! &lt;&#x2F;p&gt;
+&lt;p&gt;I thought about it some more and came up with a better solution. &lt;&#x2F;p&gt;
+&lt;h1 id=&quot;a-better-solution&quot;&gt;A better solution&lt;&#x2F;h1&gt;
+&lt;p&gt;First, here is an outline of my thought process. Let&#x27;s say bytes 12 to 14 look as follows, in hex notation:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;[00, 05, 4c]
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then the value for the &lt;code&gt;length&lt;&#x2F;code&gt; is &lt;strong&gt;00054c&lt;&#x2F;strong&gt; in hex, which is 1356 in decimal. &lt;strong&gt;00054c&lt;&#x2F;strong&gt; is &lt;strong&gt;000000 + 000500 + 00004c&lt;&#x2F;strong&gt;. If we take the bytes &lt;strong&gt;00&lt;&#x2F;strong&gt;, &lt;strong&gt;05&lt;&#x2F;strong&gt; and &lt;strong&gt;4c&lt;&#x2F;strong&gt; individually, how do we get &lt;strong&gt;00054c&lt;&#x2F;strong&gt;? &lt;&#x2F;p&gt;
+&lt;p&gt;Well, each time we move a number in the hex string one space to the left, we multiply the number by a power of 16. For example, moving &lt;strong&gt;000005&lt;&#x2F;strong&gt;, which is 5 in decimal, to &lt;strong&gt;000050&lt;&#x2F;strong&gt;, which is 80  in decimal, we had to multiply 5 by 16. If we move it two places, we would need to multiply it by 256, which is 16 squared, so &lt;strong&gt;000005&lt;&#x2F;strong&gt; to &lt;strong&gt;000500&lt;&#x2F;strong&gt; (1280 in decimal) is 5 * 256. Concretely, to convert &lt;strong&gt;000500&lt;&#x2F;strong&gt; hex to decimal:&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+\begin{aligned}
+000500 &amp;amp;=  (0 * 16 ^5) + (0 * 16 ^4) + (0 * 16 ^3) + (5 * 16 ^2) + (0 * 16 ^1) + (0 * 16 ^0) \\
+&amp;amp;= 5 * 16^2 \\
+&amp;amp;= 1280
+\end{aligned}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;With this knowledge we can update &lt;code&gt;get_cert_length&lt;&#x2F;code&gt; as follows:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;get_cert_length&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bytes&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &amp;amp;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u8&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]) -&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+    (bytes[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;12&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;] as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;65536&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) + (bytes[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;13&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;] as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;* &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;256&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) + bytes[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;14&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;] as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Much cleaner than the original version! The values we multiply each byte with are always a power of 2 so we can also use bit-shifts instead of the multiplications:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;fn &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;get_cert_length&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;bytes&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;: &amp;amp;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u8&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;]) -&amp;gt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
+    ((bytes[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;12&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;] as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) &amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;16&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) + ((bytes[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;13&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;] as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) &amp;lt;&amp;lt; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;8&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;) + bytes[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;14&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;] as &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;u32
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I ended up using the bit-shift version in the end. &lt;&#x2F;p&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
 		<title>Rust and GitHub Actions</title>
 		<published>2020-06-07T00:00:00+00:00</published>
 		<updated>2020-06-07T00:00:00+00:00</updated>
