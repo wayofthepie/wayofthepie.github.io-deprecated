@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+	<title> - coursera</title>
+	<subtitle>Software Pie</subtitle>
+	<link href="https://wayofthepie.github.io/tags/coursera/atom.xml" rel="self" type="application/atom+xml"/>
+  <link href="https://wayofthepie.github.io"/>
+	<generator uri="https://www.getzola.org/">Zola</generator>
+	<updated>2021-02-15T00:00:00+00:00</updated>
+	<id>https://wayofthepie.github.io/tags/coursera/atom.xml</id>
+	<entry xml:lang="en">
+		<title>IO Efficient Algorithms</title>
+		<published>2021-02-15T00:00:00+00:00</published>
+		<updated>2021-02-15T00:00:00+00:00</updated>
+		<link href="https://wayofthepie.github.io/courses/io-efficient-algorithms/" type="text/html"/>
+		<id>https://wayofthepie.github.io/courses/io-efficient-algorithms/</id>
+		<content type="html">&lt;p&gt;Notes on week2 of Io Efficient Algorithms.&lt;&#x2F;p&gt;
+&lt;span id=&quot;continue-reading&quot;&gt;&lt;&#x2F;span&gt;&lt;h1 id=&quot;cache-oblivious-matrix-transpose&quot;&gt;Cache Oblivious Matrix Transpose&lt;&#x2F;h1&gt;
+&lt;p&gt;This algorithm performs $O(n&#x2F;B)$ I&#x2F;Os.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;from &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;math &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;import &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;floor
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;def &lt;&#x2F;span&gt;&lt;span style=&quot;color:#8fa1b3;&quot;&gt;cache_oblivious_transpose&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;matrix&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;i1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;i2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;j1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;j2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;):
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;i1 == i2 or j1 == j2:
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;i &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;range&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(i1, i2 + &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;):
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;j &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;range&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(j1, i1 + &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;):
+                tmp = matrix[i][j];
+                matrix[i][j] = matrix[j][i];
+                matrix[j][i] = tmp;
+    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;else&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;:
+        imid = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;floor&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;((i1 + i2) &#x2F; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;)
+        jmid = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;floor&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;((j1 + j2) &#x2F; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;)
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;cache_oblivious_transpose&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(matrix, i1, imid, j1, jmid)
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;cache_oblivious_transpose&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(matrix, imid + &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, i2, j1, jmid)
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;cache_oblivious_transpose&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(matrix, imid + &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, i2, jmid + &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, j2)
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;if &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;i1 &amp;gt;= jmid + &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;:
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;cache_oblivious_transpose&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;(matrix, i1, imid, jmid + &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;, j2)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Theorem. 
+$$
+\begin{aligned}
+T(t) &amp;amp;= \text{ \# IOs for each recursive call with a } t \times t \text{ matrix} \\ 
+&amp;amp;\quad\quad \text{(when we swap at most two such matrices)} \\[1em]
+T(t) &amp;amp;\leq \begin{cases}
+O(M&#x2F;B) \quad \quad \text{if} \enspace 2t(t+2 (B-1)) \leq M\\[1em] 
+4T(t&#x2F;2)
+\end{cases}
+\end{aligned}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;Why $\htmlStyle{color:red;}{2} \htmlStyle{color:green;}{t(t+2 (B-1))} \leq M$ if subproblem fits into memory?&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;We need to read $\htmlStyle{color:red;}2$ submatrices.&lt;&#x2F;li&gt;
+&lt;li&gt;The size of one of these submatrices is $\htmlStyle{color:green;}{t(t+2 (B-1))}$.
+&lt;ul&gt;
+&lt;li&gt;$t \times t$ matrix: $t \text{ rows } \times (t \text{ elements } + \text{ blocks sticking out})$.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;This recurrence solves to $T(t) = O(T^2&#x2F;B)$  (How???? Revise this...). Initial call: $t = m = \sqrt{n} \rightarrow O(n&#x2F;B)$. The base case, $O(M&#x2F;B)$ - which we get because the number of IO&#x27;s if $2t(t+2 (B-1)) \leq M$ is $4t(t&#x2F;B+2)$ - was chosen so everything fits exactly into internal memory. We know we are filling memory with $n$ blocks of size $B$. Which means we do $M&#x2F;B$ IO&#x27;s.&lt;&#x2F;p&gt;
+</content>
+	</entry>
+</feed>

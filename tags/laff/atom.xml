@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+	<title> - laff</title>
+	<subtitle>Software Pie</subtitle>
+	<link href="https://wayofthepie.github.io/tags/laff/atom.xml" rel="self" type="application/atom+xml"/>
+  <link href="https://wayofthepie.github.io"/>
+	<generator uri="https://www.getzola.org/">Zola</generator>
+	<updated>2021-02-15T00:00:00+00:00</updated>
+	<id>https://wayofthepie.github.io/tags/laff/atom.xml</id>
+	<entry xml:lang="en">
+		<title>LAFF Week One</title>
+		<published>2021-02-15T00:00:00+00:00</published>
+		<updated>2021-02-15T00:00:00+00:00</updated>
+		<link href="https://wayofthepie.github.io/courses/laff-week-one/" type="text/html"/>
+		<id>https://wayofthepie.github.io/courses/laff-week-one/</id>
+		<content type="html">&lt;p&gt;Notes from week one of Linear Algebra - Foundations to Frontiers.&lt;&#x2F;p&gt;
+&lt;span id=&quot;continue-reading&quot;&gt;&lt;&#x2F;span&gt;&lt;h1 id=&quot;dot-product&quot;&gt;Dot Product&lt;&#x2F;h1&gt;
+&lt;p&gt;Let $x, y \in \reals^n$
+$$
+x = \begin{pmatrix}
+\chi_0  \\
+\chi_1  \\
+\vdots  \\
+\chi_{n-1}
+\end{pmatrix} \text{ and }
+y = \begin{pmatrix}
+\psi_0  \\
+\psi_1  \\
+\vdots  \\
+\psi_{n-1}
+\end{pmatrix}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;Then the dot product (inner product) of $x$ and $y$ is given by&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+dot(x,y) = \chi_0 \psi_0 + \chi_1 \psi_1 + \cdots + \chi_{n-1} \psi_{n-1} = \sum_{i=0}^{n-1} \chi_i \psi_i
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;So if:&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+x = \begin{pmatrix}
+2 \\
+-1 \\
+4 \\
+\end{pmatrix} \text{ and }
+y = \begin{pmatrix}
+1 \\
+-2 \\
+-1 \\
+\end{pmatrix} \\
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;It would give:&lt;&#x2F;p&gt;
+&lt;p&gt;$$ 
+dot(x,y) = dot \bigg(\begin{pmatrix}
+2 \\
+-1 \\
+4 \\
+\end{pmatrix},
+\begin{pmatrix}
+1 \\
+-2 \\
+-1 \\
+\end{pmatrix}\bigg) = (2 \cdot 1) + (-1 \cdot 2) + (4 \cdot -1) = 0
+$$&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;algorithm&quot;&gt;Algorithm&lt;&#x2F;h2&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-rust&quot; data-lang=&quot;rust&quot;&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;let mut&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; a = &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;;
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;for&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; i in &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;..n {
+    a = x[i] * v[i] + a
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h2 id=&quot;alternative-notation&quot;&gt;Alternative Notation&lt;&#x2F;h2&gt;
+&lt;p&gt;The &lt;em&gt;dot&lt;&#x2F;em&gt; product can also be defined as follows.&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+dot(x,y) = x^Ty
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;If $x$ is a column vector $x^T$ is a row vector. So we get the following:&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+\begin{aligned}
+&amp;amp;\begin{pmatrix}
+\chi_0 \\
+\chi_1 \\
+\vdots \\
+\chi_{n-1}
+\end{pmatrix}^T 
+\begin{pmatrix}
+\psi_0 \\
+\psi_1 \\
+\vdots \\
+\psi_{n-1}
+\end{pmatrix} \\
+&amp;amp;= \begin{pmatrix}
+\chi_0 \enspace \chi_1 \enspace \dots \enspace \chi_{n-1}
+\end{pmatrix} \begin{pmatrix}
+\psi_0  \\
+\psi_1  \\
+\vdots  \\
+\psi_{n-1}
+\end{pmatrix}
+\\
+&amp;amp;= \chi_0 \psi_0 + \chi_1 \psi_1 + \dots + \chi_{n-1} \psi_{n-1}
+\end{aligned}
+$$&lt;&#x2F;p&gt;
+</content>
+	</entry>
+</feed>

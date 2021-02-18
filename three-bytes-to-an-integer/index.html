@@ -80,12 +80,13 @@
 <script type="module">
     import renderMathInElement from "https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.mjs";
     renderMathInElement(document.body,{
-         delimiters: [
-             {left: "$$", right: "$$", display: true},
-             {left: "\\[", right: "\\]", display: true},
-             {left: "$", right: "$", display: false},
-             {left: "\\(", right: "\\)", display: false}
-         ]
+        trust: true,
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "\\[", right: "\\]", display: true},
+            {left: "$", right: "$", display: false},
+            {left: "\\(", right: "\\)", display: false}
+        ]
     });
 </script>
 

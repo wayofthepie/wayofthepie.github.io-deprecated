@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="description" content="All things computers." />
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
+    />
+
+    <title></title>
+
+    <!-- CSS -->
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css"
+      media="print"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
+
+     
+     
+    
+  </head>
+
+  <body class="">
+    
+    <div class="sidebar">
+      <div class="container sidebar-sticky">
+        <ul class="sidebar-nav">
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/series" class="sidebar-nav-item">Series</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+        </ul>
+        <ul class="sidebar-nav-social">
+          <a
+            href="https://github.com/wayofthepie"
+            class="fab fa-github sidebar-nav-social-item"
+          ></a>
+          <a
+            href="https://twitter.com/wayofthepie"
+            class="fab fa-twitter sidebar-nav-social-item"
+          ></a>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="content container">
+      
+
+
+<!-- Include Katex for math. Render math found in page by default. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js" integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<script type="module">
+    import renderMathInElement from "https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.mjs";
+    renderMathInElement(document.body,{
+        trust: true,
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "\\[", right: "\\]", display: true},
+            {left: "$", right: "$", display: false},
+            {left: "\\(", right: "\\)", display: false}
+        ]
+    });
+</script>
+
+
+<div class="post">
+    <h1 class="post-title">LAFF Week One</h1>
+    <span class="post-metadata">
+        
+        
+        
+
+        <span class="post-date">2021-02-15</span>
+        
+        
+            <span class="post-tags">
+            
+                <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/laff">laff</a></span>
+            
+            </span>
+        
+        
+    </span>
+    <ul class="table-of-content">
+    
+        <li>
+            <a href="https://wayofthepie.github.io/courses/laff-week-one/#dot-product">Dot Product</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/courses/laff-week-one/#algorithm">Algorithm</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/courses/laff-week-one/#alternative-notation">Alternative Notation</a>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+    </ul>
+    <p>Notes from week one of Linear Algebra - Foundations to Frontiers.</p>
+<span id="continue-reading"></span><h1 id="dot-product">Dot Product</h1>
+<p>Let $x, y \in \reals^n$
+$$
+x = \begin{pmatrix}
+\chi_0  \\
+\chi_1  \\
+\vdots  \\
+\chi_{n-1}
+\end{pmatrix} \text{ and }
+y = \begin{pmatrix}
+\psi_0  \\
+\psi_1  \\
+\vdots  \\
+\psi_{n-1}
+\end{pmatrix}
+$$</p>
+<p>Then the dot product (inner product) of $x$ and $y$ is given by</p>
+<p>$$
+dot(x,y) = \chi_0 \psi_0 + \chi_1 \psi_1 + \cdots + \chi_{n-1} \psi_{n-1} = \sum_{i=0}^{n-1} \chi_i \psi_i
+$$</p>
+<p>So if:</p>
+<p>$$
+x = \begin{pmatrix}
+2 \\
+-1 \\
+4 \\
+\end{pmatrix} \text{ and }
+y = \begin{pmatrix}
+1 \\
+-2 \\
+-1 \\
+\end{pmatrix} \\
+$$</p>
+<p>It would give:</p>
+<p>$$ 
+dot(x,y) = dot \bigg(\begin{pmatrix}
+2 \\
+-1 \\
+4 \\
+\end{pmatrix},
+\begin{pmatrix}
+1 \\
+-2 \\
+-1 \\
+\end{pmatrix}\bigg) = (2 \cdot 1) + (-1 \cdot 2) + (4 \cdot -1) = 0
+$$</p>
+<h2 id="algorithm">Algorithm</h2>
+<pre style="background-color:#2b303b;">
+<code class="language-rust" data-lang="rust"><span style="color:#b48ead;">let mut</span><span style="color:#c0c5ce;"> a = </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">;
+
+</span><span style="color:#b48ead;">for</span><span style="color:#c0c5ce;"> i in </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">..n {
+    a = x[i] * v[i] + a
+}
+</span></code></pre><h2 id="alternative-notation">Alternative Notation</h2>
+<p>The <em>dot</em> product can also be defined as follows.</p>
+<p>$$
+dot(x,y) = x^Ty
+$$</p>
+<p>If $x$ is a column vector $x^T$ is a row vector. So we get the following:</p>
+<p>$$
+\begin{aligned}
+&amp;\begin{pmatrix}
+\chi_0 \\
+\chi_1 \\
+\vdots \\
+\chi_{n-1}
+\end{pmatrix}^T 
+\begin{pmatrix}
+\psi_0 \\
+\psi_1 \\
+\vdots \\
+\psi_{n-1}
+\end{pmatrix} \\
+&amp;= \begin{pmatrix}
+\chi_0 \enspace \chi_1 \enspace \dots \enspace \chi_{n-1}
+\end{pmatrix} \begin{pmatrix}
+\psi_0  \\
+\psi_1  \\
+\vdots  \\
+\psi_{n-1}
+\end{pmatrix}
+\\
+&amp;= \chi_0 \psi_0 + \chi_1 \psi_1 + \dots + \chi_{n-1} \psi_{n-1}
+\end{aligned}
+$$</p>
+
+    <script src="https://utteranc.es/client.js"
+        repo="wayofthepie/wayofthepie.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+    </script>
+</div>
+
+    </div>
+  </body>
+</html>

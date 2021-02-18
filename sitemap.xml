@@ -19,6 +19,17 @@
         <lastmod>2018-02-18</lastmod>
     </url>
     <url>
+        <loc>https://wayofthepie.github.io/courses/</loc>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/courses/io-efficient-algorithms/</loc>
+        <lastmod>2021-02-15</lastmod>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/courses/laff-week-one/</loc>
+        <lastmod>2021-02-15</lastmod>
+    </url>
+    <url>
         <loc>https://wayofthepie.github.io/installing-nixos/</loc>
         <lastmod>2016-07-10</lastmod>
     </url>
@@ -70,7 +81,13 @@
         <loc>https://wayofthepie.github.io/tags/</loc>
     </url>
     <url>
+        <loc>https://wayofthepie.github.io/tags/coursera/</loc>
+    </url>
+    <url>
         <loc>https://wayofthepie.github.io/tags/haskell/</loc>
+    </url>
+    <url>
+        <loc>https://wayofthepie.github.io/tags/laff/</loc>
     </url>
     <url>
         <loc>https://wayofthepie.github.io/tags/linux/</loc>

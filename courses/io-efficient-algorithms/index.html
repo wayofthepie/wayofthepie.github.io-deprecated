@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="description" content="All things computers." />
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
+    />
+
+    <title></title>
+
+    <!-- CSS -->
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css"
+      media="print"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
+
+     
+     
+    
+  </head>
+
+  <body class="">
+    
+    <div class="sidebar">
+      <div class="container sidebar-sticky">
+        <ul class="sidebar-nav">
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/series" class="sidebar-nav-item">Series</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+        </ul>
+        <ul class="sidebar-nav-social">
+          <a
+            href="https://github.com/wayofthepie"
+            class="fab fa-github sidebar-nav-social-item"
+          ></a>
+          <a
+            href="https://twitter.com/wayofthepie"
+            class="fab fa-twitter sidebar-nav-social-item"
+          ></a>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="content container">
+      
+
+
+<!-- Include Katex for math. Render math found in page by default. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js" integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<script type="module">
+    import renderMathInElement from "https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.mjs";
+    renderMathInElement(document.body,{
+        trust: true,
+        delimiters: [
+            {left: "$$", right: "$$", display: true},
+            {left: "\\[", right: "\\]", display: true},
+            {left: "$", right: "$", display: false},
+            {left: "\\(", right: "\\)", display: false}
+        ]
+    });
+</script>
+
+
+<div class="post">
+    <h1 class="post-title">IO Efficient Algorithms</h1>
+    <span class="post-metadata">
+        
+        
+        
+
+        <span class="post-date">2021-02-15</span>
+        
+        
+            <span class="post-tags">
+            
+                <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/coursera">coursera</a></span>
+            
+            </span>
+        
+        
+    </span>
+    <ul class="table-of-content">
+    
+        <li>
+            <a href="https://wayofthepie.github.io/courses/io-efficient-algorithms/#cache-oblivious-matrix-transpose">Cache Oblivious Matrix Transpose</a>
+            
+        </li>
+    
+    </ul>
+    <p>Notes on week2 of Io Efficient Algorithms.</p>
+<span id="continue-reading"></span><h1 id="cache-oblivious-matrix-transpose">Cache Oblivious Matrix Transpose</h1>
+<p>This algorithm performs $O(n/B)$ I/Os.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-python" data-lang="python"><span style="color:#b48ead;">from </span><span style="color:#c0c5ce;">math </span><span style="color:#b48ead;">import </span><span style="color:#c0c5ce;">floor
+
+</span><span style="color:#b48ead;">def </span><span style="color:#8fa1b3;">cache_oblivious_transpose</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">matrix</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">i1</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">i2</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">j1</span><span style="color:#c0c5ce;">, </span><span style="color:#bf616a;">j2</span><span style="color:#c0c5ce;">):
+    </span><span style="color:#b48ead;">if </span><span style="color:#c0c5ce;">i1 == i2 or j1 == j2:
+        </span><span style="color:#b48ead;">for </span><span style="color:#c0c5ce;">i </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">range</span><span style="color:#c0c5ce;">(i1, i2 + </span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">):
+            </span><span style="color:#b48ead;">for </span><span style="color:#c0c5ce;">j </span><span style="color:#b48ead;">in </span><span style="color:#96b5b4;">range</span><span style="color:#c0c5ce;">(j1, i1 + </span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">):
+                tmp = matrix[i][j];
+                matrix[i][j] = matrix[j][i];
+                matrix[j][i] = tmp;
+    </span><span style="color:#b48ead;">else</span><span style="color:#c0c5ce;">:
+        imid = </span><span style="color:#bf616a;">floor</span><span style="color:#c0c5ce;">((i1 + i2) / </span><span style="color:#d08770;">2</span><span style="color:#c0c5ce;">)
+        jmid = </span><span style="color:#bf616a;">floor</span><span style="color:#c0c5ce;">((j1 + j2) / </span><span style="color:#d08770;">2</span><span style="color:#c0c5ce;">)
+        </span><span style="color:#bf616a;">cache_oblivious_transpose</span><span style="color:#c0c5ce;">(matrix, i1, imid, j1, jmid)
+        </span><span style="color:#bf616a;">cache_oblivious_transpose</span><span style="color:#c0c5ce;">(matrix, imid + </span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">, i2, j1, jmid)
+        </span><span style="color:#bf616a;">cache_oblivious_transpose</span><span style="color:#c0c5ce;">(matrix, imid + </span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">, i2, jmid + </span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">, j2)
+        </span><span style="color:#b48ead;">if </span><span style="color:#c0c5ce;">i1 &gt;= jmid + </span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">:
+            </span><span style="color:#bf616a;">cache_oblivious_transpose</span><span style="color:#c0c5ce;">(matrix, i1, imid, jmid + </span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">, j2)
+</span></code></pre>
+<p>Theorem. 
+$$
+\begin{aligned}
+T(t) &amp;= \text{ \# IOs for each recursive call with a } t \times t \text{ matrix} \\ 
+&amp;\quad\quad \text{(when we swap at most two such matrices)} \\[1em]
+T(t) &amp;\leq \begin{cases}
+O(M/B) \quad \quad \text{if} \enspace 2t(t+2 (B-1)) \leq M\\[1em] 
+4T(t/2)
+\end{cases}
+\end{aligned}
+$$</p>
+<p>Why $\htmlStyle{color:red;}{2} \htmlStyle{color:green;}{t(t+2 (B-1))} \leq M$ if subproblem fits into memory?</p>
+<ul>
+<li>We need to read $\htmlStyle{color:red;}2$ submatrices.</li>
+<li>The size of one of these submatrices is $\htmlStyle{color:green;}{t(t+2 (B-1))}$.
+<ul>
+<li>$t \times t$ matrix: $t \text{ rows } \times (t \text{ elements } + \text{ blocks sticking out})$.</li>
+</ul>
+</li>
+</ul>
+<p>This recurrence solves to $T(t) = O(T^2/B)$  (How???? Revise this...). Initial call: $t = m = \sqrt{n} \rightarrow O(n/B)$. The base case, $O(M/B)$ - which we get because the number of IO's if $2t(t+2 (B-1)) \leq M$ is $4t(t/B+2)$ - was chosen so everything fits exactly into internal memory. We know we are filling memory with $n$ blocks of size $B$. Which means we do $M/B$ IO's.</p>
+
+    <script src="https://utteranc.es/client.js"
+        repo="wayofthepie/wayofthepie.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+    </script>
+</div>
+
+    </div>
+  </body>
+</html>
