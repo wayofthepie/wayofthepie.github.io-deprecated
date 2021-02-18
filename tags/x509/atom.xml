@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+	<title> - x509</title>
+	<subtitle>Software Pie</subtitle>
+	<link href="https://wayofthepie.github.io/tags/x509/atom.xml" rel="self" type="application/atom+xml"/>
+  <link href="https://wayofthepie.github.io"/>
+	<generator uri="https://www.getzola.org/">Zola</generator>
+	<updated>2020-05-22T00:00:00+00:00</updated>
+	<id>https://wayofthepie.github.io/tags/x509/atom.xml</id>
+	<entry xml:lang="en">
+		<title>Structure of an SSL (X.509) certificate</title>
+		<published>2020-05-22T00:00:00+00:00</published>
+		<updated>2020-05-22T00:00:00+00:00</updated>
+		<link href="https://wayofthepie.github.io/structure-of-an-ssl-certificate/" type="text/html"/>
+		<id>https://wayofthepie.github.io/structure-of-an-ssl-certificate/</id>
+		<content type="html">&lt;p&gt;I&#x27;ve been working on some tooling for pulling certificate information out of the &lt;a href=&quot;https:&#x2F;&#x2F;www.certificate-transparency.org&#x2F;&quot;&gt;certificate transparency logs&lt;&#x2F;a&gt; on and off for a while. I started looking at this again after a few weeks away from it and I&#x27;ve forgotten quite a lot! I&#x27;ve even forgotten some of the basics of what makes a certificate. In this post I want to dive into the structure of a certificate, what it is made of at a high level. I won&#x27;t talk much about how certificates are used in protocols (e.g. Transport Layer Security (TLS)). &lt;&#x2F;p&gt;
+&lt;p&gt;This post started as a reference for myself but other folks may find it interesting or useful. It has a lot of external references to RFC&#x27;s which are stored in footnotes. As of now there is a small bug with how footnotes work where the footnote itself is hidden behind the top bar, see &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;thepracticaldev&#x2F;dev.to&#x2F;issues&#x2F;7760&quot;&gt;dev.to #7760&lt;&#x2F;a&gt; for more info. I might try fix it myself this weekend. &lt;&#x2F;p&gt;
+&lt;span id=&quot;continue-reading&quot;&gt;&lt;&#x2F;span&gt;&lt;div class=&quot;alert alert-info&quot;&gt;
+&lt;span&gt;&lt;i class=&quot;icon fas fa-info-circle&quot;&gt;&lt;&#x2F;i&gt;&lt;&#x2F;span&gt;
+&lt;span class=&quot;alert-text&quot;&gt;
+  &lt;p&gt;
+  Originally posted on &lt;a href=&quot;https:&#x2F;&#x2F;dev.to&quot;&gt;dev.to&lt;&#x2F;a&gt;, &lt;a href=&quot;https:&#x2F;&#x2F;dev.to&#x2F;wayofthepie&#x2F;structure-of-an-ssl-x-509-certificate-16b&quot;&gt;here&lt;&#x2F;a&gt;.
+  &lt;&#x2F;p&gt;
+&lt;&#x2F;span&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;Quick note, SSL certificates are X.509 certificates. The term SSL certificate is deeply ingrained on the web, and even though the SSL protocol should no longer be used this term is still used everywhere. &lt;&#x2F;p&gt;
+&lt;h1 id=&quot;information-in-a-certificate&quot;&gt;Information in a certificate&lt;&#x2F;h1&gt;
+&lt;p&gt;We&#x27;ll use the &lt;code&gt;openssl&lt;&#x2F;code&gt; cli to retrieve a certificate, then we can start looking into its structure. If the &lt;code&gt;openssl&lt;&#x2F;code&gt; cli is not installed you should be able to install it through your operating system&#x27;s package manager.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; openssl s_client&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; -connect&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; google.com:443 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;gt;&#x2F;dev&#x2F;null &amp;lt; &#x2F;dev&#x2F;null \
+    | &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;sed -n &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#a3be8c;&quot;&gt;&#x2F;BEGIN CERTIFICATE&#x2F;,&#x2F;END CERTIFICATE&#x2F;p&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;&amp;#39; &amp;gt; google.com.crt
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; cat google.com.crt
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;-----BEGIN&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; CERTIFICATE-----
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;MIIJRDCCCCygAwIBAgIRAJvxi9ebRliZAgAAAABjmHEwDQYJKoZIhvcNAQELBQAw
+QjELMAkGA1UEBhMCVVMxHjAcBgNVBAoTFUdvb2dsZSBUcnVzdCBTZXJ2aWNlczET
+MBEGA1UEAxMKR1RTIENBIDFPMTAeFw0yMDA0MTUyMDE2NDdaFw0yMDA3MDgyMDE2
+...
+V+hT9mqgeN10ryOWyN74CvBaw73K3hobSkDAyQS1HkbAqJP9VTuvjZl4PE0ndaIN
+yiz&#x2F;84k5xbSwxO++BuJgMUwj+WaLcvDW
+-----END&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; CERTIFICATE-----
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;$&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; openssl x509&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; -text -noout -in&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; google.com.crt
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Certificate:
+    Data:
+        Version:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; 3 (0x2)
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Serial&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Number:
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;9b:f1:8b:d7:9b:46:58:99:02:00:00:00:00:63:98:71
+        Signature&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Algorithm: sha256WithRSAEncryption
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Issuer:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; C = US, O = Google Trust Services, CN = GTS CA 1O1
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Validity
+            Not&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Before: Apr 15 20:16:47 2020 GMT
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Not&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; After : Jul  8 20:16:47 2020 GMT
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Subject:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; C = US, ST = California, L = Mountain View, O = Google LLC, CN = *.google.com
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Subject&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Public Key Info:
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Public&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Key Algorithm: id-ecPublicKey
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Public-Key:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; (256 bit)
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;pub:
+                    04:8e:a4:03:0d:0c:a7:1d:52:28:80:ba:89:51:b9:
+                    45:7a:7a:60:33:a5:ab:25:a4:05:c8:32:d9:b6:5c:
+                    ...
+                ASN1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; OID: prime256v1
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;NIST&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; CURVE: P-256
+        &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;X509v3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; extensions:
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;X509v3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Key Usage: critical
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Digital&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Signature
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;X509v3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Extended Key Usage:
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TLS&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Web Server Authentication
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;X509v3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Basic Constraints: critical
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;CA:FALSE
+            X509v3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Subject Key Identifier:
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;D0:7D:02:36:9B:CD:47:0B:C5:9C:51:0F:27:A7:70:65:5A:C5:50:E9
+            X509v3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Authority Key Identifier:
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;keyid:98:D1:F8:6E:10:EB:CF:9B:EC:60:9F:18:90:1B:A0:EB:7D:09:FD:2B
+
+            Authority&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Information Access:
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;OCSP&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; - URI:http:&#x2F;&#x2F;ocsp.pki.goog&#x2F;gts1o1
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;CA&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Issuers - URI:http:&#x2F;&#x2F;pki.goog&#x2F;gsr2&#x2F;GTS1O1.crt
+
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;X509v3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Subject Alternative Name:
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;DNS:*.google.com,&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; DNS:*.android.com, DNS:*.appengine.google.com, ... 
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;X509v3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Certificate Policies:
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Policy:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; 2.23.140.1.2.2
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Policy:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; 1.3.6.1.4.1.11129.2.5.3
+
+            &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;X509v3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; CRL Distribution Points:
+
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Full&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Name:
+                  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;URI:http:&#x2F;&#x2F;crl.pki.goog&#x2F;GTS1O1.crl
+
+            CT&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Precertificate SCTs:
+                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Signed&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Certificate Timestamp:
+                    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Version&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;   : v1 (0x0)
+                    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Log&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; ID    : B2:1E:05:CC:8B:A2:CD:8A:20:4E:87:66:F9:2B:B9:8A:
+                                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;25:20:67:6B:DA:FA:70:E7:B2:49:53:2D:EF:8B:90:5E
+                    Timestamp&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; : Apr 15 21:16:49.089 2020 GMT
+                    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Extensions:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; none
+                    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Signature&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; : ecdsa-with-SHA256
+                                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;30:45:02:20:26:77:E7:A4:C6:F9:D3:C0:0E:95:15:3C:
+                                A2:08:F0:DB:77:9F:1F:7A:EC:7A:26:9B:E8:82:95:33:
+                                ...
+                Signed&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Certificate Timestamp:
+                    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Version&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;   : v1 (0x0)
+                    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Log&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; ID    : 5E:A7:73:F9:DF:56:C0:E7:B5:36:48:7D:D0:49:E0:32:
+                                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;7A:91:9A:0C:84:A1:12:12:84:18:75:96:81:71:45:58
+                    Timestamp&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; : Apr 15 21:16:49.137 2020 GMT
+                    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Extensions:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; none
+                    &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Signature&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; : ecdsa-with-SHA256
+                                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;30:45:02:21:00:FC:5A:10:9B:63:81:BB:16:81:8B:D5:
+                                88:AF:09:A1:D8:83:FD:C3:86:CB:B1:CD:55:71:FF:76:
+                                ...
+    Signature&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; Algorithm: sha256WithRSAEncryption
+         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;20:69:ba:0b:e5:b4:7a:36:f7:4f:d2:b2:0f:0d:c1:10:b0:12:
+         7e:13:f9:f1:ca:6c:a0:c2:46:21:fb:8a:fd:a8:66:a9:96:43:
+         ...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;There&#x27;s quite a lot of information in the certificate. Before we break this down, a quick side note on the &lt;code&gt;openssl&lt;&#x2F;code&gt; command we used in the above code block. Feel free to skip this next section if you understood it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;side-note-on-the-openssl-command&quot;&gt;Side note on the openssl command&lt;&#x2F;h2&gt;
+&lt;p&gt;The command we used was:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-shell&quot; data-lang=&quot;shell&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;$ openssl s_client -connect google.com:443 2&amp;gt;&#x2F;dev&#x2F;null &amp;lt; &#x2F;dev&#x2F;null \
+    | sed -n &amp;#39;&#x2F;BEGIN CERTIFICATE&#x2F;,&#x2F;END CERTIFICATE&#x2F;p&amp;#39; &amp;gt; google.com.crt
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;openssl s_client&lt;&#x2F;code&gt; is used for connecting to hosts over TLS (and originally SSL, but no server should be using this anymore...). With &lt;code&gt;-connect&lt;&#x2F;code&gt; we tell it to connect to &lt;code&gt;google.com&lt;&#x2F;code&gt; on port &lt;code&gt;443&lt;&#x2F;code&gt;. &lt;code&gt;2&amp;gt;&#x2F;dev&#x2F;null&lt;&#x2F;code&gt; says to redirect anything that goes to &lt;code&gt;stderr&lt;&#x2F;code&gt; in the output of the &lt;code&gt;openssl s_client&lt;&#x2F;code&gt; command into &lt;code&gt;&#x2F;dev&#x2F;null&lt;&#x2F;code&gt;. Essentially this says ignore &lt;code&gt;stderr&lt;&#x2F;code&gt;. &lt;code&gt;&amp;lt; &#x2F;dev&#x2F;null&lt;&#x2F;code&gt; says read &lt;code&gt;&#x2F;dev&#x2F;null&lt;&#x2F;code&gt; into the &lt;code&gt;stdin&lt;&#x2F;code&gt; of the process, in thi s case &lt;code&gt;stdin&lt;&#x2F;code&gt; of &lt;code&gt;openssl&lt;&#x2F;code&gt;. Doing this always returns an end of file.
++&lt;code&gt;openssl s_client&lt;&#x2F;code&gt; is used for connecting to hosts over TLS (and originally SSL, but no site should be using this anymore...).&lt;&#x2F;p&gt;
+&lt;p&gt;If you don&#x27;t do this &lt;code&gt;stdin&lt;&#x2F;code&gt; redirect the &lt;code&gt;openssl s_client&lt;&#x2F;code&gt; command will hang waiting for input on &lt;code&gt;stdin&lt;&#x2F;code&gt;, doing this redirect means that once it tries to read from &lt;code&gt;stdin&lt;&#x2F;code&gt; it will read an end of file and the read will finish. The last part of the command, &lt;code&gt;| sed -n &#x27;&#x2F;BEGIN CERTIFICATE&#x2F;,&#x2F;END CERTIFICATE&#x2F;p&#x27; &amp;gt; google.com.crt&lt;&#x2F;code&gt;, pipes the output from &lt;code&gt;openssl s_client&lt;&#x2F;code&gt; into &lt;code&gt;sed&lt;&#x2F;code&gt; which pulls the certificate out of the output and redirects it to a file called &lt;code&gt;google.com.crt&lt;&#x2F;code&gt;. &lt;&#x2F;p&gt;
+&lt;p&gt;So why does it try to wait for input? There are few commands you can send it. Normally I&#x27;d just send &lt;code&gt;Q&lt;&#x2F;code&gt; to quit, however you can also tell it to send a &lt;code&gt;http&lt;&#x2F;code&gt; request. Try it! Run &lt;code&gt;openssl s_client -connect google.com:443&lt;&#x2F;code&gt; then when it hangs type in:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;GET &#x2F; HTTP&#x2F;1.1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;And press &lt;code&gt;enter&lt;&#x2F;code&gt; twice. It should return the JS&#x2F;html&#x2F;css that makes up google.com. That was a bit of a digression, back to certs now.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;a-breakdown-of-the-main-fields&quot;&gt;A breakdown of the main fields&lt;&#x2F;h1&gt;
+&lt;p&gt;Now we have google.com&#x27;s cert, what do all the fields mean? Let&#x27;s break it down one by one. As we do this I will also mention the type and structure of the given field in the ASN.1 (Abstract Syntax Notation&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#asn&quot;&gt;1&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;) specification for certificates and try to explain things which may not be obvious. Wherever I outline a part of the definition I will start it with a comment &lt;code&gt;# ASN.1&lt;&#x2F;code&gt;. I will also strip out pieces of information which are not relevant to a particular section and replace them with &lt;code&gt;...&lt;&#x2F;code&gt;. The full ASN.1 definition can be found in &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#appendix-A.1&quot;&gt;Appendix A.1&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280 - X.509 Public Key Infrastructure&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;Note that the ASN.1 spec for certificates describes a high level representation of certificate information. As bytes, this information is further encoded as DER (Distinguished Encoding Rules). I won&#x27;t go into the details of ASN.1 -&amp;gt; DER encoding&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#der-itu&quot;&gt;2&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;, but this post should lay some groundwork to make this encoding clearer in a future post.&lt;&#x2F;p&gt;
+&lt;p&gt;Above we used &lt;code&gt;openssl&lt;&#x2F;code&gt; to pull out the information from an existing cert. The fields mentioned there can have many possible values. The main structure is defined as follows in ASN.1 - don&#x27;t worry if you don&#x27;t understand it, we will cover each field in depth.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# ASN.1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Certificate&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  SEQUENCE  {
+     tbsCertificate       TBSCertificate,
+     signatureAlgorithm   AlgorithmIdentifier,
+     signature            BIT STRING  }
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TBSCertificate&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  SEQUENCE  {
+     version         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;]&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  Version DEFAULT v1,
+     serialNumber         CertificateSerialNumber,
+     signature            AlgorithmIdentifier,
+     issuer               Name,
+     validity             Validity,
+     subject              Name,
+     subjectPublicKeyInfo SubjectPublicKeyInfo,
+     issuerUniqueID  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;1&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;]&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  IMPLICIT UniqueIdentifier OPTIONAL,
+                          -- If present, version MUST be v2 or v3
+     subjectUniqueID &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;2&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;]&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  IMPLICIT UniqueIdentifier OPTIONAL,
+                          -- If present, version MUST be v2 or v3
+     extensions      &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;3&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;]&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  Extensions OPTIONAL
+                          -- If present, version MUST be v3 --  }
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h1 id=&quot;certificate&quot;&gt;Certificate&lt;&#x2F;h1&gt;
+&lt;p&gt;&lt;code&gt;Certificate&lt;&#x2F;code&gt; is an ASN.1 &lt;code&gt;SEQUENCE&lt;&#x2F;code&gt;. A &lt;code&gt;SEQUENCE&lt;&#x2F;code&gt; is an ordered list of values. In this case a list with &lt;code&gt;tbsCertificate&lt;&#x2F;code&gt;, &lt;code&gt;signatureAlgorithm&lt;&#x2F;code&gt; and &lt;code&gt;signature&lt;&#x2F;code&gt;. First let&#x27;s look at &lt;code&gt;signature&lt;&#x2F;code&gt; and &lt;code&gt;signatureAlgorithm&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;signature-and-signature-algorithm&quot;&gt;Signature and Signature Algorithm&lt;&#x2F;h2&gt;
+&lt;p&gt;In the &lt;code&gt;openssl&lt;&#x2F;code&gt; output for google.com&#x27;s cert both &lt;code&gt;Signature&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#signature&quot;&gt;3&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; and &lt;code&gt;Signature Algorithm&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#sigalgorithm1&quot;&gt;4&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; can be seen right at the bottom:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-plaintext&quot; data-lang=&quot;plaintext&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Signature Algorithm: sha256WithRSAEncryption
+     20:69:ba:0b:e5:b4:7a:36:f7:4f:d2:b2:0f:0d:c1:10:b0:12:
+     7e:13:f9:f1:ca:6c:a0:c2:46:21:fb:8a:fd:a8:66:a9:96:43:
+     ... 
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I&#x27;ve stripped out part of the &lt;code&gt;Signature&lt;&#x2F;code&gt; and replaced it with &lt;code&gt;...&lt;&#x2F;code&gt; as it&#x27;s not relevant. The &lt;code&gt;Signature Algorithm&lt;&#x2F;code&gt; field indicates the algorithm used by the issuing Certificate Authority (CA) to sign this certificate. Here its value is &lt;code&gt;sha256WithRSAEncryption&lt;&#x2F;code&gt;. For more information on this algorithm see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc4055#section-5&quot;&gt;Section 5&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc4055&quot;&gt;RFC 4055 - Additional Algorithms and Identifiers for RSA ...&lt;&#x2F;a&gt; and &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc2313&quot;&gt;RFC 2313 - PKCS #1: RSA Encryption&lt;&#x2F;a&gt;. &lt;code&gt;Signature&lt;&#x2F;code&gt; and &lt;code&gt;SignatureAlgorithm&lt;&#x2F;code&gt; are defined as follows in the ASN.1 spec:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# ASN.1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Certificate&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  SEQUENCE  {
+     ...
+     signatureAlgorithm   AlgorithmIdentifier,
+     signature            BIT STRING  }
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;signature&lt;&#x2F;code&gt; has type &lt;code&gt;BIT STRING&lt;&#x2F;code&gt;, this is simply a string of bits. In this case those bits contain a digital signature computed from the &lt;code&gt;tbsCertificate&lt;&#x2F;code&gt; field of this cert, using the algorithm defined in &lt;code&gt;signatureAlgorithm&lt;&#x2F;code&gt;. &lt;code&gt;signatureAlgorithm&lt;&#x2F;code&gt; is of type &lt;code&gt;AlgorithmIdentifier&lt;&#x2F;code&gt;. &lt;code&gt;openssl&lt;&#x2F;code&gt; encodes this as &lt;code&gt;:&lt;&#x2F;code&gt; separated hexadecimal, e.g. &lt;code&gt;20:69:ba:0b:e5:b4...&lt;&#x2F;code&gt;. &lt;code&gt;AlgorithmIdentifier&lt;&#x2F;code&gt; itself is a &lt;code&gt;SEQUENCE&lt;&#x2F;code&gt;, an ordered list with the given items. In this case a list with two values, &lt;code&gt;algorithm&lt;&#x2F;code&gt; and &lt;code&gt;parameters&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# ASN.1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;AlgorithmIdentifier&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  SEQUENCE  {
+     algorithm               OBJECT IDENTIFIER,
+     parameters              ANY DEFINED BY algorithm OPTIONAL  }
+                                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;--&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; contains a value of the type
+                                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;--&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; registered for use with the
+                                &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;--&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; algorithm object identifier value
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Here &lt;code&gt;algorithm&lt;&#x2F;code&gt; has type &lt;code&gt;OBJECT IDENTIFIER&lt;&#x2F;code&gt;. An &lt;code&gt;OBJECT IDENTIFIER&lt;&#x2F;code&gt;, or &lt;code&gt;OID&lt;&#x2F;code&gt;, is a standard way of identifying objects defined by the International Telecommunications Union (ITU). It is defined in &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc3061&quot;&gt;RFC 3061 - A URN Namespace of Object Identifiers&lt;&#x2F;a&gt; and is definitely not something I&#x27;ll go into more detail on in this post, it is a big topic! For the curious, the OID for &lt;code&gt;sha256WithRSAEncryption&lt;&#x2F;code&gt; is &lt;code&gt;1.2.840.113549.1.1.11&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#oidref-algo&quot;&gt;5&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. It is defined in &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc4055#section-5&quot;&gt;RFC 4055 Section 5&lt;&#x2F;a&gt;, to fully understand that definition you may have to go down a rabbit hole of RFC&#x27;s...&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;code&gt;parameters&lt;&#x2F;code&gt; defines parameters to the specified algorithm. We will see an example of this in the &lt;a href=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;structure-of-an-ssl-certificate&#x2F;#subject-and-subject-public-key-info&quot;&gt;Subject and Subject Public Key Info&lt;&#x2F;a&gt; section.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;tbscertificate&quot;&gt;TBSCertificate&lt;&#x2F;h1&gt;
+&lt;p&gt;&lt;code&gt;TBSCertificate&lt;&#x2F;code&gt; contains the information on the subject of the certificate and the issuing CA. We will cover all fields except &lt;code&gt;extensions&lt;&#x2F;code&gt;, &lt;code&gt;issuerUniqueID&lt;&#x2F;code&gt; and &lt;code&gt;subjectUniqueID&lt;&#x2F;code&gt;. There is quite a lot in &lt;code&gt;extensions&lt;&#x2F;code&gt;, so I will leave it for another post. &lt;code&gt;issuerUniqueID&lt;&#x2F;code&gt; and &lt;code&gt;subjectUniqueID&lt;&#x2F;code&gt; are optional and do not appear in google.com&#x27;s cert. It is also recommended that these not be set&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#uniqueids&quot;&gt;6&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. &lt;&#x2F;p&gt;
+&lt;h2 id=&quot;version&quot;&gt;Version&lt;&#x2F;h2&gt;
+&lt;p&gt;In the cert we decoded, the &lt;code&gt;Version&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#version-note&quot;&gt;7&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; is as follows:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Version: 3 (0x2)
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;Version&lt;&#x2F;code&gt; is defined as:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# ASN.1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TBSCertificate&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  SEQUENCE  {
+     version         &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;]&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  Version DEFAULT v1,
+     ...
+}
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;...
+Version&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  INTEGER  {  v1(0), v2(1), v3(2)  }
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This says the &lt;code&gt;version&lt;&#x2F;code&gt; field of a certificate can be one of three values - 0 which means the version is v1, 1 which means the version is v2 and 2 which means the version is v3. It defaults to v1, which is 0. This explains why there is a &lt;code&gt;3&lt;&#x2F;code&gt; and a &lt;code&gt;0x2&lt;&#x2F;code&gt; in the output from &lt;code&gt;openssl&lt;&#x2F;code&gt;, it&#x27;s showing the version number (3) &lt;em&gt;and&lt;&#x2F;em&gt; the real value of the field (2).&lt;&#x2F;p&gt;
+&lt;p&gt;So what does &lt;code&gt;version&lt;&#x2F;code&gt; mean? There are three versions of X.509 certificates out in the wild, it just indicates which version of the X.509 spec a given cert is using. I will gloss over the differences in the versions in this post as its not too important for an overview. You will mainly see X.509 v3 certificates in the wild.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;serial-number&quot;&gt;Serial Number&lt;&#x2F;h2&gt;
+&lt;p&gt;The &lt;code&gt;Serial Number&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#serial-number&quot;&gt;8&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; is a unique integer given to the certificate. It is unique for all certificates issued from the same CA, e.g. Digicert or Lets Encrypt, not globally unique. Meaning two certs from different CA&#x27;s could potentially have the same &lt;code&gt;Serial Number&lt;&#x2F;code&gt;. &lt;code&gt;Serial Number&lt;&#x2F;code&gt; looks as follows in the cert we decoded: &lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-plaintext&quot; data-lang=&quot;plaintext&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Serial Number:
+    9b:f1:8b:d7:9b:46:58:99:02:00:00:00:00:63:98:71
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;And its ASN.1 definition:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# ASN.1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TBSCertificate&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  SEQUENCE  {
+     ...
+     serialNumber         CertificateSerialNumber,
+     ...
+}
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;CertificateSerialNumber&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  INTEGER
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;It is of type &lt;code&gt;CertificateSerialNumber&lt;&#x2F;code&gt;, which is just an alias for an integer.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;signature-algorithm&quot;&gt;Signature Algorithm&lt;&#x2F;h2&gt;
+&lt;p&gt;This field &lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#sigalgorithm2&quot;&gt;9&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; &lt;em&gt;must&lt;&#x2F;em&gt; contain the same algorithm as the &lt;code&gt;signatureAlgorithm&lt;&#x2F;code&gt; field outside the &lt;code&gt;tbsCertficate&lt;&#x2F;code&gt; which we discussed in the &lt;a href=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;structure-of-an-ssl-certificate&#x2F;#signature-and-signature-algorithm&quot;&gt;Signature and Signature Algorithm&lt;&#x2F;a&gt; section. And in this case it does: &lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-plaintext&quot; data-lang=&quot;plaintext&quot;&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Signature Algorithm: sha256WithRSAEncryption
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;This is the &lt;code&gt;signature&lt;&#x2F;code&gt; field in the &lt;code&gt;TBSCertificate&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# ASN.1 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TBSCertificate&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  SEQUENCE  {
+     ...
+     signature            AlgorithmIdentifier,
+     ...
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We looked at &lt;code&gt;AlgorithmIdentifier&lt;&#x2F;code&gt; in &lt;a href=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;structure-of-an-ssl-certificate&#x2F;#signature-and-signature-algorithm&quot;&gt;Signature and Signature Algorithm&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;this-field-is-duplicated-why&quot;&gt;This field is duplicated, why?&lt;&#x2F;h3&gt;
+&lt;p&gt;This was interesting as the reason for the duplication was not clear. We saw the &lt;code&gt;Signature Algorithm&lt;&#x2F;code&gt; appear in the top level &lt;code&gt;Certificate&lt;&#x2F;code&gt; and it also appears inside the &lt;code&gt;TBSCertificate&lt;&#x2F;code&gt;. &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.3&quot;&gt;Section 4.1.2.3&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc6211&quot;&gt;RFC 5280&lt;&#x2F;a&gt;, which talks about the &lt;code&gt;signature&lt;&#x2F;code&gt; field within &lt;code&gt;TBSCertificate&lt;&#x2F;code&gt;, states:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;This field MUST contain the same algorithm identifier as the signatureAlgorithm field in the sequence Certificate (Section 4.1.1.2)&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;But nowhere in that RFC does it give a reason. &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc6211#section-1&quot;&gt;Section 1&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc6211&quot;&gt;RFC 6211 - Cryptographic Message Syntax (CMS)&lt;&#x2F;a&gt; gives some clue as to a possible reason - to prevent algorithm substitution attacks:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The Cryptographic Message Syntax [CMS], unlike X.509&#x2F;PKIX certificates [RFC5280], is vulnerable to algorithm substitution attacks.  In an algorithm substitution attack, the attacker changes either the algorithm being used or the parameters of the algorithm in order to change the result of a signature verification process. In X.509 certificates, the signature algorithm is protected because it is duplicated in the TBSCertificate.signature field with the proviso that the validator is to compare both fields as part of the signature validation process.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;I don&#x27;t know enough about this to comment further. But I am currently investigating. Once I understand more I will write about it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;issuer&quot;&gt;Issuer&lt;&#x2F;h2&gt;
+&lt;p&gt;The &lt;code&gt;Issuer&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#issuer&quot;&gt;10&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; field is a unique identifier for the CA issuing this certificate.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Issuer: C = US, O = Google Trust Services, CN = GTS CA 1O1
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The cert we decoded was issued by Google Trust Services. Google have a number of CA&#x27;s under Google Trust Services see https:&#x2F;&#x2F;pki.goog&#x2F; for more details. The &lt;code&gt;Issuer&lt;&#x2F;code&gt; field along with the &lt;code&gt;Serial Number&lt;&#x2F;code&gt; will uniquely identify a certificate, as long as the &lt;code&gt;Issuer&lt;&#x2F;code&gt; is a globally trusted CA.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;code&gt;Issuer&lt;&#x2F;code&gt; is defined as a &lt;code&gt;Name&lt;&#x2F;code&gt; in the spec:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# ASN.1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TBSCertificate&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  SEQUENCE  {
+     ...
+     issuer               Name,
+     ...
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;Name&lt;&#x2F;code&gt; itself is a bit weird:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# ASN.1 
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; ::= CHOICE { -- only one possibility for now --
+      rdnSequence  RDNSequence }
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;RDNSequence&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; ::= SEQUENCE OF RelativeDistinguishedName 
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;...
+
+RelativeDistinguishedName&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; ::= SET SIZE (1..MAX) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;OF&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; AttributeTypeAndValue
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# AttributeTypeAndValue is defined as follows
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;AttributeTypeAndValue ::= SEQUENCE {
+     type     AttributeType,
+     value    AttributeValue }
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;AttributeType&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; ::= OBJECT IDENTIFIER
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;AttributeValue&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; ::= ANY -- DEFINED BY AttributeType
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;CHOICE&lt;&#x2F;code&gt; defines a list of options to pick from. So, &lt;code&gt;Name&lt;&#x2F;code&gt; is a choice with a single option, an &lt;code&gt;RDNSequence&lt;&#x2F;code&gt;, and it even says there is only one possibility for now. I don&#x27;t really know why this is, it could be for forwards compatibility on changes to the spec.&lt;&#x2F;p&gt;
+&lt;p&gt;Have a look at the definition of &lt;code&gt;RDNSequence&lt;&#x2F;code&gt;, it is defined as &lt;code&gt;SEQUENCE OF RelativeDistinguishedName&lt;&#x2F;code&gt;. This is different than &lt;code&gt;SEQUENCE&lt;&#x2F;code&gt; which we saw in the &lt;a href=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;structure-of-an-ssl-certificate&#x2F;#signature-algorithm&quot;&gt;Signature Algorithm&lt;&#x2F;a&gt; section. &lt;code&gt;SEQUENCE OF&lt;&#x2F;code&gt; defines a list of values which are all the same type, in this case they are all &lt;code&gt;RelativeDistinguishedName&lt;&#x2F;code&gt;. &lt;&#x2F;p&gt;
+&lt;p&gt;We haven&#x27;t seen &lt;code&gt;SET&lt;&#x2F;code&gt; yet either. This defines a set of objects. &lt;code&gt;SET SIZE (1..MAX) OF AttributeTypeAndValue&lt;&#x2F;code&gt; defines a set of &lt;code&gt;AttributeTypeAndValue&lt;&#x2F;code&gt;&#x27;s of max size &lt;code&gt;MAX&lt;&#x2F;code&gt;, I&#x27;m not sure what value &lt;code&gt;MAX&lt;&#x2F;code&gt; is bound to here either, will edit and add this information once I realise what it is.&lt;&#x2F;p&gt;
+&lt;p&gt;In short, &lt;code&gt;Name&lt;&#x2F;code&gt; is a list of OID&#x2F;value pairs where the value is some object bound by that OID. &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc2253#section-2&quot;&gt;Section 2.3&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc2253&quot;&gt;RFC 2253 - LDAP v3&lt;&#x2F;a&gt; describes &lt;code&gt;RelativeDistinguishedName&lt;&#x2F;code&gt; and its encoding in more depth.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;validity&quot;&gt;Validity&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;code&gt;Validity&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#validity&quot;&gt;11&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; specifies the time window a certificate is valid between.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Validity
+    Not Before: Apr 15 20:16:47 2020 GMT
+    Not After : Jul  8 20:16:47 2020 GMT
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The cert we decoded is valid from &lt;code&gt;Apr 15 20:16:47 2020 GMT&lt;&#x2F;code&gt; to &lt;code&gt;Jul  8 20:16:47 2020 GMT&lt;&#x2F;code&gt;. The certificate is invalid outside of this timeframe. &lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# ASN.1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TBSCertificate&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  SEQUENCE  {
+     ...
+     validity             Validity,
+     ...
+}
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;...
+Validity&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; ::= SEQUENCE {
+     notBefore      Time,
+     notAfter       Time  }
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;Time&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; ::= CHOICE {
+     utcTime        UTCTime,
+     generalTime    GeneralizedTime }
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;Validity&lt;&#x2F;code&gt; has two fields which are both of type &lt;code&gt;Time&lt;&#x2F;code&gt;. &lt;code&gt;Time&lt;&#x2F;code&gt; can be one of two types, &lt;code&gt;UTCTime&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#utctime&quot;&gt;12&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; or &lt;code&gt;GeneralizedTime&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#gentime&quot;&gt;13&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt;. Dates before the year 2050 &lt;em&gt;must&lt;&#x2F;em&gt; be encoded as &lt;code&gt;UTCTime&lt;&#x2F;code&gt; and dates on or after the year 2050 &lt;em&gt;must&lt;&#x2F;em&gt; be encoded as &lt;code&gt;GeneralizedTime&lt;&#x2F;code&gt;. This is outlined in the definition of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.5&quot;&gt;Validity&lt;&#x2F;a&gt; in &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;certificate-validity-and-the-brazilian-government&quot;&gt;Certificate validity and the Brazilian government&lt;&#x2F;h3&gt;
+&lt;p&gt;I stumbled across &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;pyca&#x2F;cryptography&#x2F;issues&#x2F;3927&quot;&gt;this issue&lt;&#x2F;a&gt; on github while on my certificate information seeking adventures. As mentioned above, dates before the year 2050 should be encoded as &lt;code&gt;UTCTime&lt;&#x2F;code&gt;, but the Brazilian government had their own specification which required the use of &lt;code&gt;GeneralizedTime&lt;&#x2F;code&gt; for all dates. This is a good example of what you see in an RFC&#x2F;specification not being exactly what you see in a real system.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;subject-and-subject-public-key-info&quot;&gt;Subject and Subject Public Key Info&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;code&gt;Subject&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#subject&quot;&gt;14&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; identifies the owner of the public key in the &lt;code&gt;Subject Public Key Info&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#subject-pkey&quot;&gt;15&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; section , which defines the &amp;quot;thing&amp;quot; this certificate identifies. In this case it&#x27;s identifying google domains. &lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Subject: C = US, ST = California, L = Mountain View, O = Google LLC, CN = *.google.com
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Its definition is:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# ASN.1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TBSCertificate&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  SEQUENCE  {
+    ... 
+    subject              Name,
+    ...
+}
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;Name&lt;&#x2F;code&gt; was explained in the &lt;a href=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;structure-of-an-ssl-certificate&#x2F;#issuer&quot;&gt;Issuer&lt;&#x2F;a&gt; section, so it should be clear what this is. &lt;code&gt;Subject Public Key Info&lt;&#x2F;code&gt; has a few fields. Let&#x27;s look at its ASN.1 definition first.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#65737e;&quot;&gt;# ASN.1
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;TBSCertificate&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  SEQUENCE  {
+    ...
+    subjectPublicKeyInfo SubjectPublicKeyInfo,
+    ...
+}
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;...
+SubjectPublicKeyInfo&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  SEQUENCE  {
+        algorithm            AlgorithmIdentifier,
+        subjectPublicKey     BIT STRING  }
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;...
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Let&#x27;s see the actual value of &lt;code&gt;Subject Public Key Info&lt;&#x2F;code&gt; in the certifcate again:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
+&lt;code&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Subject Public Key Info:
+  Public Key Algorithm: id-ecPublicKey
+      Public-Key: (256 bit)
+      pub:
+          04:0f:45:4e:2f:0c:a7:88:9a:b9:24:ff:57:50:dc:
+          f1:ab:6e:dd:3e:7f:82:26:30:a7:12:9f:81:8a:27:
+          9d:7d:06:2e:d3:e2:50:3b:ce:6c:2d:2e:5b:32:ce:
+          7d:eb:86:06:7c:8c:29:2b:47:61:de:f0:ca:f8:b7:
+          98:00:21:6a:34
+      ASN1 OID: prime256v1
+      NIST CURVE: P-256
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;code&gt;Public Key Algorithm&lt;&#x2F;code&gt; defines the algorithm the key can be used with. This is the &lt;code&gt;algorithm&lt;&#x2F;code&gt; field in the &lt;code&gt;SubjectPublicKeyInfo&lt;&#x2F;code&gt; field defined above. The rest is the &lt;code&gt;BIT STRING&lt;&#x2F;code&gt;. The &lt;code&gt;BIT STRING&lt;&#x2F;code&gt; itself is constrained by the type of &lt;code&gt;algorithm&lt;&#x2F;code&gt;. The information in the fields the &lt;code&gt;BIT STRING&lt;&#x2F;code&gt; decodes to is beyond this post. If interested see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc3279#section-2.3.5&quot;&gt;Section 2.3.5&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc3279&quot;&gt;RFC 3279 - Algorithms and Identifiers X.509 PKI ...&lt;&#x2F;a&gt; for more on &lt;code&gt;id-ecPublicKey&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;&#x2F;h1&gt;
+&lt;p&gt;If you made it to here, kudos! I hope this has given you a better understanding of what really makes up a certificate, and the sheer complexity around X.509 in general. There is a lot I glossed over in this post which I hope to drill deeper into in the future. &lt;&#x2F;p&gt;
+&lt;p&gt;In the next post I&#x27;ll cover the &lt;code&gt;TBSCertificate&lt;&#x2F;code&gt; &lt;code&gt;extensions&lt;&#x2F;code&gt; fields. &lt;&#x2F;p&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;asn&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
+&lt;p&gt;ASN.1 - see &lt;a href=&quot;https:&#x2F;&#x2F;www.itu.int&#x2F;en&#x2F;ITU-T&#x2F;asn1&#x2F;Pages&#x2F;introduction.aspx&quot;&gt;Introduction to ASN.1&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;der-itu&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;2&lt;&#x2F;sup&gt;
+&lt;p&gt;ASN.1 to DER encoding - see &lt;a href=&quot;https:&#x2F;&#x2F;www.itu.int&#x2F;rec&#x2F;T-REC-X.690-201508-I&#x2F;en&quot;&gt;ASN.1 encoding rules&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;signature&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;3&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;Signature&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.1.3&quot;&gt;Section 4.1.1.3&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;sigalgorithm1&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;4&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;Signature Algorithm&lt;&#x2F;code&gt; in &lt;code&gt;Certificate&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.3&quot;&gt;Section 4.1.2.3&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;oidref-algo&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;5&lt;&#x2F;sup&gt;
+&lt;p&gt;OID for &lt;code&gt;sha256WithRSAEncryption&lt;&#x2F;code&gt; - see https:&#x2F;&#x2F;oidref.com&#x2F;1.2.840.113549.1.1.11.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;uniqueids&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;6&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;issuerUniqueID&lt;&#x2F;code&gt;  and &lt;code&gt;subjectUniqueID&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.8&quot;&gt;Section 4.1.2.8&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;version-note&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;7&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;Version&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.1&quot;&gt;Section 4.1.2.1&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;serial-number&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;8&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;Serial Number&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.2&quot;&gt;Section 4.1.2.2&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;sigalgorithm2&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;9&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;Signature Algorithm&lt;&#x2F;code&gt; in &lt;code&gt;TBSCertificate&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.1.2&quot;&gt;Section 4.1.1.2&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;issuer&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;10&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;Issuer&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.4&quot;&gt;Secion 4.2.1.4&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;validity&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;11&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;Validity&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.5&quot;&gt;Secion 4.2.1.5&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;utctime&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;12&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;UTCTime&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.5.1&quot;&gt;Section 4.1.2.5.1&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;gentime&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;13&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;GeneralizedTime&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.5.2&quot;&gt;Section 4.1.2.5.2&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;subject&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;14&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;Subject&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.5&quot;&gt;Secion 4.2.1.6&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;subject-pkey&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;15&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;Subject Public Key&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.6&quot;&gt;Secion 4.2.1.6&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;ext-keyusage&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;16&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;X509v3 Key Usage&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.2.1.3&quot;&gt;Section 4.2.1.3&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;ext-extkeyusage&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;17&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;X509v3 Extended Key Usage&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.2.1.12&quot;&gt;Section 4.2.1.12&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5820&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;critical&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;18&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;critical&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.2&quot;&gt;Section 4.2&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;digital-signature&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;19&lt;&#x2F;sup&gt;
+&lt;p&gt;TLS 1.3 &lt;code&gt;Digital Signature&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc8446#section-4.4.2.2&quot;&gt;Section 4.4.2.2&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc8446&quot;&gt;RFC 8446&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;pkey-ecpubkey&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;20&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;id-exPublicKey&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5480#section-2.1&quot;&gt;Section 2.1&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5480&quot;&gt;RFC 5480&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;basic-constraints&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;21&lt;&#x2F;sup&gt;
+&lt;p&gt;&lt;code&gt;X509v3 Basic Constraints&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.2.1.9&quot;&gt;Section 4.2.1.9&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+</content>
+	</entry>
+</feed>
