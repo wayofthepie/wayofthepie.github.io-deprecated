@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="description" content="All things computers." />
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
+    />
+
+    <title></title>
+
+    <!-- CSS -->
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css"
+      media="print"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
+
+     
+     
+    
+  </head>
+
+  <body class="">
+    
+    <div class="sidebar">
+      <div class="container sidebar-sticky">
+        <ul class="sidebar-nav">
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/series" class="sidebar-nav-item">Series</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+        </ul>
+        <ul class="sidebar-nav-social">
+          <a
+            href="https://github.com/wayofthepie"
+            class="fab fa-github sidebar-nav-social-item"
+          ></a>
+          <a
+            href="https://twitter.com/wayofthepie"
+            class="fab fa-twitter sidebar-nav-social-item"
+          ></a>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="content container">
+      
+
+
+
+<div class="post">
+    <h1 class="post-title">Morning silence and broken drivers</h1>
+    <span class="post-metadata">
+        
+        
+        
+
+        <span class="post-date">2020-06-14</span>
+        
+        
+            <span class="post-tags">
+            
+                <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/linux">linux</a></span>
+            
+            </span>
+        
+        
+    </span>
+    <ul class="table-of-content">
+    
+        <li>
+            <a href="https://wayofthepie.github.io/linux/morning-silence/#still-silence">Still silence</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/linux/morning-silence/#silence-and-broken-graphics">Silence and broken graphics</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/linux/morning-silence/#conclusion">Conclusion</a>
+            
+        </li>
+    
+    </ul>
+    <p>I woke up this morning and booted my desktop. No sound! Some digging around and I noticed <code>dmesg</code> spitting out an error. I don't have that message saved but here are the details from the kernel logs.</p>
+<span id="continue-reading"></span><div class="alert alert-info">
+<span><i class="icon fas fa-info-circle"></i></span>
+<span class="alert-text">
+  <p>
+  Originally posted on <a href="https://dev.to">dev.to</a>, <a href="https://dev.to/wayofthepie/morning-silence-and-broken-drivers-2d3b">here</a>.
+  </p>
+</span>
+</div>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">✦</span><span style="color:#c0c5ce;"> ➜ journalctl</span><span style="color:#bf616a;"> --system --since</span><span style="color:#c0c5ce;"> yesterday | </span><span style="color:#bf616a;">grep </span><span style="color:#c0c5ce;">&quot;</span><span style="color:#a3be8c;">Focusrite Scarlett</span><span style="color:#c0c5ce;">&quot;</span><span style="color:#bf616a;"> -C10
+...
+Jun</span><span style="color:#c0c5ce;"> 14 06:45:59 sky kernel: usb 1-1.2.3: USB disconnect, device number 8
+</span><span style="color:#bf616a;">Jun</span><span style="color:#c0c5ce;"> 14 06:46:00 sky kernel: usb 1-1.2.3: new high-speed USB device number 9 using ehci-pci
+</span><span style="color:#bf616a;">Jun</span><span style="color:#c0c5ce;"> 14 06:46:00 sky kernel: usb 1-1.2.3: New USB device found, idVendor=1235, idProduct=8203, bcdDevice= 6.2f
+</span><span style="color:#bf616a;">Jun</span><span style="color:#c0c5ce;"> 14 06:46:00 sky kernel: usb 1-1.2.3: New USB device strings: Mfr=1, Product=3, SerialNumber=2
+</span><span style="color:#bf616a;">Jun</span><span style="color:#c0c5ce;"> 14 06:46:00 sky kernel: usb 1-1.2.3: Product: Scarlett 6i6 USB
+</span><span style="color:#bf616a;">Jun</span><span style="color:#c0c5ce;"> 14 06:46:00 sky kernel: usb 1-1.2.3: Manufacturer: Focusrite
+</span><span style="color:#bf616a;">Jun</span><span style="color:#c0c5ce;"> 14 06:46:00 sky kernel: usb 1-1.2.3: SerialNumber: 00009810
+</span><span style="color:#bf616a;">Jun</span><span style="color:#c0c5ce;"> 14 06:46:00 sky kernel: usb 1-1.2.3: Focusrite Scarlett Gen 2 Mixer Driver disabled; </span><span style="color:#bf616a;">use</span><span style="color:#c0c5ce;"> options snd_usb_audio device_setup=1 to enable and report any issues to g@b4.v
+</span><span style="color:#bf616a;">...
+</span></code></pre>
+<p>It looks like a driver update in the latest kernel broke my USB audio device, a pretty old Focusrite Scarlett. A quick google of the error brings you to <a href="https://github.com/geoffreybennett/scarlett-gen2/releases">these release notes</a>. This is a fork of the kernel where the Focusrite Scarlett driver development happens. They mention adding one of the following lines to <code>/etc/modprobe.d/scarlett.conf</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-plaintext" data-lang="plaintext"><span style="color:#c0c5ce;">options snd_usb_audio device_setup=1,1,1,1
+options snd_usb_audio vid=0x1235 pid=0x8212 device_setup=1
+</span></code></pre>
+<p>Great! I'm not sure what <code>vid</code> and <code>pid</code> are. However, if you look back up at the kernel logs there is a line that looks like this:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-plaintext" data-lang="plaintext"><span style="color:#c0c5ce;">New USB device found, idVendor=1235, idProduct=8203, bcdDevice= 6.2f
+</span></code></pre>
+<p><code>vid</code> is probably the Vendor ID and <code>pid</code> product ID. I had a quick look at the <a href="https://github.com/geoffreybennett/scarlett-gen2/commit/63693795498192ca1142aca4a829a1276a1c76b9">commit for that release</a> and that clarified it. There are a number of constants defined in <a href="https://github.com/geoffreybennett/scarlett-gen2/blob/63693795498192ca1142aca4a829a1276a1c76b9/sound/usb/mixer_quirks.c">sound/usb/mixer_quirks.c</a>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-c" data-lang="c"><span style="color:#c0c5ce;">    </span><span style="color:#b48ead;">case </span><span style="color:#bf616a;">USB_ID</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x1235</span><span style="color:#c0c5ce;">, </span><span style="color:#d08770;">0x8203</span><span style="color:#c0c5ce;">): </span><span style="color:#65737e;">/* Focusrite Scarlett 6i6 2nd Gen */
+    </span><span style="color:#b48ead;">case </span><span style="color:#bf616a;">USB_ID</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x1235</span><span style="color:#c0c5ce;">, </span><span style="color:#d08770;">0x8204</span><span style="color:#c0c5ce;">): </span><span style="color:#65737e;">/* Focusrite Scarlett 18i8 2nd Gen */
+    </span><span style="color:#b48ead;">case </span><span style="color:#bf616a;">USB_ID</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x1235</span><span style="color:#c0c5ce;">, </span><span style="color:#d08770;">0x8201</span><span style="color:#c0c5ce;">): </span><span style="color:#65737e;">/* Focusrite Scarlett 18i20 2nd Gen */
+    </span><span style="color:#b48ead;">case </span><span style="color:#bf616a;">USB_ID</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x1235</span><span style="color:#c0c5ce;">, </span><span style="color:#d08770;">0x8212</span><span style="color:#c0c5ce;">): </span><span style="color:#65737e;">/* Focusrite Scarlett 4i4 3rd Gen */
+    </span><span style="color:#b48ead;">case </span><span style="color:#bf616a;">USB_ID</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">0x1235</span><span style="color:#c0c5ce;">, </span><span style="color:#d08770;">0x8213</span><span style="color:#c0c5ce;">): </span><span style="color:#65737e;">/* Focusrite Scarlett 8i6 3rd Gen */
+</span></code></pre>
+<p>The kernel logs have <code>idProduct=8203</code>, this matches the constant with the comment for the <code>Focusrite Scarlett 6i6 2nd Gen</code>, which is the device I have. Great, so now we know what <code>vid</code> and <code>pid</code> should be. Add this to <code>/etc/modprobe.d/scarlett.conf</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-plaintext" data-lang="plaintext"><span style="color:#c0c5ce;">options snd_usb_audio vid=0x1235 pid=0x8203 device_setup=1
+</span></code></pre>
+<p>Run <code>sudo systemctl restart systemd-modules-load.service</code> to reload the kernel modules. Check they are loaded:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">✦</span><span style="color:#c0c5ce;"> ➜ modprobe</span><span style="color:#bf616a;"> -c </span><span style="color:#c0c5ce;">| </span><span style="color:#bf616a;">grep</span><span style="color:#c0c5ce;"> snd_usb_audio | </span><span style="color:#bf616a;">grep</span><span style="color:#c0c5ce;"> options
+</span><span style="color:#bf616a;">options</span><span style="color:#c0c5ce;"> snd_usb_audio vid=0x1235 pid=0x8203 device_setup=1
+</span></code></pre>
+<p>Still no sound... </p>
+<h1 id="still-silence">Still silence</h1>
+<p>Now what?  Some more googling around brought me to <a href="https://linuxmusicians.com/viewtopic.php?f=6&amp;t=19975&amp;start=30">this forum thread</a>. There is some discussion about the issue there, luckily the author of the driver is also posting! In one of the comments they mention:</p>
+<blockquote>
+<p>Please upgrade to 5.4.1 first; there are known issues with the 6i6 support in 5.4.0 and it won't work very well even after you enable it.</p>
+</blockquote>
+<p>What version of the kernel am I on?</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> uname</span><span style="color:#bf616a;"> -r
+5.4.0-37-generic
+</span></code></pre>
+<p>Ah! A likely suspect. Let's compile a custom kernel, say the latest 5.4.x kernel. It's been a while since I've done this. </p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.4.46.tar.xz
+
+</span><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.4.46.tar.sign
+
+</span><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> unxz linux-5.4.46.tar.xz
+
+</span><span style="color:#65737e;"># I haven&#39;t stored the public keys for linus/greg on this machine yet
+</span><span style="color:#c0c5ce;">➜ gpg</span><span style="color:#bf616a;"> --locate-keys</span><span style="color:#c0c5ce;"> torvalds@kernel.org gregkh@kernel.org
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> WARNING: unacceptable HTTP redirect from server was cleaned up
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> key 38DBBDC86092693E: public key &quot;</span><span style="color:#a3be8c;">Greg Kroah-Hartman &lt;gregkh@kernel.org&gt;</span><span style="color:#c0c5ce;">&quot; imported
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> Total number processed: 1
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;">               imported: 1
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> WARNING: unacceptable HTTP redirect from server was cleaned up
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> key 79BE3E4300411886: public key &quot;</span><span style="color:#a3be8c;">Linus Torvalds &lt;torvalds@kernel.org&gt;</span><span style="color:#c0c5ce;">&quot; imported
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> Total number processed: 1
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;">               imported: 1
+</span><span style="color:#bf616a;">pub</span><span style="color:#c0c5ce;">   rsa4096 2011-09-23 </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">SC</span><span style="color:#b48ead;">]
+      </span><span style="color:#bf616a;">647F28654894E3BD457199BE38DBBDC86092693E
+uid           </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;"> unknown</span><span style="color:#b48ead;">]</span><span style="color:#c0c5ce;"> Greg Kroah-Hartman &lt;gregkh@kernel.org&gt;
+sub   rsa4096 2011-09-23 </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">E</span><span style="color:#b48ead;">]
+
+</span><span style="color:#bf616a;">pub</span><span style="color:#c0c5ce;">   rsa2048 2011-09-20 </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">SC</span><span style="color:#b48ead;">]
+      </span><span style="color:#bf616a;">ABAF11C65A2970B130ABE3C479BE3E4300411886
+uid           </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;"> unknown</span><span style="color:#b48ead;">]</span><span style="color:#c0c5ce;"> Linus Torvalds &lt;torvalds@kernel.org&gt;
+sub   rsa2048 2011-09-20 </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">E</span><span style="color:#b48ead;">]
+
+</span><span style="color:#65737e;"># Verify the signature, can ignore the warning I just haven&#39;t trusted
+</span><span style="color:#c0c5ce;">➜ gpg</span><span style="color:#bf616a;"> --verify</span><span style="color:#c0c5ce;"> linux-5.4.46.tar.sign
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> assuming signed data in &#39;</span><span style="color:#a3be8c;">linux-5.4.46.tar</span><span style="color:#c0c5ce;">&#39;
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> Signature made Wed 10 Jun 2020 19:25:28 IST
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;">                using RSA key 647F28654894E3BD457199BE38DBBDC86092693E
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> Good signature from &quot;</span><span style="color:#a3be8c;">Greg Kroah-Hartman &lt;gregkh@kernel.org&gt;</span><span style="color:#c0c5ce;">&quot; </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">unknown</span><span style="color:#b48ead;">]
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> WARNING: This key is not certified with a trusted signature!
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;">          There is no indication that the signature belongs to the owner.
+</span><span style="color:#bf616a;">Primary</span><span style="color:#c0c5ce;"> key fingerprint: 647F 2865 4894 E3BD 4571  99BE 38DB BDC8 6092 693E
+
+</span><span style="color:#65737e;"># I haven&#39;t trusted the key so I got a warning, to do so
+</span><span style="color:#c0c5ce;">➜ gpg</span><span style="color:#bf616a;"> --tofu-policy</span><span style="color:#c0c5ce;"> good 647F28654894E3BD457199BE38DBBDC86092693E
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> Setting TOFU trust policy for new binding &lt;key: 647F28654894E3BD457199BE38DBBDC86092693E, user id: Greg Kroah-Hartman &lt;gregkh@kernel.org&gt;&gt; to good.
+
+</span><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> gpg</span><span style="color:#bf616a;"> --trust-model</span><span style="color:#c0c5ce;"> tofu</span><span style="color:#bf616a;"> --verify</span><span style="color:#c0c5ce;"> linux-5.4.46.tar.sign
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> assuming signed data in &#39;</span><span style="color:#a3be8c;">linux-5.4.46.tar</span><span style="color:#c0c5ce;">&#39;
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> Signature made Wed 10 Jun 2020 19:25:28 IST
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;">                using RSA key 647F28654894E3BD457199BE38DBBDC86092693E
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> Good signature from &quot;</span><span style="color:#a3be8c;">Greg Kroah-Hartman &lt;gregkh@kernel.org&gt;</span><span style="color:#c0c5ce;">&quot; </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">full</span><span style="color:#b48ead;">]
+</span><span style="color:#bf616a;">gpg:</span><span style="color:#c0c5ce;"> gregkh@kernel.org: Verified 1 signatures in the past 0 seconds.  Encrypted
+     </span><span style="color:#bf616a;">0</span><span style="color:#c0c5ce;"> messages.
+
+</span><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> tar xf linux-5.4.46.tar
+</span><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> cd linux-5.4.46/
+
+</span><span style="color:#65737e;"># Copy the current kernels config
+</span><span style="color:#c0c5ce;">➜ cp /boot/config-$(</span><span style="color:#bf616a;">uname -r</span><span style="color:#c0c5ce;">) .config
+
+</span><span style="color:#65737e;"># Once menuconfig loads just save and exit, no need to change anything
+</span><span style="color:#c0c5ce;">➜ make menuconfig
+
+</span><span style="color:#65737e;"># This can take a while...
+</span><span style="color:#c0c5ce;">➜ time make</span><span style="color:#bf616a;"> -j12
+  HOSTCC</span><span style="color:#c0c5ce;">  scripts/basic/fixdep
+  </span><span style="color:#bf616a;">DESCEND</span><span style="color:#c0c5ce;">  objtool
+</span><span style="color:#bf616a;">...
+
+</span><span style="color:#65737e;"># Install the modules
+</span><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> sudo make modules_install
+</span><span style="color:#bf616a;">...
+
+</span><span style="color:#65737e;"># Install the kernel
+</span><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> sudo make install
+</span><span style="color:#bf616a;">...
+</span></code></pre>
+<p><code>make install</code> should setup the boot config needed in grub, I just need to reboot now. Reboot... and nothing!</p>
+<h1 id="silence-and-broken-graphics">Silence and broken graphics</h1>
+<p>This time <code>dmesg</code> is giving a different error. </p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#96b5b4;">[</span><span style="color:#c0c5ce;">  159.097340] usb 1-1.1: Product: Scarlett 6i6 USB
+</span><span style="color:#96b5b4;">[</span><span style="color:#c0c5ce;">  159.097343] usb 1-1.1: Manufacturer: Focusrite
+</span><span style="color:#96b5b4;">[</span><span style="color:#c0c5ce;">  159.097344] usb 1-1.1: SerialNumber: 00009810
+</span><span style="color:#96b5b4;">[</span><span style="color:#c0c5ce;">  164.318711] usb 1-1.1: Scarlett Gen 2 USB response result cmd 0 was -110
+</span></code></pre>
+<p>On top of that, I broke the nvidia drivers :smile: these need to be compiled for the kernel you are on. This is my lovely 1440p display:</p>
+<p><img src="https://wayofthepie.github.io/linux/morning-silence/nvidia-broken.png" alt="Alt Text" /></p>
+<p>Purge them and flip back to noveau for now:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-bash" data-lang="bash"><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> sudo apt-get remove</span><span style="color:#bf616a;"> --purge</span><span style="color:#c0c5ce;"> nvidia-*
+</span><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> reboot
+</span><span style="color:#bf616a;">➜</span><span style="color:#c0c5ce;"> lshw</span><span style="color:#bf616a;"> -c</span><span style="color:#c0c5ce;"> video
+  </span><span style="color:#bf616a;">*-display
+       description:</span><span style="color:#c0c5ce;"> VGA compatible controller
+       </span><span style="color:#bf616a;">product:</span><span style="color:#c0c5ce;"> GP102 </span><span style="color:#b48ead;">[</span><span style="color:#c0c5ce;">GeForce GTX 1080 Ti</span><span style="color:#b48ead;">]
+       </span><span style="color:#bf616a;">vendor:</span><span style="color:#c0c5ce;"> NVIDIA Corporation
+       </span><span style="color:#bf616a;">physical</span><span style="color:#c0c5ce;"> id: 0
+       </span><span style="color:#bf616a;">bus</span><span style="color:#c0c5ce;"> info: pci@0000:03:00.0
+       </span><span style="color:#bf616a;">version:</span><span style="color:#c0c5ce;"> a1
+       </span><span style="color:#bf616a;">width:</span><span style="color:#c0c5ce;"> 64 bits
+       </span><span style="color:#bf616a;">clock:</span><span style="color:#c0c5ce;"> 33MHz
+       </span><span style="color:#bf616a;">capabilities:</span><span style="color:#c0c5ce;"> vga_controller bus_master cap_list rom
+       </span><span style="color:#bf616a;">configuration:</span><span style="color:#c0c5ce;"> driver=nouveau latency=0 </span><span style="color:#65737e;"># running noveau drivers now
+</span><span style="color:#c0c5ce;">       resources: irq:73 memory:fa000000-faffffff memory:c0000000-cfffffff memory:d0000000-d1ffffff ioport:e000(size=128) </span><span style="color:#bf616a;">memory:c0000-dffff
+</span></code></pre>
+<p>Much better:
+<img src="https://wayofthepie.github.io/linux/morning-silence/nvidia-fixed.png" alt="Alt Text" /></p>
+<p>Back to the <code>dmesg</code> error - <code>Scarlett Gen 2 USB response result cmd 0 was -110</code>. Looking at <code>alsamixer</code> this shows it is not recognizing the device properly.
+<img src="https://wayofthepie.github.io/linux/morning-silence/usb-sound-ports.png" alt="Alt Text" /> </p>
+<p>I wonder if it is the USB port I'm using... It is! Using a different port:</p>
+<p><img src="https://wayofthepie.github.io/linux/morning-silence/usb-sound-ports-different-port.png" alt="" /></p>
+<p>I get the expected &quot;Front left&quot;, &quot;Front center&quot; sound output when running <code>speaker-test -t wav -c 6</code>. This is weird, as other devices work fine on that port and it was previously working there too. Something else to investigate another time I guess.</p>
+<h1 id="conclusion">Conclusion</h1>
+<p>In the end there were a number of issues. This is the first time a driver issue has caused me trouble on linux in years. But my hardware is getting old, it's probably time to upgrade a few things. Also:</p>
+<ul>
+<li>Don't try to debug and fix an issue when you have just woken up and have had no caffeine injected into your system yet.</li>
+<li>All computers are broken.</li>
+</ul>
+
+    <script src="https://utteranc.es/client.js"
+        repo="wayofthepie/wayofthepie.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+    </script>
+</div>
+
+    </div>
+  </body>
+</html>

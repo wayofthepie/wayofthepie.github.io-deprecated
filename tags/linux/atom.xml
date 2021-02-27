@@ -11,8 +11,8 @@
 		<title>Morning silence and broken drivers</title>
 		<published>2020-06-14T00:00:00+00:00</published>
 		<updated>2020-06-14T00:00:00+00:00</updated>
-		<link href="https://wayofthepie.github.io/linux-broken-driver/morning-silence/" type="text/html"/>
-		<id>https://wayofthepie.github.io/linux-broken-driver/morning-silence/</id>
+		<link href="https://wayofthepie.github.io/linux/morning-silence/" type="text/html"/>
+		<id>https://wayofthepie.github.io/linux/morning-silence/</id>
 		<content type="html">&lt;p&gt;I woke up this morning and booted my desktop. No sound! Some digging around and I noticed &lt;code&gt;dmesg&lt;&#x2F;code&gt; spitting out an error. I don&#x27;t have that message saved but here are the details from the kernel logs.&lt;&#x2F;p&gt;
 &lt;span id=&quot;continue-reading&quot;&gt;&lt;&#x2F;span&gt;&lt;div class=&quot;alert alert-info&quot;&gt;
 &lt;span&gt;&lt;i class=&quot;icon fas fa-info-circle&quot;&gt;&lt;&#x2F;i&gt;&lt;&#x2F;span&gt;
@@ -155,7 +155,7 @@ sub   rsa2048 2011-09-20 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&q
 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#96b5b4;&quot;&gt;[&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  164.318711] usb 1-1.1: Scarlett Gen 2 USB response result cmd 0 was -110
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;p&gt;On top of that, I broke the nvidia drivers :smile: these need to be compiled for the kernel you are on. This is my lovely 1440p display:&lt;&#x2F;p&gt;
-&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;linux-broken-driver&#x2F;morning-silence&#x2F;nvidia-broken.png&quot; alt=&quot;Alt Text&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;linux&#x2F;morning-silence&#x2F;nvidia-broken.png&quot; alt=&quot;Alt Text&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
 &lt;p&gt;Purge them and flip back to noveau for now:&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
 &lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;➜&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; sudo apt-get remove&lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt; --purge&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; nvidia-*
@@ -175,11 +175,11 @@ sub   rsa2048 2011-09-20 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&q
 &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;       resources: irq:73 memory:fa000000-faffffff memory:c0000000-cfffffff memory:d0000000-d1ffffff ioport:e000(size=128) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#bf616a;&quot;&gt;memory:c0000-dffff
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;p&gt;Much better:
-&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;linux-broken-driver&#x2F;morning-silence&#x2F;nvidia-fixed.png&quot; alt=&quot;Alt Text&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;linux&#x2F;morning-silence&#x2F;nvidia-fixed.png&quot; alt=&quot;Alt Text&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
 &lt;p&gt;Back to the &lt;code&gt;dmesg&lt;&#x2F;code&gt; error - &lt;code&gt;Scarlett Gen 2 USB response result cmd 0 was -110&lt;&#x2F;code&gt;. Looking at &lt;code&gt;alsamixer&lt;&#x2F;code&gt; this shows it is not recognizing the device properly.
-&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;linux-broken-driver&#x2F;morning-silence&#x2F;usb-sound-ports.png&quot; alt=&quot;Alt Text&quot; &#x2F;&gt; &lt;&#x2F;p&gt;
+&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;linux&#x2F;morning-silence&#x2F;usb-sound-ports.png&quot; alt=&quot;Alt Text&quot; &#x2F;&gt; &lt;&#x2F;p&gt;
 &lt;p&gt;I wonder if it is the USB port I&#x27;m using... It is! Using a different port:&lt;&#x2F;p&gt;
-&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;linux-broken-driver&#x2F;morning-silence&#x2F;usb-sound-ports-different-port.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;linux&#x2F;morning-silence&#x2F;usb-sound-ports-different-port.png&quot; alt=&quot;&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
 &lt;p&gt;I get the expected &amp;quot;Front left&amp;quot;, &amp;quot;Front center&amp;quot; sound output when running &lt;code&gt;speaker-test -t wav -c 6&lt;&#x2F;code&gt;. This is weird, as other devices work fine on that port and it was previously working there too. Something else to investigate another time I guess.&lt;&#x2F;p&gt;
 &lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;&#x2F;h1&gt;
 &lt;p&gt;In the end there were a number of issues. This is the first time a driver issue has caused me trouble on linux in years. But my hardware is getting old, it&#x27;s probably time to upgrade a few things. Also:&lt;&#x2F;p&gt;
