@@ -14,7 +14,11 @@
 		<link href="https://wayofthepie.github.io/courses/laff-week-one/" type="text/html"/>
 		<id>https://wayofthepie.github.io/courses/laff-week-one/</id>
 		<content type="html">&lt;p&gt;Notes from week one of Linear Algebra - Foundations to Frontiers.&lt;&#x2F;p&gt;
-&lt;span id=&quot;continue-reading&quot;&gt;&lt;&#x2F;span&gt;&lt;h1 id=&quot;dot-product&quot;&gt;Dot Product&lt;&#x2F;h1&gt;
+&lt;span id=&quot;continue-reading&quot;&gt;&lt;&#x2F;span&gt;&lt;h1 id=&quot;notation&quot;&gt;Notation&lt;&#x2F;h1&gt;
+&lt;p&gt;$$
+\vert\vert\vert\vert
+$$&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;dot-product&quot;&gt;Dot Product&lt;&#x2F;h1&gt;
 &lt;p&gt;Let $x, y \in \reals^n$
 $$
 x = \begin{pmatrix}
@@ -58,7 +62,7 @@ dot(x,y) = dot \bigg(\begin{pmatrix}
 1 \\
 -2 \\
 -1 \\
-\end{pmatrix}\bigg) = (2 \cdot 1) + (-1 \cdot 2) + (4 \cdot -1) = 0
+\end{pmatrix}\bigg) = (2 \cdot 1) + (-1 \cdot -2) + (4 \cdot -1) = 0
 $$&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;algorithm&quot;&gt;Algorithm&lt;&#x2F;h2&gt;
 &lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
@@ -99,6 +103,44 @@ $$&lt;&#x2F;p&gt;
 &amp;amp;= \chi_0 \psi_0 + \chi_1 \psi_1 + \dots + \chi_{n-1} \psi_{n-1}
 \end{aligned}
 $$&lt;&#x2F;p&gt;
+&lt;h1 id=&quot;vector-length&quot;&gt;Vector Length&lt;&#x2F;h1&gt;
+&lt;p&gt;Size of a vector is num components. Length is euclidian length. Given a vector $x$ such that&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+x = \begin{pmatrix}
+4 \\
+-3 \\
+\end{pmatrix}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;The length of $x$ is $\sqrt{4^2+3^2} = 5$. Pythagoras&#x27; theorem! We can also get the length of a vector $x$ using $\sqrt{dot(x,x)}$.&lt;&#x2F;p&gt;
+&lt;p&gt;Let $x \in \reals^2$ then the length is&lt;&#x2F;p&gt;
+&lt;p&gt;$$
+\begin{aligned}
+\sqrt{dot(x,x)} &amp;amp;= \sqrt{x^Tx} \\
+&amp;amp;= \sqrt{
+\begin{pmatrix}
+\chi_0 \\
+\chi_1 \\
+\vdots \\
+\chi_{n-1}
+\end{pmatrix}^T 
+\begin{pmatrix}
+\chi_0 \\
+\chi_1 \\
+\vdots \\
+\chi_{n-1}
+\end{pmatrix}
+}\\
+&amp;amp;= \sqrt{\chi_{0}^{2} + \chi_{1}^{2} + \cdots + \chi_{n-1}^2} = \sqrt{ \sum_{i=0}^{n-1} \chi_{i}^{2} }
+\end{aligned}
+$$&lt;&#x2F;p&gt;
+&lt;p&gt;In summary,&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;The euclidian length of a vector equals the square root of the sum of the squares of its components.&lt;&#x2F;li&gt;
+&lt;li&gt;The length also equals the square root of the dot product of the vector with itself.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;h2 id=&quot;notes&quot;&gt;Notes&lt;&#x2F;h2&gt;
+&lt;h3 id=&quot;unit-vs-unit-basis-vector&quot;&gt;Unit vs Unit Basis Vector&lt;&#x2F;h3&gt;
+&lt;p&gt;Unit vector is a vector of length $1$. Unit basis (standard basis vectors) have all zeros except for a single entry which is one. They are denoted in this course with $e_j$ where $j$ is the index of the $1$ in the vector.&lt;&#x2F;p&gt;
 </content>
 	</entry>
 </feed>

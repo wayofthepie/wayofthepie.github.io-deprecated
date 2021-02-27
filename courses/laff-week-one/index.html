@@ -112,6 +112,11 @@
     <ul class="table-of-content">
     
         <li>
+            <a href="https://wayofthepie.github.io/courses/laff-week-one/#notation">Notation</a>
+            
+        </li>
+    
+        <li>
             <a href="https://wayofthepie.github.io/courses/laff-week-one/#dot-product">Dot Product</a>
             
                 <ul>
@@ -130,9 +135,35 @@
             
         </li>
     
+        <li>
+            <a href="https://wayofthepie.github.io/courses/laff-week-one/#vector-length">Vector Length</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/courses/laff-week-one/#notes">Notes</a>
+                    
+                        <ul>
+                            
+                                <li>
+                                    <a href="https://wayofthepie.github.io/courses/laff-week-one/#unit-vs-unit-basis-vector">Unit vs Unit Basis Vector</a>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
     </ul>
     <p>Notes from week one of Linear Algebra - Foundations to Frontiers.</p>
-<span id="continue-reading"></span><h1 id="dot-product">Dot Product</h1>
+<span id="continue-reading"></span><h1 id="notation">Notation</h1>
+<p>$$
+\vert\vert\vert\vert
+$$</p>
+<h1 id="dot-product">Dot Product</h1>
 <p>Let $x, y \in \reals^n$
 $$
 x = \begin{pmatrix}
@@ -176,7 +207,7 @@ dot(x,y) = dot \bigg(\begin{pmatrix}
 1 \\
 -2 \\
 -1 \\
-\end{pmatrix}\bigg) = (2 \cdot 1) + (-1 \cdot 2) + (4 \cdot -1) = 0
+\end{pmatrix}\bigg) = (2 \cdot 1) + (-1 \cdot -2) + (4 \cdot -1) = 0
 $$</p>
 <h2 id="algorithm">Algorithm</h2>
 <pre style="background-color:#2b303b;">
@@ -217,6 +248,44 @@ $$</p>
 &amp;= \chi_0 \psi_0 + \chi_1 \psi_1 + \dots + \chi_{n-1} \psi_{n-1}
 \end{aligned}
 $$</p>
+<h1 id="vector-length">Vector Length</h1>
+<p>Size of a vector is num components. Length is euclidian length. Given a vector $x$ such that</p>
+<p>$$
+x = \begin{pmatrix}
+4 \\
+-3 \\
+\end{pmatrix}
+$$</p>
+<p>The length of $x$ is $\sqrt{4^2+3^2} = 5$. Pythagoras' theorem! We can also get the length of a vector $x$ using $\sqrt{dot(x,x)}$.</p>
+<p>Let $x \in \reals^2$ then the length is</p>
+<p>$$
+\begin{aligned}
+\sqrt{dot(x,x)} &amp;= \sqrt{x^Tx} \\
+&amp;= \sqrt{
+\begin{pmatrix}
+\chi_0 \\
+\chi_1 \\
+\vdots \\
+\chi_{n-1}
+\end{pmatrix}^T 
+\begin{pmatrix}
+\chi_0 \\
+\chi_1 \\
+\vdots \\
+\chi_{n-1}
+\end{pmatrix}
+}\\
+&amp;= \sqrt{\chi_{0}^{2} + \chi_{1}^{2} + \cdots + \chi_{n-1}^2} = \sqrt{ \sum_{i=0}^{n-1} \chi_{i}^{2} }
+\end{aligned}
+$$</p>
+<p>In summary,</p>
+<ul>
+<li>The euclidian length of a vector equals the square root of the sum of the squares of its components.</li>
+<li>The length also equals the square root of the dot product of the vector with itself.</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<h3 id="unit-vs-unit-basis-vector">Unit vs Unit Basis Vector</h3>
+<p>Unit vector is a vector of length $1$. Unit basis (standard basis vectors) have all zeros except for a single entry which is one. They are denoted in this course with $e_j$ where $j$ is the index of the $1$ in the vector.</p>
 
     <script src="https://utteranc.es/client.js"
         repo="wayofthepie/wayofthepie.github.io"

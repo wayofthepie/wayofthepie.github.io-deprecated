@@ -422,7 +422,7 @@ Version</span><span style="color:#c0c5ce;">  ::=  INTEGER  {  v1(0), v2(1), v3(2
 </blockquote>
 <p>I don't know enough about this to comment further. But I am currently investigating. Once I understand more I will write about it.</p>
 <h2 id="issuer">Issuer</h2>
-<p>The <code>Issuer</code><sup class="footnote-reference"><a href="#issuer">10</a></sup> field is a unique identifier for the CA issuing this certificate.</p>
+<p>The <code>Issuer</code><sup class="footnote-reference"><a href="#issuer-note">10</a></sup> field is a unique identifier for the CA issuing this certificate.</p>
 <pre style="background-color:#2b303b;">
 <code><span style="color:#c0c5ce;">Issuer: C = US, O = Google Trust Services, CN = GTS CA 1O1
 </span></code></pre>
@@ -462,7 +462,7 @@ RelativeDistinguishedName</span><span style="color:#c0c5ce;"> ::= SET SIZE (1..M
 <p>We haven't seen <code>SET</code> yet either. This defines a set of objects. <code>SET SIZE (1..MAX) OF AttributeTypeAndValue</code> defines a set of <code>AttributeTypeAndValue</code>'s of max size <code>MAX</code>, I'm not sure what value <code>MAX</code> is bound to here either, will edit and add this information once I realise what it is.</p>
 <p>In short, <code>Name</code> is a list of OID/value pairs where the value is some object bound by that OID. <a href="https://tools.ietf.org/html/rfc2253#section-2">Section 2.3</a> of <a href="https://tools.ietf.org/html/rfc2253">RFC 2253 - LDAP v3</a> describes <code>RelativeDistinguishedName</code> and its encoding in more depth.</p>
 <h2 id="validity">Validity</h2>
-<p><code>Validity</code><sup class="footnote-reference"><a href="#validity">11</a></sup> specifies the time window a certificate is valid between.</p>
+<p><code>Validity</code><sup class="footnote-reference"><a href="#validity-note">11</a></sup> specifies the time window a certificate is valid between.</p>
 <pre style="background-color:#2b303b;">
 <code><span style="color:#c0c5ce;">Validity
     Not Before: Apr 15 20:16:47 2020 GMT
@@ -534,6 +534,7 @@ SubjectPublicKeyInfo</span><span style="color:#c0c5ce;">  ::=  SEQUENCE  {
 <h1 id="conclusion">Conclusion</h1>
 <p>If you made it to here, kudos! I hope this has given you a better understanding of what really makes up a certificate, and the sheer complexity around X.509 in general. There is a lot I glossed over in this post which I hope to drill deeper into in the future. </p>
 <p>In the next post I'll cover the <code>TBSCertificate</code> <code>extensions</code> fields. </p>
+<hr />
 <div class="footnote-definition" id="asn"><sup class="footnote-definition-label">1</sup>
 <p>ASN.1 - see <a href="https://www.itu.int/en/ITU-T/asn1/Pages/introduction.aspx">Introduction to ASN.1</a>.</p>
 </div>
@@ -561,10 +562,10 @@ SubjectPublicKeyInfo</span><span style="color:#c0c5ce;">  ::=  SEQUENCE  {
 <div class="footnote-definition" id="sigalgorithm2"><sup class="footnote-definition-label">9</sup>
 <p><code>Signature Algorithm</code> in <code>TBSCertificate</code> - see <a href="https://tools.ietf.org/html/rfc5280#section-4.1.1.2">Section 4.1.1.2</a> of <a href="https://tools.ietf.org/html/rfc5280">RFC 5280</a>.</p>
 </div>
-<div class="footnote-definition" id="issuer"><sup class="footnote-definition-label">10</sup>
+<div class="footnote-definition" id="issuer-note"><sup class="footnote-definition-label">10</sup>
 <p><code>Issuer</code> - see <a href="https://tools.ietf.org/html/rfc5280#section-4.1.2.4">Secion 4.2.1.4</a> of <a href="https://tools.ietf.org/html/rfc5280">RFC 5280</a></p>
 </div>
-<div class="footnote-definition" id="validity"><sup class="footnote-definition-label">11</sup>
+<div class="footnote-definition" id="validity-note"><sup class="footnote-definition-label">11</sup>
 <p><code>Validity</code> - see <a href="https://tools.ietf.org/html/rfc5280#section-4.1.2.5">Secion 4.2.1.5</a> of <a href="https://tools.ietf.org/html/rfc5280">RFC 5280</a></p>
 </div>
 <div class="footnote-definition" id="utctime"><sup class="footnote-definition-label">12</sup>

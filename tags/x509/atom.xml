@@ -247,7 +247,7 @@ Version&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;  ::=  INT
 &lt;&#x2F;blockquote&gt;
 &lt;p&gt;I don&#x27;t know enough about this to comment further. But I am currently investigating. Once I understand more I will write about it.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;issuer&quot;&gt;Issuer&lt;&#x2F;h2&gt;
-&lt;p&gt;The &lt;code&gt;Issuer&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#issuer&quot;&gt;10&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; field is a unique identifier for the CA issuing this certificate.&lt;&#x2F;p&gt;
+&lt;p&gt;The &lt;code&gt;Issuer&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#issuer-note&quot;&gt;10&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; field is a unique identifier for the CA issuing this certificate.&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
 &lt;code&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Issuer: C = US, O = Google Trust Services, CN = GTS CA 1O1
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
@@ -287,7 +287,7 @@ RelativeDistinguishedName&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&q
 &lt;p&gt;We haven&#x27;t seen &lt;code&gt;SET&lt;&#x2F;code&gt; yet either. This defines a set of objects. &lt;code&gt;SET SIZE (1..MAX) OF AttributeTypeAndValue&lt;&#x2F;code&gt; defines a set of &lt;code&gt;AttributeTypeAndValue&lt;&#x2F;code&gt;&#x27;s of max size &lt;code&gt;MAX&lt;&#x2F;code&gt;, I&#x27;m not sure what value &lt;code&gt;MAX&lt;&#x2F;code&gt; is bound to here either, will edit and add this information once I realise what it is.&lt;&#x2F;p&gt;
 &lt;p&gt;In short, &lt;code&gt;Name&lt;&#x2F;code&gt; is a list of OID&#x2F;value pairs where the value is some object bound by that OID. &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc2253#section-2&quot;&gt;Section 2.3&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc2253&quot;&gt;RFC 2253 - LDAP v3&lt;&#x2F;a&gt; describes &lt;code&gt;RelativeDistinguishedName&lt;&#x2F;code&gt; and its encoding in more depth.&lt;&#x2F;p&gt;
 &lt;h2 id=&quot;validity&quot;&gt;Validity&lt;&#x2F;h2&gt;
-&lt;p&gt;&lt;code&gt;Validity&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#validity&quot;&gt;11&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; specifies the time window a certificate is valid between.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;code&gt;Validity&lt;&#x2F;code&gt;&lt;sup class=&quot;footnote-reference&quot;&gt;&lt;a href=&quot;#validity-note&quot;&gt;11&lt;&#x2F;a&gt;&lt;&#x2F;sup&gt; specifies the time window a certificate is valid between.&lt;&#x2F;p&gt;
 &lt;pre style=&quot;background-color:#2b303b;&quot;&gt;
 &lt;code&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;Validity
     Not Before: Apr 15 20:16:47 2020 GMT
@@ -359,6 +359,7 @@ SubjectPublicKeyInfo&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&
 &lt;h1 id=&quot;conclusion&quot;&gt;Conclusion&lt;&#x2F;h1&gt;
 &lt;p&gt;If you made it to here, kudos! I hope this has given you a better understanding of what really makes up a certificate, and the sheer complexity around X.509 in general. There is a lot I glossed over in this post which I hope to drill deeper into in the future. &lt;&#x2F;p&gt;
 &lt;p&gt;In the next post I&#x27;ll cover the &lt;code&gt;TBSCertificate&lt;&#x2F;code&gt; &lt;code&gt;extensions&lt;&#x2F;code&gt; fields. &lt;&#x2F;p&gt;
+&lt;hr &#x2F;&gt;
 &lt;div class=&quot;footnote-definition&quot; id=&quot;asn&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;1&lt;&#x2F;sup&gt;
 &lt;p&gt;ASN.1 - see &lt;a href=&quot;https:&#x2F;&#x2F;www.itu.int&#x2F;en&#x2F;ITU-T&#x2F;asn1&#x2F;Pages&#x2F;introduction.aspx&quot;&gt;Introduction to ASN.1&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
 &lt;&#x2F;div&gt;
@@ -386,10 +387,10 @@ SubjectPublicKeyInfo&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&
 &lt;div class=&quot;footnote-definition&quot; id=&quot;sigalgorithm2&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;9&lt;&#x2F;sup&gt;
 &lt;p&gt;&lt;code&gt;Signature Algorithm&lt;&#x2F;code&gt; in &lt;code&gt;TBSCertificate&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.1.2&quot;&gt;Section 4.1.1.2&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
 &lt;&#x2F;div&gt;
-&lt;div class=&quot;footnote-definition&quot; id=&quot;issuer&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;10&lt;&#x2F;sup&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;issuer-note&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;10&lt;&#x2F;sup&gt;
 &lt;p&gt;&lt;code&gt;Issuer&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.4&quot;&gt;Secion 4.2.1.4&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
 &lt;&#x2F;div&gt;
-&lt;div class=&quot;footnote-definition&quot; id=&quot;validity&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;11&lt;&#x2F;sup&gt;
+&lt;div class=&quot;footnote-definition&quot; id=&quot;validity-note&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;11&lt;&#x2F;sup&gt;
 &lt;p&gt;&lt;code&gt;Validity&lt;&#x2F;code&gt; - see &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280#section-4.1.2.5&quot;&gt;Secion 4.2.1.5&lt;&#x2F;a&gt; of &lt;a href=&quot;https:&#x2F;&#x2F;tools.ietf.org&#x2F;html&#x2F;rfc5280&quot;&gt;RFC 5280&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
 &lt;&#x2F;div&gt;
 &lt;div class=&quot;footnote-definition&quot; id=&quot;utctime&quot;&gt;&lt;sup class=&quot;footnote-definition-label&quot;&gt;12&lt;&#x2F;sup&gt;

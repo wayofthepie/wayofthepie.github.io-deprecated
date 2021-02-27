@@ -1559,7 +1559,7 @@ test&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt; result: ok. 
 &lt;hr &#x2F;&gt;
 &lt;p&gt;&lt;strong&gt;Read and print certificate&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
 &lt;ul&gt;
-&lt;li&gt;:heavy_check_mark: Validate file is a certificate&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;i class=&quot;fas fa-check&quot;&gt;&lt;&#x2F;i&gt; Validate file is a certificate&lt;&#x2F;li&gt;
 &lt;li&gt;☐ Print the certificate &lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;hr &#x2F;&gt;
@@ -1624,8 +1624,8 @@ TbsCertificate &lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;{
 &lt;hr &#x2F;&gt;
 &lt;p&gt;&lt;strong&gt;Read and print certificate&lt;&#x2F;strong&gt;&lt;&#x2F;p&gt;
 &lt;ul&gt;
-&lt;li&gt;:heavy_check_mark: Validate file is a certificate&lt;&#x2F;li&gt;
-&lt;li&gt;:heavy_check_mark: Print the certificate &lt;&#x2F;li&gt;
+&lt;li&gt;&lt;i class=&quot;fas fa-check&quot;&gt;&lt;&#x2F;i&gt; Validate file is a certificate&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;i class=&quot;fas fa-check&quot;&gt;&lt;&#x2F;i&gt; Print the certificate &lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
 &lt;hr &#x2F;&gt;
 &lt;div class=&quot;alert alert-info&quot;&gt;
