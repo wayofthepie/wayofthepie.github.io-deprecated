@@ -337,7 +337,7 @@ finished thread
 			   | </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">);
 </span></code></pre>
 <p>You can see the source <a href="https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/createthread.c;h=bc3409b32648e901d931f67ff1869597473d1250;hb=HEAD#l67">here</a>. The actual calls from the <code>pthread_create</code> function to that function are through an insane chain of macros, it's not easy to see the call chain at all!</p>
-<p>Anyway, we know how to spawn a thread with <code>clone</code> in libc now. In the next post, I'm going to try to do this with the <code>clone</code> syscall directly.</p>
+<p>Anyway, we know how to spawn a thread with <code>clone</code> in libc now, yay!</p>
 <h1 id="mmap-and-map-stack">mmap and MAP_STACK</h1>
 <p>In the <a href="https://wayofthepie.github.io/linux/linux-procs-and-threads/#mmap">mmap</a> section I mentioned we could have just ignored this flag, at least for this post. But, I was super curious why it even existed after reading the <a href="https://man7.org/linux/man-pages/man2/clone.2.html">man page description</a> which says:</p>
 <blockquote>

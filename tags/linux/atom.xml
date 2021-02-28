@@ -200,7 +200,7 @@ finished thread
 			   | &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;);
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
 &lt;p&gt;You can see the source &lt;a href=&quot;https:&#x2F;&#x2F;sourceware.org&#x2F;git&#x2F;?p=glibc.git;a=blob;f=sysdeps&#x2F;unix&#x2F;sysv&#x2F;linux&#x2F;createthread.c;h=bc3409b32648e901d931f67ff1869597473d1250;hb=HEAD#l67&quot;&gt;here&lt;&#x2F;a&gt;. The actual calls from the &lt;code&gt;pthread_create&lt;&#x2F;code&gt; function to that function are through an insane chain of macros, it&#x27;s not easy to see the call chain at all!&lt;&#x2F;p&gt;
-&lt;p&gt;Anyway, we know how to spawn a thread with &lt;code&gt;clone&lt;&#x2F;code&gt; in libc now. In the next post, I&#x27;m going to try to do this with the &lt;code&gt;clone&lt;&#x2F;code&gt; syscall directly.&lt;&#x2F;p&gt;
+&lt;p&gt;Anyway, we know how to spawn a thread with &lt;code&gt;clone&lt;&#x2F;code&gt; in libc now, yay!&lt;&#x2F;p&gt;
 &lt;h1 id=&quot;mmap-and-map-stack&quot;&gt;mmap and MAP_STACK&lt;&#x2F;h1&gt;
 &lt;p&gt;In the &lt;a href=&quot;https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;linux&#x2F;linux-procs-and-threads&#x2F;#mmap&quot;&gt;mmap&lt;&#x2F;a&gt; section I mentioned we could have just ignored this flag, at least for this post. But, I was super curious why it even existed after reading the &lt;a href=&quot;https:&#x2F;&#x2F;man7.org&#x2F;linux&#x2F;man-pages&#x2F;man2&#x2F;clone.2.html&quot;&gt;man page description&lt;&#x2F;a&gt; which says:&lt;&#x2F;p&gt;
 &lt;blockquote&gt;
