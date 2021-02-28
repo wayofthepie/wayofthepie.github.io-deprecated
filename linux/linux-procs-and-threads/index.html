@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="description" content="All things computers." />
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
+    />
+
+    <title></title>
+
+    <!-- CSS -->
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;print.css"
+      media="print"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;poole.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;hyde.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;custom.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
+
+     
+     
+    
+  </head>
+
+  <body class="">
+    
+    <div class="sidebar">
+      <div class="container sidebar-sticky">
+        <ul class="sidebar-nav">
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io" class="sidebar-nav-item">Home</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags" class="sidebar-nav-item">Tags</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/series" class="sidebar-nav-item">Series</a>
+          <a href="https:&#x2F;&#x2F;wayofthepie.github.io/about" class="sidebar-nav-item">About</a>
+        </ul>
+        <ul class="sidebar-nav-social">
+          <a
+            href="https://github.com/wayofthepie"
+            class="fab fa-github sidebar-nav-social-item"
+          ></a>
+          <a
+            href="https://twitter.com/wayofthepie"
+            class="fab fa-twitter sidebar-nav-social-item"
+          ></a>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="content container">
+      
+
+
+
+<div class="post">
+    <h1 class="post-title">Processes, Threads and the Clone Syscall</h1>
+    <span class="post-metadata">
+        
+        
+            
+            
+<div class="post-series">
+    <div>Series <a href="https:&#x2F;&#x2F;wayofthepie.github.io&#x2F;series&#x2F;linux-processes&#x2F;">Linux Processes</a></div>
+</div>
+
+        
+        
+        
+        
+
+        <span class="post-date">2021-02-28</span>
+        
+        
+        
+        
+            <span class="post-tags">
+            
+                <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/linux">linux</a></span>
+            
+            </span>
+        
+        
+    </span>
+    <ul class="table-of-content">
+    
+        <li>
+            <a href="https://wayofthepie.github.io/linux/linux-procs-and-threads/#with-pthread">With pthread</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/linux/linux-procs-and-threads/#without-pthread">Without pthread</a>
+            
+                <ul>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/linux/linux-procs-and-threads/#clone-a-thread">Clone a Thread</a>
+                    
+                </li>
+                
+                <li>
+                    <a href="https://wayofthepie.github.io/linux/linux-procs-and-threads/#mmap">mmap</a>
+                    
+                </li>
+                
+                </ul>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/linux/linux-procs-and-threads/#time-to-clone">Time to Clone</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/linux/linux-procs-and-threads/#mmap-and-map-stack">mmap and MAP_STACK</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/linux/linux-procs-and-threads/#thread-safety-of-printf">Thread Safety of printf</a>
+            
+        </li>
+    
+        <li>
+            <a href="https://wayofthepie.github.io/linux/linux-procs-and-threads/#conclusion">Conclusion</a>
+            
+        </li>
+    
+    </ul>
+    <p>I want to explore how threads and processes work on Linux, under the hood, as in-depth as I can. So, in this series of posts, I'll be writing some potentially insane C code to dive into this.</p>
+<h1 id="with-pthread">With pthread</h1>
+<p>Normally if you want a thread in C you'd use the <a href="https://man7.org/linux/man-pages/man7/pthreads.7.html">pthreads</a> (POSIX threads) API. Quick example with <code>pthreads</code>.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-c" data-lang="c"><span style="color:#b48ead;">#include </span><span style="color:#c0c5ce;">&lt;</span><span style="color:#a3be8c;">pthread.h</span><span style="color:#c0c5ce;">&gt;
+</span><span style="color:#b48ead;">#include </span><span style="color:#c0c5ce;">&lt;</span><span style="color:#a3be8c;">stdio.h</span><span style="color:#c0c5ce;">&gt;
+</span><span style="color:#b48ead;">#include </span><span style="color:#c0c5ce;">&lt;</span><span style="color:#a3be8c;">stdlib.h</span><span style="color:#c0c5ce;">&gt;
+</span><span style="color:#b48ead;">#include </span><span style="color:#c0c5ce;">&lt;</span><span style="color:#a3be8c;">unistd.h</span><span style="color:#c0c5ce;">&gt;
+
+</span><span style="color:#b48ead;">void </span><span style="color:#c0c5ce;">*</span><span style="color:#8fa1b3;">work</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">void </span><span style="color:#c0c5ce;">*</span><span style="color:#bf616a;">arg</span><span style="color:#c0c5ce;">);
+
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">() {
+  pthread_t ptid;
+  </span><span style="color:#bf616a;">pthread_create</span><span style="color:#c0c5ce;">(&amp;ptid, </span><span style="color:#d08770;">NULL</span><span style="color:#c0c5ce;">, &amp;work, </span><span style="color:#d08770;">NULL</span><span style="color:#c0c5ce;">);
+  </span><span style="color:#96b5b4;">printf</span><span style="color:#c0c5ce;">(&quot;</span><span style="color:#a3be8c;">I launched a thread!</span><span style="color:#96b5b4;">\n</span><span style="color:#c0c5ce;">&quot;);
+  </span><span style="color:#bf616a;">pthread_join</span><span style="color:#c0c5ce;">(ptid, </span><span style="color:#d08770;">NULL</span><span style="color:#c0c5ce;">);
+  </span><span style="color:#bf616a;">pthread_exit</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">NULL</span><span style="color:#c0c5ce;">);
+}
+
+</span><span style="color:#b48ead;">void </span><span style="color:#c0c5ce;">*</span><span style="color:#8fa1b3;">work</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">void </span><span style="color:#c0c5ce;">*</span><span style="color:#bf616a;">arg</span><span style="color:#c0c5ce;">) {
+  </span><span style="color:#bf616a;">pthread_detach</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">pthread_self</span><span style="color:#c0c5ce;">());
+  </span><span style="color:#96b5b4;">printf</span><span style="color:#c0c5ce;">(&quot;</span><span style="color:#a3be8c;">Look ma! I&#39;m a thread!</span><span style="color:#96b5b4;">\n</span><span style="color:#c0c5ce;">&quot;);
+  </span><span style="color:#bf616a;">pthread_exit</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">NULL</span><span style="color:#c0c5ce;">);
+}
+</span></code></pre>
+<p>Compile and run, and you will get the following:</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">$ gcc -pthread -o pthread_thread.o pthread_thread.c
+
+$ ./pthread_thread.o
+I launched a thread!
+Look ma! I&#39;m a thread!
+</span></code></pre>
+<p>The order of the prints will depend on which thread got to print first. Note too that <code>printf</code> is threadsafe when used within the context of <code>glibc</code>, more on that later. This seems pretty straightforward. How would we do it without using <code>pthreads</code>? </p>
+<h1 id="without-pthread">Without pthread</h1>
+<p>Note the following will <em>not</em> be equivalent to the <code>pthread</code> call above. That does a lot more setup to make using the thread easier and safer than what we are going to see in this section. With that said - the <code>clone</code> syscall on Linux allows the creation of threads. This can be called directly or through <code>libc</code>. Let's do the latter. The signature for <code>clone</code> in libc looks as follows:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-c" data-lang="c"><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">clone </span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">int </span><span style="color:#c0c5ce;">(*fn)(</span><span style="color:#b48ead;">void </span><span style="color:#c0c5ce;">*arg), </span><span style="color:#b48ead;">void </span><span style="color:#c0c5ce;">*</span><span style="color:#bf616a;">child_stack</span><span style="color:#c0c5ce;">, </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">flags</span><span style="color:#c0c5ce;">,
+	      </span><span style="color:#b48ead;">void </span><span style="color:#c0c5ce;">*</span><span style="color:#bf616a;">arg</span><span style="color:#c0c5ce;">, ... </span><span style="color:#65737e;">/* pid_t *parent_tid, void *tls, pid_t *child_tid);
+</span></code></pre>
+<p><code>int (*fn)(void *arg)</code> is a pointer to a function that will do the work in the thread, <code>void *child_stack</code> is a pointer to the top of the stack for the thread, <code>int flags</code> are the flags for this <code>clone</code> call (more on those later), and <code>void *arg</code> is a pointer to an argument to pass to this thread. </p>
+<p>The rest of the arguments, defined with var args (<code>...</code>) we are not going to use. But they are the parent thread ID, pointer to thread local storage for this new thread, and the child's thread ID. <code>clone</code> will return  <code>-1</code> on error.</p>
+<h2 id="clone-a-thread">Clone a Thread</h2>
+<p>First, what should our thread do? Let's just make it print something and then sleep for a bit.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-c" data-lang="c"><span style="color:#65737e;">// We need to define this so we can call clone later.
+</span><span style="color:#b48ead;">#define </span><span style="color:#c0c5ce;">_GNU_SOURCE
+
+</span><span style="color:#65737e;">// We dont need all these headers just for thread_work, but  will need them later.
+</span><span style="color:#b48ead;">#include </span><span style="color:#c0c5ce;">&lt;</span><span style="color:#a3be8c;">sched.h</span><span style="color:#c0c5ce;">&gt;
+</span><span style="color:#b48ead;">#include </span><span style="color:#c0c5ce;">&lt;</span><span style="color:#a3be8c;">stdio.h</span><span style="color:#c0c5ce;">&gt;
+</span><span style="color:#b48ead;">#include </span><span style="color:#c0c5ce;">&lt;</span><span style="color:#a3be8c;">stdlib.h</span><span style="color:#c0c5ce;">&gt;
+</span><span style="color:#b48ead;">#include </span><span style="color:#c0c5ce;">&lt;</span><span style="color:#a3be8c;">string.h</span><span style="color:#c0c5ce;">&gt;
+</span><span style="color:#b48ead;">#include </span><span style="color:#c0c5ce;">&lt;</span><span style="color:#a3be8c;">sys/mman.h</span><span style="color:#c0c5ce;">&gt;
+</span><span style="color:#b48ead;">#include </span><span style="color:#c0c5ce;">&lt;</span><span style="color:#a3be8c;">unistd.h</span><span style="color:#c0c5ce;">&gt;
+
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">thread_work</span><span style="color:#c0c5ce;">() {
+  </span><span style="color:#b48ead;">const int</span><span style="color:#c0c5ce;"> SIZE = </span><span style="color:#d08770;">17</span><span style="color:#c0c5ce;">;
+  </span><span style="color:#b48ead;">char</span><span style="color:#c0c5ce;"> buf[SIZE];
+  </span><span style="color:#96b5b4;">strcpy</span><span style="color:#c0c5ce;">(buf, &quot;</span><span style="color:#a3be8c;">running thread</span><span style="color:#96b5b4;">\n</span><span style="color:#c0c5ce;">&quot;);
+  </span><span style="color:#bf616a;">write</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">fileno</span><span style="color:#c0c5ce;">(stdout), buf, SIZE);
+  </span><span style="color:#bf616a;">sleep</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">5</span><span style="color:#c0c5ce;">);
+  </span><span style="color:#96b5b4;">strcpy</span><span style="color:#c0c5ce;">(buf, &quot;</span><span style="color:#a3be8c;">finished thread</span><span style="color:#96b5b4;">\n</span><span style="color:#c0c5ce;">&quot;);
+  </span><span style="color:#bf616a;">write</span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">fileno</span><span style="color:#c0c5ce;">(stdout), buf, SIZE);
+  </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">;
+}
+
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">argc</span><span style="color:#c0c5ce;">, </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">**</span><span style="color:#bf616a;">argv</span><span style="color:#c0c5ce;">) {}
+</span></code></pre>
+<p>All this does is print &quot;running thread&quot; and sleeps for 10 seconds. We can't use printf here, as I mentioned above it won't be thread safe because we will be using <code>clone</code> directly. More on why later. </p>
+<p>Ok, what's next? Well, we need to set up some stack space for the thread. Let's create a function for that.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-c" data-lang="c"><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">*</span><span style="color:#8fa1b3;">alloc_stack</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">stack_size</span><span style="color:#c0c5ce;">) {
+  </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">*stack = </span><span style="color:#bf616a;">mmap</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">NULL</span><span style="color:#c0c5ce;">, stack_size, PROT_READ | PROT_WRITE,
+                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">, </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">);
+  </span><span style="color:#b48ead;">if </span><span style="color:#c0c5ce;">(stack == MAP_FAILED) {
+    </span><span style="color:#96b5b4;">perror</span><span style="color:#c0c5ce;">(&quot;</span><span style="color:#a3be8c;">failed to allocate stack for thread</span><span style="color:#c0c5ce;">&quot;);
+    </span><span style="color:#96b5b4;">exit</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">);
+  }
+  </span><span style="color:#b48ead;">return</span><span style="color:#c0c5ce;"> stack;
+}
+</span></code></pre>
+<p>There is a bit going on here! We call <a href="https://man7.org/linux/man-pages/man2/mmap.2.html">mmap</a> to allocate memory for the stack. Let's break it down.</p>
+<h2 id="mmap">mmap</h2>
+<p>The signature for <code>mmap</code> is:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-c" data-lang="c"><span style="color:#b48ead;">void </span><span style="color:#c0c5ce;">*</span><span style="color:#8fa1b3;">mmap</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">void </span><span style="color:#c0c5ce;">*</span><span style="color:#bf616a;">addr</span><span style="color:#c0c5ce;">, size_t </span><span style="color:#bf616a;">length</span><span style="color:#c0c5ce;">, </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">prot</span><span style="color:#c0c5ce;">, </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">flags</span><span style="color:#c0c5ce;">,
+                  </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">fd</span><span style="color:#c0c5ce;">, off_t </span><span style="color:#bf616a;">offset</span><span style="color:#c0c5ce;">);
+</span></code></pre>
+<p><code>void *addr</code> is a hint to the kernel about where it should place the mapping. <code>size_t lngth</code> is the length of the mapping. <code>int prot</code> defines the memory protection that should be applied. <code>int flags</code> allows passing a number of flags that determine how this mapping functions, more on that in a moment. <code>int fd</code> is a file descriptor, <code>mmap</code> can be used to memory map a file, this is ignored depending on what flags are passed. Finally, <code>off_t offset</code> the offset of the file to start mapping, if <code>mmap</code> is memory mapping a file.</p>
+<p>We pass <code>PROT_READ | PROT_WRITE</code> as the value for <code>prot</code>:</p>
+<ul>
+<li><code>PROT_READ</code> allows pages in the mapping to be read.</li>
+<li><code>PROT_WRITE</code> allows pages in the mapping to be written to.</li>
+</ul>
+<p>For <code>flags</code> we pass <code>MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK</code>:</p>
+<ul>
+<li><code>MAP_PRIVATE</code> marks the memory region created by this mapping as private, so no other <em>process</em> can see it. </li>
+<li><code>MAP_ANONYMOUS</code> means this region is not backed by a file, and the <code>fd</code> argument to <code>mmap</code> is ignored.</li>
+<li><code>MAP_STACK</code> this is a no-op on Linux, currently anyway. This is an interesting one, I could have ignored this here, but it is recommened to add it. I've dedicated <a href="https://wayofthepie.github.io/linux/linux-procs-and-threads/#mmap-and-map-stack">a section later in this post</a> specifically for this.</li>
+</ul>
+<p>Hopefully that makes sense. <code>mmap</code> will return <code>MAP_FAILED</code> if it fails to allocate or the address of the mapping. So <code>alloc_stack</code> checks for <code>MAP_FAILED</code>, log an error with <a href="https://man7.org/linux/man-pages/man3/perror.3.html">perror</a> if it does, and exit. <code>perror</code> will log our message along with a translation of the <code>errno</code> value <code>mmap</code> sets.</p>
+<p>If <code>mmap</code> succeeds, <code>alloc_stack</code> returns a pointer to the stack.</p>
+<h1 id="time-to-clone">Time to Clone</h1>
+<p>Now we have a function to allocate a stack and a function that defines the work our thread should do. Time to <code>clone</code>, lets just do it in <code>main</code>. First up, allocate the stack.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-c" data-lang="c"><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">argc</span><span style="color:#c0c5ce;">, </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">**</span><span style="color:#bf616a;">argv</span><span style="color:#c0c5ce;">) {
+  </span><span style="color:#b48ead;">const int</span><span style="color:#c0c5ce;"> STACK_SIZE = </span><span style="color:#d08770;">65536</span><span style="color:#c0c5ce;">;
+  </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">*stack = </span><span style="color:#bf616a;">alloc_stack</span><span style="color:#c0c5ce;">(STACK_SIZE);
+  </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">*stack_top = stack + STACK_SIZE;
+
+  </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">;
+}
+</span></code></pre>
+<p>We compute the value at the top of the stack, <code>stack_top</code>, as <code>clone</code> needs this as an argument. Now we can clone:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-c" data-lang="c"><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">argc</span><span style="color:#c0c5ce;">, </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">**</span><span style="color:#bf616a;">argv</span><span style="color:#c0c5ce;">) {
+  </span><span style="color:#b48ead;">const int</span><span style="color:#c0c5ce;"> STACK_SIZE = </span><span style="color:#d08770;">65536</span><span style="color:#c0c5ce;">;
+  </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">*stack = </span><span style="color:#bf616a;">alloc_stack</span><span style="color:#c0c5ce;">(STACK_SIZE);
+  </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">*stack_top = stack + STACK_SIZE;
+
+  </span><span style="color:#96b5b4;">printf</span><span style="color:#c0c5ce;">(&quot;</span><span style="color:#a3be8c;">starting thread...</span><span style="color:#96b5b4;">\n</span><span style="color:#c0c5ce;">&quot;);
+
+  </span><span style="color:#b48ead;">if </span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">clone</span><span style="color:#c0c5ce;">(thread_work, stack_top, CLONE_THREAD | CLONE_SIGHAND | CLONE_VM,
+            </span><span style="color:#d08770;">NULL</span><span style="color:#c0c5ce;">) == -</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">) {
+    </span><span style="color:#96b5b4;">perror</span><span style="color:#c0c5ce;">(&quot;</span><span style="color:#a3be8c;">error cloning</span><span style="color:#c0c5ce;">&quot;);
+    </span><span style="color:#96b5b4;">exit</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">);
+  }
+
+  </span><span style="color:#bf616a;">sleep</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">10</span><span style="color:#c0c5ce;">);
+
+  </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">;
+}
+</span></code></pre>
+<p>We call <code>clone</code> with <code>child</code>, the function we defined earlier, a pointer to the top of the stack, flags to tell clone what we want to do, and <code>NULL</code> for the argument. <code>clone</code> has a lot of functionality which is chosen through the flags passed to it.</p>
+<ul>
+<li><code>CLONE_THREAD</code> says to put the child into the same thread group as the calling process.</li>
+<li><code>CLONE_SIGHAND</code> is required when using <code>CLONE_THREAD</code>. This makes the child and the parent share the same signal handlers.</li>
+<li><code>CLONE_VM</code> is required when using <code>CLONE_SIGHAND</code>. This makes the calling process and the child share the same memory space.</li>
+</ul>
+<p>These three flags together make the child which <code>clone</code> creates a thread of the calling process. If we passed different flags, we could spawn a new process, instead of a thread, that does not share memory with the calling process.</p>
+<p>Compile and run, and you should get the following:</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">$ gcc -o clone_thread.o clone_thread.c
+
+$ ./clone_thread.o
+starting thread...
+running thread
+finished thread
+</span></code></pre>
+<p>Great! I mentioned this is not equivalent to <code>pthread_create</code>. One difference is that <code>pthread_create</code> will set a lot more flags. Here is an excerpt from the libc source on thread creation:</p>
+<pre style="background-color:#2b303b;">
+<code class="language-c" data-lang="c"><span style="color:#65737e;">/* We rely heavily on various flags the CLONE function understands:
+
+     CLONE_VM, CLONE_FS, CLONE_FILES
+	These flags select semantics with shared address space and
+	file descriptors according to what POSIX requires.
+
+     CLONE_SIGHAND, CLONE_THREAD
+	This flag selects the POSIX signal semantics and various
+	other kinds of sharing (itimers, POSIX timers, etc.).
+
+     CLONE_SETTLS
+	The sixth parameter to CLONE determines the TLS area for the
+	new thread.
+
+     CLONE_PARENT_SETTID
+	The kernels writes the thread ID of the newly created thread
+	into the location pointed to by the fifth parameters to CLONE.
+
+	Note that it would be semantically equivalent to use
+	CLONE_CHILD_SETTID but it is be more expensive in the kernel.
+
+     CLONE_CHILD_CLEARTID
+	The kernels clears the thread ID of a thread that has called
+	sys_exit() in the location pointed to by the seventh parameter
+	to CLONE.
+
+     The termination signal is chosen to be zero which means no signal
+     is sent.  */
+  </span><span style="color:#b48ead;">const int</span><span style="color:#c0c5ce;"> clone_flags = (CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SYSVSEM
+			   | CLONE_SIGHAND | CLONE_THREAD
+			   | CLONE_SETTLS | CLONE_PARENT_SETTID
+			   | CLONE_CHILD_CLEARTID
+			   | </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">);
+</span></code></pre>
+<p>You can see the source <a href="https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/createthread.c;h=bc3409b32648e901d931f67ff1869597473d1250;hb=HEAD#l67">here</a>. The actual calls from the <code>pthread_create</code> function to that function are through an insane chain of macros, it's not easy to see the call chain at all!</p>
+<p>Anyway, we know how to spawn a thread with <code>clone</code> in libc now. In the next post, I'm going to try to do this with the <code>clone</code> syscall directly.</p>
+<h1 id="mmap-and-map-stack">mmap and MAP_STACK</h1>
+<p>In the <a href="https://wayofthepie.github.io/linux/linux-procs-and-threads/#mmap">mmap</a> section I mentioned we could have just ignored this flag, at least for this post. But, I was super curious why it even existed after reading the <a href="https://man7.org/linux/man-pages/man2/clone.2.html">man page description</a> which says:</p>
+<blockquote>
+<p>MAP_STACK (since Linux 2.6.27) </p>
+<p>Allocate the mapping at an address suitable for a process or thread stack.</p>
+<p>This flag is currently a no-op on Linux.  However, by employing this flag, applications can ensure  that  they  transparently
+obtain support if the flag is implemented in the future.  Thus, it is used in the glibc threading implementation to allow for
+the fact that some architectures may (later) require special treatment for stack allocations.  A  further  reason  to  employ
+this flag is portability: MAP_STACK exists (and has an effect) on some other systems (e.g., some of the BSDs).</p>
+</blockquote>
+<p>Further down that man page it talks about why you should use <code>mmap</code> over <code>malloc</code> for allocating stack memory:</p>
+<blockquote>
+<p>We can specify the MAP_STACK flag to request a mapping that is
+suitable for a stack.  For the moment, this flag is a no-op on
+Linux, but it exists and has effect on some other systems, so
+we should include it for portability.</p>
+</blockquote>
+<p>Besides the man pages, you can read a bit more about this in this thread <a href="https://lkml.org/lkml/2019/11/11/135">https://lkml.org/lkml/2019/11/11/135</a>, which mentions why this should be added:</p>
+<blockquote>
+<p>So, my understanding from the above is that MAP_STACK was added to 
+allow a possible fix on some old architectures, should anyone decide it
+was worth doing the work of implementing it. But so far, after 12 years,
+no one did. It kind of looks like no one ever will (since those old
+architectures become less and less relevant).</p>
+</blockquote>
+<p>Computers are hard.</p>
+<h1 id="thread-safety-of-printf">Thread Safety of printf</h1>
+<p>I never really thought about it until writing this post, but <code>printf</code> is only threadsafe in the context of libc. Here is what I originally tried to write when building the initial <code>clone</code> example.</p>
+<pre style="background-color:#2b303b;">
+<code class="language-c" data-lang="c"><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">thread_work</span><span style="color:#c0c5ce;">() {
+  </span><span style="color:#96b5b4;">printf</span><span style="color:#c0c5ce;">(&quot;</span><span style="color:#a3be8c;">running thread</span><span style="color:#96b5b4;">\n</span><span style="color:#c0c5ce;">&quot;);
+  </span><span style="color:#bf616a;">sleep</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">5</span><span style="color:#c0c5ce;">);
+  </span><span style="color:#96b5b4;">printf</span><span style="color:#c0c5ce;">(&quot;</span><span style="color:#a3be8c;">finished thread</span><span style="color:#96b5b4;">\n</span><span style="color:#c0c5ce;">&quot;);
+  </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">;
+}
+
+</span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">*</span><span style="color:#8fa1b3;">alloc_stack</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">stack_size</span><span style="color:#c0c5ce;">) {
+  </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">*stack = </span><span style="color:#bf616a;">mmap</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">NULL</span><span style="color:#c0c5ce;">, stack_size, PROT_READ | PROT_WRITE,
+                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, -</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">, </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">);
+  </span><span style="color:#b48ead;">if </span><span style="color:#c0c5ce;">(stack == MAP_FAILED) {
+    </span><span style="color:#96b5b4;">perror</span><span style="color:#c0c5ce;">(&quot;</span><span style="color:#a3be8c;">failed to allocate stack for thread</span><span style="color:#c0c5ce;">&quot;);
+    </span><span style="color:#96b5b4;">exit</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">);
+  }
+  </span><span style="color:#b48ead;">return</span><span style="color:#c0c5ce;"> stack;
+}
+
+</span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">argc</span><span style="color:#c0c5ce;">, </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">**</span><span style="color:#bf616a;">argv</span><span style="color:#c0c5ce;">) {
+  </span><span style="color:#b48ead;">const int</span><span style="color:#c0c5ce;"> STACK_SIZE = </span><span style="color:#d08770;">65536</span><span style="color:#c0c5ce;">;
+  </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">*stack = </span><span style="color:#bf616a;">alloc_stack</span><span style="color:#c0c5ce;">(STACK_SIZE);
+  </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">*stack_top = stack + STACK_SIZE;
+
+  </span><span style="color:#b48ead;">if </span><span style="color:#c0c5ce;">(</span><span style="color:#bf616a;">clone</span><span style="color:#c0c5ce;">(thread_work, stack_top, CLONE_THREAD | CLONE_SIGHAND | CLONE_VM,
+            </span><span style="color:#d08770;">NULL</span><span style="color:#c0c5ce;">) == -</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">) {
+    </span><span style="color:#96b5b4;">perror</span><span style="color:#c0c5ce;">(&quot;</span><span style="color:#a3be8c;">error cloning</span><span style="color:#c0c5ce;">&quot;);
+    </span><span style="color:#96b5b4;">exit</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">1</span><span style="color:#c0c5ce;">);
+  }
+
+  </span><span style="color:#96b5b4;">printf</span><span style="color:#c0c5ce;">(&quot;</span><span style="color:#a3be8c;">started thread...</span><span style="color:#96b5b4;">\n</span><span style="color:#c0c5ce;">&quot;);
+  </span><span style="color:#bf616a;">sleep</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">10</span><span style="color:#c0c5ce;">);
+
+  </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">;
+}
+</span></code></pre>
+<p>If you compile and run this (hint, you shouldn't 😄), you might get something like this:</p>
+<pre style="background-color:#2b303b;">
+<code><span style="color:#c0c5ce;">$ gcc -o clone_thread.o clone_thread.c
+
+$ ./clone_thread.o
+�U.
+running thread
+finished thread
+</span></code></pre>
+<p>Uh oh! It may segfault too. Or do who knows what, it's undefined behaviour! This baffled me for a bit. It seems when calling <code>pthread_create</code> libc will setup some bookkeeping, perhaps setting up thread local storage for the buffer in <code>printf</code> 🤔. I'm not entirely sure yet. There are some posts on the interweb about this. <a href="https://stackoverflow.com/a/38492299/1906866">This stackoverflow</a> answer, and the one above it, comes to the same conclusion. <a href="https://sourceware.org/bugzilla/show_bug.cgi?id=10311#c6">This thread</a> for a related bug on sourceware talks about it too.</p>
+<p>It makes sense. I'm going to dive more into glibc, to get a better understanding of what it's doing when it spawns a thread with <code>pthread_create</code>. I just need to build up the energy to wade through crazy macros first 😬.</p>
+<h1 id="conclusion">Conclusion</h1>
+<p>I covered the basic way threads can be created on linux using <code>clone</code> through <code>libc</code>. It's a lot simpler than <code>pthreads</code> for sure! But it does make <code>printf</code> (and possibly other parts of libc!) unsafe to use in child threads. But hopefully this gave you a better understanding of what is happening under the hood. In the next post I want to drop a level lower, and <code>clone</code> a thread by calling the <code>clone</code> syscall directly, without libc. Either that or dive more into the <code>printf</code> issue and see how glibc sets up threads. </p>
+
+    <script src="https://utteranc.es/client.js"
+        repo="wayofthepie/wayofthepie.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+    </script>
+</div>
+
+    </div>
+  </body>
+</html>
