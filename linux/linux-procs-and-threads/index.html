@@ -79,6 +79,8 @@
     <span class="post-metadata">
         
         
+        
+        
             
             
 <div class="post-series">
@@ -87,12 +89,8 @@
 
         
         
-        
-        
 
         <span class="post-date">2021-02-28</span>
-        
-        
         
         
             <span class="post-tags">
@@ -100,6 +98,8 @@
                 <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/linux">linux</a></span>
             
             </span>
+        
+        
         
         
     </span>
@@ -150,8 +150,8 @@
         </li>
     
     </ul>
-    <p>I want to explore how threads and processes work on Linux, under the hood, as in-depth as I can. So, in this series of posts, I'll be writing some potentially insane C code to dive into this.</p>
-<h1 id="with-pthread">With pthread</h1>
+    <p>I want to explore how threads and processes work on Linux, under the hood, as in-depth as I can. It's been a while since I dove into the kernel. In this series of posts, I'll be writing some potentially insane C code to dive into this.</p>
+<span id="continue-reading"></span><h1 id="with-pthread">With pthread</h1>
 <p>Normally if you want a thread in C you'd use the <a href="https://man7.org/linux/man-pages/man7/pthreads.7.html">pthreads</a> (POSIX threads) API. Quick example with <code>pthreads</code>.</p>
 <pre style="background-color:#2b303b;">
 <code class="language-c" data-lang="c"><span style="color:#b48ead;">#include </span><span style="color:#c0c5ce;">&lt;</span><span style="color:#a3be8c;">pthread.h</span><span style="color:#c0c5ce;">&gt;
