@@ -79,8 +79,6 @@
     <span class="post-metadata">
         
         
-        
-        
             
             
 <div class="post-series">
@@ -89,8 +87,12 @@
 
         
         
+        
+        
 
         <span class="post-date">2021-02-28</span>
+        
+        
         
         
             <span class="post-tags">
@@ -98,8 +100,6 @@
                 <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/linux">linux</a></span>
             
             </span>
-        
-        
         
         
     </span>
@@ -249,7 +249,7 @@ Look ma! I&#39;m a thread!
 <ul>
 <li><code>MAP_PRIVATE</code> marks the memory region created by this mapping as private, so no other <em>process</em> can see it. </li>
 <li><code>MAP_ANONYMOUS</code> means this region is not backed by a file, and the <code>fd</code> argument to <code>mmap</code> is ignored.</li>
-<li><code>MAP_STACK</code> this is a no-op on Linux, currently anyway. This is an interesting one, I could have ignored this here, but it is recommened to add it. I've dedicated <a href="https://wayofthepie.github.io/linux/linux-procs-and-threads/#mmap-and-map-stack">a section later in this post</a> specifically for this.</li>
+<li><code>MAP_STACK</code>, which is currently a no-op on Linux. This is an interesting one. I could have ignored it here, but it is recommened to add as a flag. I've dedicated <a href="https://wayofthepie.github.io/linux/linux-procs-and-threads/#mmap-and-map-stack">a section later in this post</a> specifically to <code>MAP_STACK</code>.</li>
 </ul>
 <p>Hopefully that makes sense. <code>mmap</code> will return <code>MAP_FAILED</code> if it fails to allocate or the address of the mapping. So <code>alloc_stack</code> checks for <code>MAP_FAILED</code>, log an error with <a href="https://man7.org/linux/man-pages/man3/perror.3.html">perror</a> if it does, and exit. <code>perror</code> will log our message along with a translation of the <code>errno</code> value <code>mmap</code> sets.</p>
 <p>If <code>mmap</code> succeeds, <code>alloc_stack</code> returns a pointer to the stack.</p>
