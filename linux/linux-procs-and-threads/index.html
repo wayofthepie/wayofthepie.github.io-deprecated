@@ -79,8 +79,6 @@
     <span class="post-metadata">
         
         
-        
-        
             
             
 <div class="post-series">
@@ -89,8 +87,12 @@
 
         
         
+        
+        
 
         <span class="post-date">2021-02-28</span>
+        
+        
         
         
             <span class="post-tags">
@@ -98,8 +100,6 @@
                 <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/linux">linux</a></span>
             
             </span>
-        
-        
         
         
     </span>
@@ -219,8 +219,8 @@ Look ma! I&#39;m a thread!
 
 </span><span style="color:#b48ead;">int </span><span style="color:#8fa1b3;">main</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">argc</span><span style="color:#c0c5ce;">, </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">**</span><span style="color:#bf616a;">argv</span><span style="color:#c0c5ce;">) {}
 </span></code></pre>
-<p>All this does is print &quot;running thread&quot; and sleeps for 10 seconds. We can't use printf here, as I mentioned above it won't be thread safe because we will be using <code>clone</code> directly. More on why later. </p>
-<p>Ok, what's next? Well, we need to set up some stack space for the thread. Let's create a function for that.</p>
+<p>All this does is print &quot;running thread&quot; and sleeps for 10 seconds. We can't use printf here, it's not thread safe if not used with a thread created with <code>pthread_create</code>. More on why later.</p>
+<p>For now, what's next? Well, we need to set up some stack space for the thread. Let's create a function for that.</p>
 <pre style="background-color:#2b303b;">
 <code class="language-c" data-lang="c"><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">*</span><span style="color:#8fa1b3;">alloc_stack</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">stack_size</span><span style="color:#c0c5ce;">) {
   </span><span style="color:#b48ead;">char </span><span style="color:#c0c5ce;">*stack = </span><span style="color:#bf616a;">mmap</span><span style="color:#c0c5ce;">(</span><span style="color:#d08770;">NULL</span><span style="color:#c0c5ce;">, stack_size, PROT_READ | PROT_WRITE,
