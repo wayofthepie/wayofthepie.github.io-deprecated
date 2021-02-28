@@ -79,6 +79,8 @@
     <span class="post-metadata">
         
         
+        
+        
             
             
 <div class="post-series">
@@ -87,12 +89,8 @@
 
         
         
-        
-        
 
         <span class="post-date">2021-02-28</span>
-        
-        
         
         
             <span class="post-tags">
@@ -100,6 +98,8 @@
                 <span><a href="https:&#x2F;&#x2F;wayofthepie.github.io/tags/linux">linux</a></span>
             
             </span>
+        
+        
         
         
     </span>
@@ -239,7 +239,7 @@ Look ma! I&#39;m a thread!
 <code class="language-c" data-lang="c"><span style="color:#b48ead;">void </span><span style="color:#c0c5ce;">*</span><span style="color:#8fa1b3;">mmap</span><span style="color:#c0c5ce;">(</span><span style="color:#b48ead;">void </span><span style="color:#c0c5ce;">*</span><span style="color:#bf616a;">addr</span><span style="color:#c0c5ce;">, size_t </span><span style="color:#bf616a;">length</span><span style="color:#c0c5ce;">, </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">prot</span><span style="color:#c0c5ce;">, </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">flags</span><span style="color:#c0c5ce;">,
                   </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">fd</span><span style="color:#c0c5ce;">, off_t </span><span style="color:#bf616a;">offset</span><span style="color:#c0c5ce;">);
 </span></code></pre>
-<p><code>void *addr</code> is a hint to the kernel about where it should place the mapping. <code>size_t lngth</code> is the length of the mapping. <code>int prot</code> defines the memory protection that should be applied. <code>int flags</code> allows passing a number of flags that determine how this mapping functions, more on that in a moment. <code>int fd</code> is a file descriptor, <code>mmap</code> can be used to memory map a file, this is ignored depending on what flags are passed. Finally, <code>off_t offset</code> the offset of the file to start mapping, if <code>mmap</code> is memory mapping a file.</p>
+<p><code>void *addr</code> is a hint to the kernel about where it should place the mapping. <code>size_t length</code> is the length of the mapping. <code>int prot</code> defines the memory protection that should be applied. <code>int flags</code> allows passing a number of flags that determine how this mapping functions, more on that in a moment. <code>int fd</code> is a file descriptor, <code>mmap</code> can be used to memory map a file, this is ignored depending on what flags are passed. Finally, <code>off_t offset</code> the offset of the file to start mapping, if <code>mmap</code> is memory mapping a file.</p>
 <p>We pass <code>PROT_READ | PROT_WRITE</code> as the value for <code>prot</code>:</p>
 <ul>
 <li><code>PROT_READ</code> allows pages in the mapping to be read.</li>
