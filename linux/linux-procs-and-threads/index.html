@@ -350,10 +350,17 @@ this flag is portability: MAP_STACK exists (and has an effect) on some other sys
 </blockquote>
 <p>Further down that man page it talks about why you should use <code>mmap</code> over <code>malloc</code> for allocating stack memory:</p>
 <blockquote>
-<p>We can specify the MAP_STACK flag to request a mapping that is
-suitable for a stack.  For the moment, this flag is a no-op on
-Linux, but it exists and has effect on some other systems, so
-we should include it for portability.</p>
+<p>Within the sample program, we allocate the memory that is to be
+used for the child's stack using mmap(2) rather than malloc(3)
+for the following reasons:</p>
+<ul>
+<li>
+<p>mmap(2) allocates a block of memory that starts on a page boundary and is a multiple of the page size.  This is useful if we want to establish a guard page (a page with protection PROT_NONE) at the end of the stack using mprotect(2).</p>
+</li>
+<li>
+<p>We can specify the MAP_STACK flag to request a mapping that is suitable for a stack.  For the moment, this flag is a no-op on Linux, but it exists and has effect on some other systems, so we should include it for portability.</p>
+</li>
+</ul>
 </blockquote>
 <p>Besides the man pages, you can read a bit more about MAP_STACK in this thread <a href="https://lkml.org/lkml/2019/11/11/135">https://lkml.org/lkml/2019/11/11/135</a>, which mentions why this should be added:</p>
 <blockquote>

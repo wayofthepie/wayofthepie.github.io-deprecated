@@ -213,10 +213,17 @@ this flag is portability: MAP_STACK exists (and has an effect) on some other sys
 &lt;&#x2F;blockquote&gt;
 &lt;p&gt;Further down that man page it talks about why you should use &lt;code&gt;mmap&lt;&#x2F;code&gt; over &lt;code&gt;malloc&lt;&#x2F;code&gt; for allocating stack memory:&lt;&#x2F;p&gt;
 &lt;blockquote&gt;
-&lt;p&gt;We can specify the MAP_STACK flag to request a mapping that is
-suitable for a stack.  For the moment, this flag is a no-op on
-Linux, but it exists and has effect on some other systems, so
-we should include it for portability.&lt;&#x2F;p&gt;
+&lt;p&gt;Within the sample program, we allocate the memory that is to be
+used for the child&#x27;s stack using mmap(2) rather than malloc(3)
+for the following reasons:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;mmap(2) allocates a block of memory that starts on a page boundary and is a multiple of the page size.  This is useful if we want to establish a guard page (a page with protection PROT_NONE) at the end of the stack using mprotect(2).&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;li&gt;
+&lt;p&gt;We can specify the MAP_STACK flag to request a mapping that is suitable for a stack.  For the moment, this flag is a no-op on Linux, but it exists and has effect on some other systems, so we should include it for portability.&lt;&#x2F;p&gt;
+&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
 &lt;&#x2F;blockquote&gt;
 &lt;p&gt;Besides the man pages, you can read a bit more about MAP_STACK in this thread &lt;a href=&quot;https:&#x2F;&#x2F;lkml.org&#x2F;lkml&#x2F;2019&#x2F;11&#x2F;11&#x2F;135&quot;&gt;https:&#x2F;&#x2F;lkml.org&#x2F;lkml&#x2F;2019&#x2F;11&#x2F;11&#x2F;135&lt;&#x2F;a&gt;, which mentions why this should be added:&lt;&#x2F;p&gt;
 &lt;blockquote&gt;
