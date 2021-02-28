@@ -284,9 +284,9 @@ Look ma! I&#39;m a thread!
   </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">0</span><span style="color:#c0c5ce;">;
 }
 </span></code></pre>
-<p>We call <code>clone</code> with <code>child</code>, the function we defined earlier, a pointer to the top of the stack, flags to tell clone what we want to do, and <code>NULL</code> for the argument. <code>clone</code> has a lot of functionality which is chosen through the flags passed to it.</p>
+<p>We call <code>clone</code> with <code>thread_work</code>, the function we defined earlier, a pointer to the top of the stack, flags to tell clone what we want to do, and <code>NULL</code> for the argument. <code>clone</code> has a lot of functionality which is chosen through the flags passed to it.</p>
 <ul>
-<li><code>CLONE_THREAD</code> says to put the child into the same thread group as the calling process.</li>
+<li><code>CLONE_THREAD</code> says to put the child thread into the same thread group as the calling process.</li>
 <li><code>CLONE_SIGHAND</code> is required when using <code>CLONE_THREAD</code>. This makes the child and the parent share the same signal handlers.</li>
 <li><code>CLONE_VM</code> is required when using <code>CLONE_SIGHAND</code>. This makes the calling process and the child share the same memory space.</li>
 </ul>
@@ -355,7 +355,7 @@ suitable for a stack.  For the moment, this flag is a no-op on
 Linux, but it exists and has effect on some other systems, so
 we should include it for portability.</p>
 </blockquote>
-<p>Besides the man pages, you can read a bit more about this in this thread <a href="https://lkml.org/lkml/2019/11/11/135">https://lkml.org/lkml/2019/11/11/135</a>, which mentions why this should be added:</p>
+<p>Besides the man pages, you can read a bit more about MAP_STACK in this thread <a href="https://lkml.org/lkml/2019/11/11/135">https://lkml.org/lkml/2019/11/11/135</a>, which mentions why this should be added:</p>
 <blockquote>
 <p>So, my understanding from the above is that MAP_STACK was added to 
 allow a possible fix on some old architectures, should anyone decide it

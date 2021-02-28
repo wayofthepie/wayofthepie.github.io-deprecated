@@ -147,9 +147,9 @@ Look ma! I&amp;#39;m a thread!
   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#b48ead;&quot;&gt;return &lt;&#x2F;span&gt;&lt;span style=&quot;color:#d08770;&quot;&gt;0&lt;&#x2F;span&gt;&lt;span style=&quot;color:#c0c5ce;&quot;&gt;;
 }
 &lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
-&lt;p&gt;We call &lt;code&gt;clone&lt;&#x2F;code&gt; with &lt;code&gt;child&lt;&#x2F;code&gt;, the function we defined earlier, a pointer to the top of the stack, flags to tell clone what we want to do, and &lt;code&gt;NULL&lt;&#x2F;code&gt; for the argument. &lt;code&gt;clone&lt;&#x2F;code&gt; has a lot of functionality which is chosen through the flags passed to it.&lt;&#x2F;p&gt;
+&lt;p&gt;We call &lt;code&gt;clone&lt;&#x2F;code&gt; with &lt;code&gt;thread_work&lt;&#x2F;code&gt;, the function we defined earlier, a pointer to the top of the stack, flags to tell clone what we want to do, and &lt;code&gt;NULL&lt;&#x2F;code&gt; for the argument. &lt;code&gt;clone&lt;&#x2F;code&gt; has a lot of functionality which is chosen through the flags passed to it.&lt;&#x2F;p&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;code&gt;CLONE_THREAD&lt;&#x2F;code&gt; says to put the child into the same thread group as the calling process.&lt;&#x2F;li&gt;
+&lt;li&gt;&lt;code&gt;CLONE_THREAD&lt;&#x2F;code&gt; says to put the child thread into the same thread group as the calling process.&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;code&gt;CLONE_SIGHAND&lt;&#x2F;code&gt; is required when using &lt;code&gt;CLONE_THREAD&lt;&#x2F;code&gt;. This makes the child and the parent share the same signal handlers.&lt;&#x2F;li&gt;
 &lt;li&gt;&lt;code&gt;CLONE_VM&lt;&#x2F;code&gt; is required when using &lt;code&gt;CLONE_SIGHAND&lt;&#x2F;code&gt;. This makes the calling process and the child share the same memory space.&lt;&#x2F;li&gt;
 &lt;&#x2F;ul&gt;
@@ -218,7 +218,7 @@ suitable for a stack.  For the moment, this flag is a no-op on
 Linux, but it exists and has effect on some other systems, so
 we should include it for portability.&lt;&#x2F;p&gt;
 &lt;&#x2F;blockquote&gt;
-&lt;p&gt;Besides the man pages, you can read a bit more about this in this thread &lt;a href=&quot;https:&#x2F;&#x2F;lkml.org&#x2F;lkml&#x2F;2019&#x2F;11&#x2F;11&#x2F;135&quot;&gt;https:&#x2F;&#x2F;lkml.org&#x2F;lkml&#x2F;2019&#x2F;11&#x2F;11&#x2F;135&lt;&#x2F;a&gt;, which mentions why this should be added:&lt;&#x2F;p&gt;
+&lt;p&gt;Besides the man pages, you can read a bit more about MAP_STACK in this thread &lt;a href=&quot;https:&#x2F;&#x2F;lkml.org&#x2F;lkml&#x2F;2019&#x2F;11&#x2F;11&#x2F;135&quot;&gt;https:&#x2F;&#x2F;lkml.org&#x2F;lkml&#x2F;2019&#x2F;11&#x2F;11&#x2F;135&lt;&#x2F;a&gt;, which mentions why this should be added:&lt;&#x2F;p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;So, my understanding from the above is that MAP_STACK was added to 
 allow a possible fix on some old architectures, should anyone decide it
